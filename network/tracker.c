@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <math.h>
+#include <signal.h>
 
 #include "common.h"
 #include "projectreader.h"
@@ -83,6 +84,12 @@ void turnOn(udsclientsocket *socket, int solindex) {
   cmd = solindex << 1;
   cmd |= 1;
   uds_write(socket, &cmd, 1);
+}
+
+udsclientsocket *manipulatorsocket = NULL;  
+
+static void stopit(int a) {
+  turnOn(manipulatorsocket, -1);
 }
 
 int main(int argc, char *argv[]) {
@@ -171,7 +178,6 @@ int main(int argc, char *argv[]) {
   int bufferlength;
   struct packet2byte *packet = allocate2bytePacket(pd->solnum);
   
-  udsclientsocket *manipulatorsocket = NULL;  
   if (manipulatorsocketpath) {
     fprintf(stderr, "opening connection to manipulation server on \"%s\"\n", manipulatorsocketpath);
     manipulatorsocket = uds_create_client(manipulatorsocketpath);
@@ -179,6 +185,7 @@ int main(int argc, char *argv[]) {
   
   fprintf(stderr, "opening connection to server on \"%s\"\n", socketpath);
   udsclientsocket *udscs = uds_create_client(socketpath);
+  signal(SIGTERM, stopit);
   
   fprintf(stderr, "start reading data ...\n");
   while ( (bufferlength = uds_read(udscs, buffer, GLOBALSEQPACKETSIZE)) > 0) {
