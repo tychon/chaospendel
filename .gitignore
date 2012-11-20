@@ -3,10 +3,14 @@
 *.o
 *.pyc
 
+numerical/main
+
+doc-ger/*.ps
+doc-ger/*.dvi
 doc-ger/*.pdf
 doc-ger/*.log
 doc-ger/*.aux
 povray/*.png
+povray/solenoid/*.png
 
-numerical/main
 
