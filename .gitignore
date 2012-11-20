@@ -1,0 +1,12 @@
+
+*.hi
+*.o
+*.pyc
+
+doc-ger/*.pdf
+doc-ger/*.log
+doc-ger/*.aux
+povray/*.png
+
+numerical/main
+
