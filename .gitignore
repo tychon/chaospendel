@@ -3,7 +3,10 @@
 *.o
 *.pyc
 
+*.csv
 numerical/main
+
+fftw/*.png
 
 doc-ger/*.ps
 doc-ger/*.dvi
