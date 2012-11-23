@@ -1,21 +1,10 @@
 
-#.PHONY: #none
+.PHONY: numerical
 
-all: numerical/main doc-ger
+all: numerical doc-ger
 
-numerical/main: numerical/main.hs
-	cd numerical ;\
-	ghc --make main.hs -o main
-
-numericaltest: numerical/main
-	cd numerical ;\
-	./main > out.csv 2> out.info ;\
-	python show.py out
-
-RungeKutta/RungeKutta: RungeKutta/RungeKutta.hs
-	cd RungeKutta ;\
-	ghc --make RungeKutta.hs -o RungeKutta ;\
-	haddock -h -odoc RungeKutta.hs
+numerical:
+	make -C numerical
 
 fftw/fourier: fftw/fourier.hs fftw/fourierplot.m
 	cd fftw                          ;\
