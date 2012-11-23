@@ -11,21 +11,31 @@ import Data.List.Split
 g = -9.81
 -- Andere Konstanten
 time = 60.0
-timestep = 0.0001
-optFps = 1000
-l1 = 4
-l2 = 3
-m1 = 2
+timestep = 0.01
+optFps = 25
+
+-- Startbedingungen
+l1 = 1
+l2 = 1
+m1 = 1
 m2 = 1
 
-phi1_0 = (pi/3)
-phi2_0 = (0)
+phi1_0 = (pi+0.01)
+phi2_0 = (pi)
 
 k1 = (1/3) * l1^2 * m1
 k2 = (1/2) * l1   * m1
 k3 = m2
 k4 = (1/3) * l2^2 * m2
 k5 = (1/2) * l2   * m2
+
+-- Differentialgleichungen
+fphi1 p1 phi2 phi1d phi2d phi1 = ((-1)*k5*l1*(cos (phi1-phi2))*phi2d + p1)
+                                 / (k1 + k3*l1)
+fphi2 p2 phi1 phi1d phi2d phi2 = ((-1)*k5*l1*(cos (phi1-phi2))*phi1d + p2) / k4
+fp1 phi1 phi2 phi1d phi2d = (-1)*k5*l1*phi1d*phi2d*(sin (phi1-phi2))
+                               - g*k2*(sin phi1)- l1*g*k3*(sin phi1)
+fp2 phi1 phi2 phi1d phi2d = k5*l1*phi1d*phi2d*(sin (phi2-phi2)) - g*k5*(sin phi2)
 
 -- Data structure for Pendulum:
 data Pendulum = Pendulum {
@@ -73,13 +83,13 @@ step :: Pendulum -> Double -> Double -> [[Double]]
 step (Pendulum phi1 phi1d p1 p1d phi2 phi2d p2 p2d) timeStep time
   | time <= 0 = [] -- Abbruchbedingung fuer Rekursion
   | otherwise =
-    let phi1d' = ((-1)*k5*l1*(cos (phi1-phi2))*phi2d + p1) / (k1 + k3*l1)
+    let phi1d' = fphi1 p1 phi2 phi1d phi2d phi1
         phi1'  = phi1 + phi1d' * timeStep
-        phi2d' = ((-1)*k5*l1*(cos (phi1-phi2))*phi1d - p2) / k4
+        phi2d' = fphi2 p2 phi1 phi1d phi2d phi2
         phi2'  = phi2 + phi2d' * timeStep
-        p1d' = (-1)*k5*l1*phi1d*phi2d*(sin (phi1-phi2)) - g*k2*(sin phi1) - l1*g*k3*(sin phi1)
+        p1d' = fp1 phi1 phi2 phi1d phi2d
         p1'  = p1 + p1d' * timeStep
-        p2d' =      k5*l1*phi1d*phi2d*(sin (phi2-phi2)) - g*k5*(sin phi2)
+        p2d' = fp2 phi1 phi2 phi1d phi2d
         p2'  = p2 + p2d' * timeStep
     in  [phi1d, phi1, phi2d, phi2, p1d, p1, p2d, p2] : (step (Pendulum phi1' phi1d' p1' p1d' phi2' phi2d' p2' p2d') timeStep (time-timeStep))
 

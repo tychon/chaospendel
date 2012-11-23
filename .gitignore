@@ -4,10 +4,12 @@
 *.pyc
 
 *.csv
+
+fftw/fourier
 numerical/main
-
+numerical/doc/
+wikihaskell/main
 fftw/*.png
-
 doc-ger/*.ps
 doc-ger/*.dvi
 doc-ger/*.pdf

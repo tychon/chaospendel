@@ -11,7 +11,7 @@ import Math.FFT
 import Data.Complex
 
 main = do
-  let xs = [0,0.01..(8*pi)] :: [Double]
+  let xs = [0,0.0001..(8*pi)] :: [Double]
       n = length xs
       --xs' = map (\x -> (sin (x))+(cos (x))+4*(cos(3*x))+(sin (5*x))) xs
       xs' = map (\x -> 4*(sin (x))+(sin (8*x))+(sin (20*x))) xs
