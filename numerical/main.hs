@@ -12,7 +12,7 @@ g = -9.81
 -- Andere Konstanten
 time = 60.0
 timestep = 0.001
-optFps = 1000
+optFps = 100
 
 -- Startbedingungen
 l1 = 4
@@ -20,7 +20,7 @@ l2 = 3
 m1 = 2
 m2 = 1
 
-phi1_0 = (pi+0.01)
+phi1_0 = (pi+0.1)
 phi2_0 = (pi)
 
 k1 = (1/3) * l1^2 * m1
@@ -71,6 +71,20 @@ main = do
       fullres = step pend timestep time
       outres = every (fromIntegral $ toInteger $ ceiling ((1/timestep)/optFps)) fullres
   putStr . formatCSV $ outres
+  hPutStrLn stderr $ "t1min="++(show $ minimum $ map (\xs -> xs !! 8) outres)
+  hPutStrLn stderr $ "v1min="++(show $ minimum $ map (\xs -> xs !! 9) outres)
+  hPutStrLn stderr $ "t2min="++(show $ minimum $ map (\xs -> xs !! 10) outres)
+  hPutStrLn stderr $ "v2min="++(show $ minimum $ map (\xs -> xs !! 11) outres)
+  hPutStrLn stderr $ "tmin=" ++(show $ minimum $ map (\xs -> xs !! 12) outres)
+  hPutStrLn stderr $ "vmin=" ++(show $ minimum $ map (\xs -> xs !! 13) outres)
+  hPutStrLn stderr $ "emin=" ++(show $ minimum $ map (\xs -> xs !! 14) outres)
+  hPutStrLn stderr $ "t1max="++(show $ maximum $ map (\xs -> xs !! 8) outres)
+  hPutStrLn stderr $ "v1max="++(show $ maximum $ map (\xs -> xs !! 9) outres)
+  hPutStrLn stderr $ "t2max="++(show $ maximum $ map (\xs -> xs !! 10) outres)
+  hPutStrLn stderr $ "v2max="++(show $ maximum $ map (\xs -> xs !! 11) outres)
+  hPutStrLn stderr $ "tmax=" ++(show $ maximum $ map (\xs -> xs !! 12) outres)
+  hPutStrLn stderr $ "vmax=" ++(show $ maximum $ map (\xs -> xs !! 13) outres)
+  hPutStrLn stderr $ "emax=" ++(show $ maximum $ map (\xs -> xs !! 14) outres)
   
 
 -- Formatiert eine Liste von Listen mit Doubles als Comma-separated values in einen String.
@@ -103,5 +117,5 @@ step (Pendulum phi1 phi1d p1 p1d phi2 phi2d p2 p2d) timeStep time
         pot1 = v1 phi1
         kin2 = t2 phi1 phi2 phi1d phi2d
         pot2 = v2 phi1 phi2
-    in  [phi1d, phi1, phi2d, phi2, p1d, p1, p2d, p2, kin1, pot1, kin2, pot2, (kin1+kin2), (pot1+pot2)] : (step (Pendulum phi1' phi1d' p1' p1d' phi2' phi2d' p2' p2d') timeStep (time-timeStep))
+    in  [phi1d, phi1, phi2d, phi2, p1d, p1, p2d, p2, kin1, pot1, kin2, pot2, (kin1+kin2), (pot1+pot2), (kin1+kin2+pot1+pot2)] : (step (Pendulum phi1' phi1d' p1' p1d' phi2' phi2d' p2' p2d') timeStep (time-timeStep))
 

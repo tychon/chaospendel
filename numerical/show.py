@@ -5,31 +5,64 @@ import os, sys, pygame, math, time, re
 from pygame.locals import *
 if not pygame.font: print 'Warning, fonts disabled'
 
+RED = (250, 0, 0)
+BLUE = (0, 0, 250)
+GREEN = (0, 250, 0)
+BARCOLOR = GREEN
+
 #classes for our game objects
 class Pendulum(pygame.sprite.Sprite):
-  def __init__(self, screen, l1, l2):
+  def __init__(self, rect, l1, l2):
     pygame.sprite.Sprite.__init__(self) #call Sprite initializer
-    self.screen = screen
-    self.image = pygame.Surface(screen.get_size())
-    self.rect = self.image.get_rect()
+    self.rect = rect
+    self.image = pygame.Surface((rect.width, rect.height))
     self.image.fill( (0, 0, 0) )
-    l = self.rect.width/2.0 * (4./5.)
+    l = rect.height/2.0 * (4./5.)
     self.l1 = l * (l1 / (l1+l2))
     self.l2 = l * (l2 / (l1+l2))
-    print l, self.l1, self.l2
   
   def setAngles(self, angles):
     self.angles = angles
   
   def update(self):
     self.image.fill( (0, 0, 0) )
-    middle = self.rect.width/2
+    middle = self.rect.height/2
     x1 = middle + self.l1 *  math.sin(self.angles[0])
     y1 = middle + self.l1 * -math.cos(self.angles[0])
     x2 = x1     + self.l2 *  math.sin(self.angles[1])
     y2 = y1     + self.l2 * -math.cos(self.angles[1])
-    pygame.draw.line(self.image, (250, 0, 0), (middle, middle), (x1, y1) )
-    pygame.draw.line(self.image, (250, 0, 0), (x1, y1), (x2, y2) )
+    pygame.draw.line(self.image, RED, (middle, middle), (x1, y1) )
+    pygame.draw.line(self.image, RED, (x1, y1), (x2, y2) )
+
+class Bar(pygame.sprite.Sprite):
+  def __init__(self, rect, minval, maxval, initval=0, fix=False, fixval=0):
+    pygame.sprite.Sprite.__init__(self)
+    self.rect = rect
+    self.image = pygame.Surface((rect.width, rect.height))
+    self.minval = minval
+    self.maxval = maxval
+    self.scale = self.rect.height / float(maxval-minval)
+    self.val = initval
+    self.fix = fix
+    self.fixval = fixval
+  
+  def set_value(self, val):
+    self.val = val
+  
+  def update(self):
+    self.image.fill( (0, 0, 0) )
+    if self.fix: fixpos = self.scale * (self.maxval - self.fixval)
+    else:            fixpos = self.scale * self.maxval
+    valpos = self.scale * (self.fixval - self.val)
+    pygame.draw.rect(self.image, BARCOLOR, pygame.Rect(0, fixpos, self.rect.width, valpos))
+    # blue zero line
+    zeropos = self.scale * self.maxval
+    pygame.draw.line(self.image, BLUE, (0, zeropos), (self.rect.width, zeropos))
+    # red fix line
+    pygame.draw.line(self.image, RED, (0, fixpos), (self.rect.width, fixpos))
+
+RECT_SIZE = 400
+ENERGY_WIDTH = 180
 
 def main():
   # read arguments
@@ -47,6 +80,8 @@ def main():
     print "Give me some project name!"
     exit(1)
   
+  
+  ################
   # open info file
   print "reading "+project_name+".info ..."
   infof = open(project_name+".info")
@@ -63,6 +98,20 @@ def main():
       elif res.group(1) == "time_step": time_step = float(res.group(2))
       elif res.group(1) == "l1": l1 = float(res.group(2))
       elif res.group(1) == "l2": l2 = float(res.group(2))
+      elif res.group(1) == "t1min": t1min = float(res.group(2))
+      elif res.group(1) == "v1min": v1min = float(res.group(2))
+      elif res.group(1) == "t2min": t2min = float(res.group(2))
+      elif res.group(1) == "v2min": v2min = float(res.group(2))
+      elif res.group(1) == "tmin":  tmin  = float(res.group(2))
+      elif res.group(1) == "vmin":  vmin  = float(res.group(2))
+      elif res.group(1) == "emin":  emin  = float(res.group(2))
+      elif res.group(1) == "t1max": t1max = float(res.group(2))
+      elif res.group(1) == "v1max": v1max = float(res.group(2))
+      elif res.group(1) == "t2max": t2max = float(res.group(2))
+      elif res.group(1) == "v2max": v2max = float(res.group(2))
+      elif res.group(1) == "tmax":  tmax  = float(res.group(2))
+      elif res.group(1) == "vmax":  vmax  = float(res.group(2))
+      elif res.group(1) == "emax":  emax  = float(res.group(2))
   print "estimated total time:", total_time
   print "optimal framerate:", opt_fps
   print "optimal time per frame:", time_step
@@ -78,25 +127,45 @@ def main():
   print "favoured framerate:", req_fps
   print "estimated time zoom:", req_fps/opt_fps
   
+  energymin = min(tmin, vmin, emin)
+  energymax = max(tmax, vmax, emax)
+  print "bar scale: min="+str(energymin)+" max="+str(energymax)
+  
+  ##############
+  ## read first line of csv data
+  ## This is needed for initializing the energy bars
+  print "opening "+project_name+".csv ..."
+  f = open(project_name+".csv")
+  numberstrs = f.readline().split(",")
+  if len(numberstrs[0]) is 0: return
+  data = [float(x) for x in numberstrs ]
+  
+  ##################
   #Initialize pygame
   pygame.init()
-  screen = pygame.display.set_mode((200, 200))
+  screen = pygame.display.set_mode((RECT_SIZE+ENERGY_WIDTH, RECT_SIZE))
   pygame.display.set_caption('Chaos')
   pygame.mouse.set_visible(0)
   font = pygame.font.Font(None, 18)
   #Prepare Game Objects
-  pend = Pendulum(screen, l1, l2)
-  allsprites = pygame.sprite.RenderPlain((pend))
+  pend = Pendulum(pygame.Rect(0, 0, RECT_SIZE, RECT_SIZE), l1, l2)
+  barnum = 7
+  t1bar = Bar(pygame.Rect(RECT_SIZE, 0, ENERGY_WIDTH/barnum, RECT_SIZE), energymin, energymax, fix=True, fixval=data[8])
+  v1bar = Bar(pygame.Rect(RECT_SIZE+ENERGY_WIDTH/barnum*3, 0, ENERGY_WIDTH/barnum, RECT_SIZE), energymin, energymax, fix=True, fixval=data[9])
+  t2bar = Bar(pygame.Rect(RECT_SIZE+ENERGY_WIDTH/barnum*1, 0, ENERGY_WIDTH/barnum, RECT_SIZE), energymin, energymax, fix=True, fixval=data[10])
+  v2bar = Bar(pygame.Rect(RECT_SIZE+ENERGY_WIDTH/barnum*4, 0, ENERGY_WIDTH/barnum, RECT_SIZE), energymin, energymax, fix=True, fixval=data[11])
+  tbar = Bar(pygame.Rect(RECT_SIZE+ENERGY_WIDTH/barnum*2, 0, ENERGY_WIDTH/barnum, RECT_SIZE), energymin, energymax, fix=True, fixval=data[12])
+  vbar = Bar(pygame.Rect(RECT_SIZE+ENERGY_WIDTH/barnum*5, 0, ENERGY_WIDTH/barnum, RECT_SIZE), energymin, energymax, fix=True, fixval=data[13])
+  ebar = Bar(pygame.Rect(RECT_SIZE+ENERGY_WIDTH/barnum*6, 0, ENERGY_WIDTH/barnum, RECT_SIZE), energymin, energymax, fix=True, fixval=data[14])
   
-  # open data file
-  print "opening "+project_name+".csv ..."
-  f = open(project_name+".csv")
+  allsprites = pygame.sprite.RenderPlain([pend, t1bar, v1bar, t2bar, v2bar, tbar, vbar, ebar])
   
+  ##########
+  #Main Loop
   artificial_time = 0.0
   real_time_start = time.time()
   frameTimes = []
   
-  #Main Loop
   runon = True
   while runon:
     loopstart = time.time()
@@ -112,8 +181,15 @@ def main():
     if len(numberstrs[0]) is 0:
       runon = False
       break
-    ang = [float(x) for x in numberstrs ]
-    pend.setAngles([ang[1], ang[3]])
+    data = [float(x) for x in numberstrs ]
+    pend.setAngles([data[1], data[3]])
+    t1bar.set_value(data[8]);
+    v1bar.set_value(data[9]);
+    t2bar.set_value(data[10]);
+    v2bar.set_value(data[11]);
+    tbar.set_value(data[12]);
+    vbar.set_value(data[13]);
+    ebar.set_value(data[14]);
     
     #Draw Everything
     allsprites.update()
