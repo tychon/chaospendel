@@ -4,6 +4,7 @@
 *.pyc
 
 *.csv
+*.info
 
 fftw/fourier
 numerical/main

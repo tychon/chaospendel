@@ -15,9 +15,9 @@ timestep = 0.001
 optFps = 1000
 
 -- Startbedingungen
-l1 = 1
-l2 = 1
-m1 = 1
+l1 = 4
+l2 = 3
+m1 = 2
 m2 = 1
 
 phi1_0 = (pi+0.01)
@@ -65,6 +65,8 @@ main = do
   hPutStrLn stderr $ "opt_fps       ="++(show optFps)
   hPutStrLn stderr $ "time_step     ="++(show (1/optFps))
   hPutStrLn stderr $ "frames_loss   ="++(show $ 1-optFps*timestep)
+  hPutStrLn stderr $ "l1="++(show l1)
+  hPutStrLn stderr $ "l2="++(show l2)
   let pend = Pendulum phi1_0 0 0 0 phi2_0 0 0 0
       fullres = step pend timestep time
       outres = every (fromIntegral $ toInteger $ ceiling ((1/timestep)/optFps)) fullres
