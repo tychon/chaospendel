@@ -118,14 +118,10 @@ int main(int argc, char** argv) {
   double maxval = 0; // maximum value of doubles in result array
   // run fft
   while (1) {
-    for (int i = 0; i < window; i++) {
-      if (i == window-1) fprintf(stderr, "%f\n", fftwin[i]);
-      else fprintf(stderr, "%f,", fftwin[i]);
-    }
-    
     fftw_execute (plan_forward); // yeay!
     // copy and post process results
-    for (int i = 0; i < freqn; i++) {
+    result[resindex*freqn] = 0.0; // delete DC
+    for (int i = 1; i < freqn; i++) {
       result[resindex*freqn+i] =   (fftwout[i][0]/window)*(fftwout[i][0]/window)
                                  + (fftwout[i][1]/window)*(fftwout[i][1]/window);
       if (result[resindex*freqn+i] > maxval)
@@ -170,7 +166,7 @@ int main(int argc, char** argv) {
   }
   fprintf(f, "P2\n%d %d\n256\n", freqn, resindex);
   for (int res = 0; res < resindex; res++) {
-    for (int freq = freqn-1; freq >= 0; freq --) {
+    for (int freq = 0; freq < freqn; freq ++) {
       // ~70% of user time are spent in this fprintf() call - if the program becomes too slow,
       // optimize that
       fprintf(f, "%d ", (int)floor(result[res*freqn+freq] * (256/maxval)));

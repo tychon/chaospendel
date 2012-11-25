@@ -61,28 +61,35 @@ class Bar(pygame.sprite.Sprite):
     # red fix line
     pygame.draw.line(self.image, RED, (0, fixpos), (self.rect.width, fixpos))
 
-class Equalizer(pygame.sprite.Sprite):
+class Fourier2Show(pygame.sprite.Sprite):
   def __init__(self, rect, maxval):
     pygame.sprite.Sprite.__init__(self)
     self.rect = rect
     self.image = pygame.Surface((rect.width, rect.height))
     self.maxval = maxval
-    self.scale = rect.height / float(maxval)
-    self.values = [ 0 for i in range(rect.width) ]
+    self.scale = (rect.height/2) / float(maxval)
+    self.values2 = self.values1 = [ 0 for i in range(rect.width) ]
   
-  def set_values(self, vals):
-    self.values = vals
+  def set_values(self, vals1, vals2):
+    self.values1 = vals1
+    self.values2 = vals2
   
   def update(self):
     self.image.fill( (0, 0, 0) )
     xpos = 0
-    for val in self.values:
-      valy = self.rect.height-self.scale*val
-      pygame.draw.line(self.image, GREEN, (xpos, valy), (xpos, self.rect.height))
+    for val in self.values1:
+      valy = self.rect.height/2-self.scale*val
+      pygame.draw.line(self.image, GREEN, (xpos, valy), (xpos, self.rect.height/2))
       xpos += 1
+    xpos = 0
+    for val in self.values2:
+      valy = self.rect.height/2+self.scale*val
+      pygame.draw.line(self.image, GREEN, (xpos, self.rect.height/2), (xpos, valy))
+      xpos += 1
+    pygame.draw.line(self.image, BLUE, (0, self.rect.height/2), (self.rect.width, self.rect.height/2))
     
 
-RECT_SIZE = 400
+RECT_SIZE = 500
 ENERGY_WIDTH = 100
 
 def main():
@@ -170,21 +177,25 @@ def main():
   if fourier_window > 0:
     # Read first lines of pgm file
     # to initialize equalizer
-    print "opening "+project_name+".pgm ..."
-    pgmf = open(project_name+".pgm")
-    [ppmfmt] = pgmf.readline().split()
-    if (ppmfmt != "P2"):
-      print "Invalid PPM format (expected P2): \""+ppmfmt+"\""
-      exit(1)
+    print "opening "+project_name+".pend1.pgm ..."
+    pgmf = open(project_name+".pend1.pgm")
+    pgmf.readline() # skip first line
     pgmrow = pgmf.readline().split()
-    if len(pgmrow[0]) is 0: return
     [fourier_freqn, fourier_rows] = [int(x) for x in pgmrow]
     [pgmmax] = pgmf.readline().split()
     pgmmax = int(pgmmax)
+    pgmf2 = open(project_name+".pend2.pgm")
+    pgmf2.readline() # skip first line
+    pgmf2.readline() # skip second line
+    [pgmmax2] = pgmf2.readline().split() # read out third line
+    pgmmax2 = int(pgmmax2)
+    pgmmax = max(pgmmax, pgmmax2)
     print "fourier window:", fourier_window
     print "fourier maximum value: "+str(pgmmax/fourier_scale)
     print "number of fourier samples: "+str(fourier_rows)
     print "number of frequ in 1 sample: "+str(fourier_freqn)
+    print "opening "+project_name+".pend2.pgm ..."
+  else: fourier_freqn = 0
   
   ##################
   #Initialize pygame
@@ -203,8 +214,8 @@ def main():
   tbar = Bar(pygame.Rect(RECT_SIZE+ENERGY_WIDTH/barnum*2, 0, ENERGY_WIDTH/barnum, RECT_SIZE), energymin, energymax, fix=True, fixval=data[12])
   vbar = Bar(pygame.Rect(RECT_SIZE+ENERGY_WIDTH/barnum*5, 0, ENERGY_WIDTH/barnum, RECT_SIZE), energymin, energymax, fix=True, fixval=data[13])
   ebar = Bar(pygame.Rect(RECT_SIZE+ENERGY_WIDTH/barnum*6, 0, ENERGY_WIDTH/barnum, RECT_SIZE), energymin, energymax, fix=True, fixval=data[14])
-  equalizer = Equalizer(pygame.Rect(RECT_SIZE+ENERGY_WIDTH, 0, fourier_freqn, RECT_SIZE), pgmmax)
-  allsprites = pygame.sprite.RenderPlain([pend, t1bar, v1bar, t2bar, v2bar, tbar, vbar, ebar, equalizer])
+  fouriershow = Fourier2Show(pygame.Rect(RECT_SIZE+ENERGY_WIDTH, 0, fourier_freqn, RECT_SIZE), pgmmax)
+  allsprites = pygame.sprite.RenderPlain([pend, t1bar, v1bar, t2bar, v2bar, tbar, vbar, ebar, fouriershow])
   
   ##########
   #Main Loop
@@ -243,13 +254,12 @@ def main():
     if fourier_window > 0:
       if samplenum > fourier_window/2 and fouriersampnum < fourier_rows:
         numberstrs = pgmf.readline().split()
-        if len(numberstrs[0]) is 0:
-          print "out of fourier samples!"
-          runon = False
-          break
-        data = [float(x) for x in numberstrs]
-        equalizer.set_values(data)
+        data1 = [float(x) for x in numberstrs]
+        numberstrs = pgmf2.readline().split()
+        data2 = [float(x) for x in numberstrs]
+        fouriershow.set_values(data1, data2)
         fouriersampnum += 1
+      else: fouriershow.set_values([0 for x in range(fourier_freqn)], [])
     
     
     #Draw Everything
