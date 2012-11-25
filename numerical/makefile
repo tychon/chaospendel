@@ -18,7 +18,7 @@ RungeKutta: RungeKutta.hs
 # run all the programms and scripts
 test: main fourier show.py
 	./main > out.csv 2> out.info
-	./fourier --inputfile out.csv --samples `cat out.csv | wc -l` --window 512 --column 1 --projectfile out.info --outputfile out.pgm
+	./fourier --inputfile out.csv --samples `cat out.csv | wc -l` --window 1000 --column 1 --projectfile out.info --outputfile out.pgm 2> fftwin.csv
 	python show.py out
 
 # generate haskell doc

@@ -118,6 +118,11 @@ int main(int argc, char** argv) {
   double maxval = 0; // maximum value of doubles in result array
   // run fft
   while (1) {
+    for (int i = 0; i < window; i++) {
+      if (i == window-1) fprintf(stderr, "%f\n", fftwin[i]);
+      else fprintf(stderr, "%f,", fftwin[i]);
+    }
+    
     fftw_execute (plan_forward); // yeay!
     // copy and post process results
     for (int i = 0; i < freqn; i++) {
@@ -150,8 +155,10 @@ int main(int argc, char** argv) {
   // append some data to .info project file
   if (projectfilepath) {
     f = fopen(projectfilepath, "a+");
-    fprintf(f, "fourier_rows=%d\n", resindex);
-    fprintf(f, "fourier_freqn=%d\n", freqn);
+    fprintf(f, "fourier_window=%d\n", window);
+    //fprintf(f, "fourier_rows=%d\n", resindex);
+    //fprintf(f, "fourier_freqn=%d\n", freqn);
+    fprintf(f, "fourier_pgm_scaling=%f\n", 256/maxval);
     fclose(f);
   }
   
@@ -161,12 +168,12 @@ int main(int argc, char** argv) {
     printf("Could not write to file: %s\n", outputfilepath);
     return -1;
   }
-  fprintf(f, "P2\n%d %d\n256\n", resindex, freqn);
-  for (int i = 0; i < resindex; i++) {
+  fprintf(f, "P2\n%d %d\n256\n", freqn, resindex);
+  for (int res = 0; res < resindex; res++) {
     for (int freq = freqn-1; freq >= 0; freq --) {
       // ~70% of user time are spent in this fprintf() call - if the program becomes too slow,
       // optimize that
-      fprintf(f, "%d ", (int)floor(result[i*freqn+freq] * (255/maxval)));
+      fprintf(f, "%d ", (int)floor(result[res*freqn+freq] * (256/maxval)));
     }
     fprintf(f, "\n");
   }
