@@ -10,25 +10,31 @@
 // TAU is 2*PI
 #define TAU 6.283185307179586476925286766559005768394338
 
-char *parseBuffer;
-double *parseCSVLine(FILE *f, double *res) {
-  if (! parseBuffer) parseBuffer = malloc(1000);
-  fgets(parseBuffer, 1000, f);
+// returns whether the correct amount of data was parsed
+int parseCSVLine(FILE *f, double *res, int columns) {
+  char buf[1000];
+  if (fgets(buf, 1000, f) == NULL) {
+    return -2; // real error
+  }
   
-  char *numstart = parseBuffer;
-  char *current  = parseBuffer;
-  int stop = 0;
+  char *strtok_buf = buf;
+  char *p = buf;
   int resindex = 0;
-  while (1) {
-    if (*current == ',' || *current == '\0') {
-      if (*current == '\0') stop = 1;
-      *current = '\0';
-      res[resindex] = strtod(numstart, NULL);
-      resindex ++;
-      if (stop) break;
-      else numstart = current+1;
+  while ((p = strtok(strtok_buf, ",")) != NULL) {
+    strtok_buf = NULL;
+    if (resindex == columns) return 1; // no more space in res
+    char *endptr;
+    res[resindex++] = strtod(p, &endptr);
+    if (endptr == p) {
+      fprintf(stderr, "WARNING: unparseable number!\n");
+    } else if (*endptr != 0) {
+      fprintf(stderr, "WARNING: can't parse the whole number!\n");
     }
-    current ++;
+  }
+  if (resindex == columns) {
+    return 0; // everything fine
+  } else {
+    return -1; // didn't parse exactly "columns" rows
   }
 }
 
@@ -89,10 +95,13 @@ int main(int argc, char** argv) {
   fftw_plan plan_forward = fftw_plan_dft_r2c_1d(window, fftwin, fftwout, FFTW_ESTIMATE);
   
   // initial filling of input array
-  double *numbers = malloc(sizeof(double) * (column+1));
+  double numbers[column+1];
   int samplecount = 0;
   for (int i = 0; i < window; i++) {
-    parseCSVLine(f, numbers);
+    if (parseCSVLine(f, numbers, column+1) < 0) {
+      fprintf(stderr, "parseCSVLine returned an error!\n");
+      return 1;
+    }
     fftwin[i] = numbers[column];
     samplecount ++;
     if (feof(f)) return 1; // mhhh, this should NOT happen
@@ -122,7 +131,10 @@ int main(int argc, char** argv) {
     // aaargghh: shift every number one field left (but: O(n))
     for (int i = 0; i < window-1; i++) fftwin[i] = fftwin[i+1];
     // read next csv line
-    parseCSVLine(f, numbers);
+    if (parseCSVLine(f, numbers, column+1) < 0) {
+      fprintf(stderr, "parseCSVLine returned an error!\n");
+      return 1;
+    }
     samplecount ++;
     fftwin[window-1] = numbers[column];
   }
