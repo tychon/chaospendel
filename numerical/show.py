@@ -61,8 +61,29 @@ class Bar(pygame.sprite.Sprite):
     # red fix line
     pygame.draw.line(self.image, RED, (0, fixpos), (self.rect.width, fixpos))
 
+class Equalizer(pygame.sprite.Sprite):
+  def __init__(self, rect, maxval):
+    pygame.sprite.Sprite.__init__(self)
+    self.rect = rect
+    self.image = pygame.Surface((rect.width, rect.height))
+    self.maxval = maxval
+    self.scale = rect.height / float(maxval)
+    self.values = [ 0 for i in range(rect.width) ]
+  
+  def set_values(self, vals):
+    self.values = vals
+  
+  def update(self):
+    self.image.fill( (0, 0, 0) )
+    xpos = 0
+    for val in self.values:
+      valy = self.rect.height-self.scale*val
+      pygame.draw.line(self.image, GREEN, (xpos, valy), (xpos, self.rect.height))
+      xpos += 1
+    
+
 RECT_SIZE = 400
-ENERGY_WIDTH = 180
+ENERGY_WIDTH = 100
 
 def main():
   # read arguments
@@ -90,6 +111,8 @@ def main():
   time_step = -1 # This should be 1/opt_fps
   l1 = -1 # Length of first pendulum
   l2 = -1 # Length of second pendulum
+  fourier_rows = 0 # number of rows in pgm file
+  fourier_window = -1 # size of fourier window
   for line in infof:
     res = re.match(r"\s*(\S+)\s*=\s*(\S+)", line)
     if res:
@@ -112,6 +135,9 @@ def main():
       elif res.group(1) == "tmax":  tmax  = float(res.group(2))
       elif res.group(1) == "vmax":  vmax  = float(res.group(2))
       elif res.group(1) == "emax":  emax  = float(res.group(2))
+      elif res.group(1) == "fourier_window": fourier_window  = float(res.group(2))
+      elif res.group(1) == "fourier_pgm_scaling": fourier_scale  = float(res.group(2))
+  infof.close()
   print "estimated total time:", total_time
   print "optimal framerate:", opt_fps
   print "optimal time per frame:", time_step
@@ -135,15 +161,35 @@ def main():
   ## read first line of csv data
   ## This is needed for initializing the energy bars
   print "opening "+project_name+".csv ..."
-  f = open(project_name+".csv")
-  numberstrs = f.readline().split(",")
+  csvf = open(project_name+".csv")
+  numberstrs = csvf.readline().split(",")
   if len(numberstrs[0]) is 0: return
   data = [float(x) for x in numberstrs ]
+  
+  ##############################
+  if fourier_window > 0:
+    # Read first lines of pgm file
+    # to initialize equalizer
+    print "opening "+project_name+".pgm ..."
+    pgmf = open(project_name+".pgm")
+    [ppmfmt] = pgmf.readline().split()
+    if (ppmfmt != "P2"):
+      print "Invalid PPM format (expected P2): \""+ppmfmt+"\""
+      exit(1)
+    pgmrow = pgmf.readline().split()
+    if len(pgmrow[0]) is 0: return
+    [fourier_freqn, fourier_rows] = [int(x) for x in pgmrow]
+    [pgmmax] = pgmf.readline().split()
+    pgmmax = int(pgmmax)
+    print "fourier window:", fourier_window
+    print "fourier maximum value: "+str(pgmmax/fourier_scale)
+    print "number of fourier samples: "+str(fourier_rows)
+    print "number of frequ in 1 sample: "+str(fourier_freqn)
   
   ##################
   #Initialize pygame
   pygame.init()
-  screen = pygame.display.set_mode((RECT_SIZE+ENERGY_WIDTH, RECT_SIZE))
+  screen = pygame.display.set_mode((RECT_SIZE+ENERGY_WIDTH+fourier_freqn, RECT_SIZE))
   pygame.display.set_caption('Chaos')
   #pygame.mouse.set_visible(0)
   font = pygame.font.Font(None, 18)
@@ -157,14 +203,16 @@ def main():
   tbar = Bar(pygame.Rect(RECT_SIZE+ENERGY_WIDTH/barnum*2, 0, ENERGY_WIDTH/barnum, RECT_SIZE), energymin, energymax, fix=True, fixval=data[12])
   vbar = Bar(pygame.Rect(RECT_SIZE+ENERGY_WIDTH/barnum*5, 0, ENERGY_WIDTH/barnum, RECT_SIZE), energymin, energymax, fix=True, fixval=data[13])
   ebar = Bar(pygame.Rect(RECT_SIZE+ENERGY_WIDTH/barnum*6, 0, ENERGY_WIDTH/barnum, RECT_SIZE), energymin, energymax, fix=True, fixval=data[14])
-  
-  allsprites = pygame.sprite.RenderPlain([pend, t1bar, v1bar, t2bar, v2bar, tbar, vbar, ebar])
+  equalizer = Equalizer(pygame.Rect(RECT_SIZE+ENERGY_WIDTH, 0, fourier_freqn, RECT_SIZE), pgmmax)
+  allsprites = pygame.sprite.RenderPlain([pend, t1bar, v1bar, t2bar, v2bar, tbar, vbar, ebar, equalizer])
   
   ##########
   #Main Loop
   artificial_time = 0.0
   real_time_start = time.time()
   frameTimes = []
+  samplenum = 0
+  fouriersampnum = 0
   
   runon = True
   while runon:
@@ -176,8 +224,8 @@ def main():
         print "User input causing QUIT."
         runon = False
     
-    # load line from file
-    numberstrs = f.readline().split(",")
+    # load line from csv file
+    numberstrs = csvf.readline().split(",")
     if len(numberstrs[0]) is 0:
       runon = False
       break
@@ -190,6 +238,19 @@ def main():
     tbar.set_value(data[12]);
     vbar.set_value(data[13]);
     ebar.set_value(data[14]);
+    samplenum += 1
+    # load line from pgm file
+    if fourier_window > 0:
+      if samplenum > fourier_window/2 and fouriersampnum < fourier_rows:
+        numberstrs = pgmf.readline().split()
+        if len(numberstrs[0]) is 0:
+          print "out of fourier samples!"
+          runon = False
+          break
+        data = [float(x) for x in numberstrs]
+        equalizer.set_values(data)
+        fouriersampnum += 1
+    
     
     #Draw Everything
     allsprites.update()
@@ -210,6 +271,9 @@ def main():
     
     if len(frameTimes) > 30: frameTimes.pop()
     frameTimes.insert(0, time.time() - loopstart)
+  
+  csvf.close()
+  pgmf.close()
 
 #this calls the 'main' function when this script is executed
 if __name__ == '__main__': main()
