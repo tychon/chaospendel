@@ -145,7 +145,7 @@ def main():
   pygame.init()
   screen = pygame.display.set_mode((RECT_SIZE+ENERGY_WIDTH, RECT_SIZE))
   pygame.display.set_caption('Chaos')
-  pygame.mouse.set_visible(0)
+  #pygame.mouse.set_visible(0)
   font = pygame.font.Font(None, 18)
   #Prepare Game Objects
   pend = Pendulum(pygame.Rect(0, 0, RECT_SIZE, RECT_SIZE), l1, l2)

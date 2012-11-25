@@ -1,5 +1,4 @@
 
-
 ----------------
 -- prerequisites
 import System.IO
@@ -20,7 +19,7 @@ l2 = 3
 m1 = 2
 m2 = 1
 
-phi1_0 = (pi+0.1)
+phi1_0 = (pi+0.01)
 phi2_0 = (pi)
 
 k1 = (1/3) * l1^2 * m1

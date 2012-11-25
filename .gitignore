@@ -5,9 +5,11 @@
 
 *.csv
 *.info
+*.pgm
 
 fftw/fourier
 numerical/main
+numerical/fourier
 numerical/doc/
 wikihaskell/main
 fftw/*.png
