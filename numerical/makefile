@@ -3,7 +3,7 @@ main: main.hs RungeKutta.hs
 	ghc --make main -o main
 
 fourier: fourier.c
-	gcc -g -std=c99 -o fourier fourier.c -lfftw3 -lm
+	gcc -g -std=gnu99 -Wall -Werror -o fourier fourier.c -lfftw3 -lm
 
 RungeKutta: RungeKutta.hs 
 	ghc --make RungeKutta.hs
