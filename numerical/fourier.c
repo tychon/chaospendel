@@ -44,6 +44,7 @@ int main(int argc, char** argv) {
   int samples = -1;
   char* inputfilepath = NULL;
   char* outputfilepath = NULL;
+  char* projectfilepath = NULL;
   // with default values
   int window = 512;
   int column = 0;
@@ -56,6 +57,10 @@ int main(int argc, char** argv) {
     else if (strcmp("--inputfile", argv[i]) == 0) {
       i ++;
       inputfilepath = argv[i];
+    }
+    else if (strcmp("--projectfile", argv[i]) == 0) {
+      i ++;
+      projectfilepath = argv[i];
     }
     else if (strcmp("--column", argv[i]) == 0) {
       i ++;
@@ -141,6 +146,14 @@ int main(int argc, char** argv) {
   fclose(f);
   
   printf("I read %d samples and have %d fourier transform results.\n", samplecount, resindex);
+  
+  // append some data to .info project file
+  if (projectfilepath) {
+    f = fopen(projectfilepath, "a+");
+    fprintf(f, "fourier_rows=%d\n", resindex);
+    fprintf(f, "fourier_freqn=%d\n", freqn);
+    fclose(f);
+  }
   
   // write pgm file
   f = fopen(outputfilepath, "w");
