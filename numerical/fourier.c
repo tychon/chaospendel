@@ -151,6 +151,8 @@ int main(int argc, char** argv) {
   fprintf(f, "P2\n%d %d\n256\n", resindex, freqn);
   for (int i = 0; i < resindex; i++) {
     for (int freq = freqn-1; freq >= 0; freq --) {
+      // ~70% of user time are spent in this fprintf() call - if the program becomes too slow,
+      // optimize that
       fprintf(f, "%d ", (int)floor(result[i*freqn+freq] * (255/maxval)));
     }
     fprintf(f, "\n");
