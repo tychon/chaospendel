@@ -209,13 +209,13 @@ def main():
   #Prepare Game Objects
   pend = Pendulum(pygame.Rect(0, 0, RECT_SIZE, RECT_SIZE), l1, l2)
   barnum = 7
-  t1bar = Bar(pygame.Rect(RECT_SIZE, 0, ENERGY_WIDTH/barnum, RECT_SIZE), energymin, energymax, fix=True, fixval=data[8])
-  v1bar = Bar(pygame.Rect(RECT_SIZE+ENERGY_WIDTH/barnum*3, 0, ENERGY_WIDTH/barnum, RECT_SIZE), energymin, energymax, fix=True, fixval=data[9])
-  t2bar = Bar(pygame.Rect(RECT_SIZE+ENERGY_WIDTH/barnum*1, 0, ENERGY_WIDTH/barnum, RECT_SIZE), energymin, energymax, fix=True, fixval=data[10])
-  v2bar = Bar(pygame.Rect(RECT_SIZE+ENERGY_WIDTH/barnum*4, 0, ENERGY_WIDTH/barnum, RECT_SIZE), energymin, energymax, fix=True, fixval=data[11])
-  tbar = Bar(pygame.Rect(RECT_SIZE+ENERGY_WIDTH/barnum*2, 0, ENERGY_WIDTH/barnum, RECT_SIZE), energymin, energymax, fix=True, fixval=data[12])
-  vbar = Bar(pygame.Rect(RECT_SIZE+ENERGY_WIDTH/barnum*5, 0, ENERGY_WIDTH/barnum, RECT_SIZE), energymin, energymax, fix=True, fixval=data[13])
-  ebar = Bar(pygame.Rect(RECT_SIZE+ENERGY_WIDTH/barnum*6, 0, ENERGY_WIDTH/barnum, RECT_SIZE), energymin, energymax, fix=True, fixval=data[14])
+  t1bar = Bar(pygame.Rect(RECT_SIZE, 0, ENERGY_WIDTH/barnum, RECT_SIZE), energymin, energymax, fix=True, fixval=data[4])
+  v1bar = Bar(pygame.Rect(RECT_SIZE+ENERGY_WIDTH/barnum*3, 0, ENERGY_WIDTH/barnum, RECT_SIZE), energymin, energymax, fix=True, fixval=data[5])
+  t2bar = Bar(pygame.Rect(RECT_SIZE+ENERGY_WIDTH/barnum*1, 0, ENERGY_WIDTH/barnum, RECT_SIZE), energymin, energymax, fix=True, fixval=data[6])
+  v2bar = Bar(pygame.Rect(RECT_SIZE+ENERGY_WIDTH/barnum*4, 0, ENERGY_WIDTH/barnum, RECT_SIZE), energymin, energymax, fix=True, fixval=data[7])
+  tbar = Bar(pygame.Rect(RECT_SIZE+ENERGY_WIDTH/barnum*2, 0, ENERGY_WIDTH/barnum, RECT_SIZE), energymin, energymax, fix=True, fixval=data[8])
+  vbar = Bar(pygame.Rect(RECT_SIZE+ENERGY_WIDTH/barnum*5, 0, ENERGY_WIDTH/barnum, RECT_SIZE), energymin, energymax, fix=True, fixval=data[9])
+  ebar = Bar(pygame.Rect(RECT_SIZE+ENERGY_WIDTH/barnum*6, 0, ENERGY_WIDTH/barnum, RECT_SIZE), energymin, energymax, fix=True, fixval=data[10])
   spritelist = [pend, t1bar, v1bar, t2bar, v2bar, tbar, vbar, ebar]
   if fourier_window > 0:
     fouriershow = Fourier2Show(pygame.Rect(RECT_SIZE+ENERGY_WIDTH, 0, fourier_freqn, RECT_SIZE), pgmmax)
@@ -248,13 +248,13 @@ def main():
       break
     data = [float(x) for x in numberstrs ]
     pend.setAngles([data[1], data[3]])
-    t1bar.set_value(data[8]);
-    v1bar.set_value(data[9]);
-    t2bar.set_value(data[10]);
-    v2bar.set_value(data[11]);
-    tbar.set_value(data[12]);
-    vbar.set_value(data[13]);
-    ebar.set_value(data[14]);
+    t1bar.set_value(data[4]);
+    v1bar.set_value(data[5]);
+    t2bar.set_value(data[6]);
+    v2bar.set_value(data[7]);
+    tbar.set_value(data[8]);
+    vbar.set_value(data[9]);
+    ebar.set_value(data[10]);
     samplenum += 1
     # load line from pgm file
     if fourier_window > 0:

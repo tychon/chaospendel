@@ -2,6 +2,7 @@
 ----------------
 -- prerequisites
 import System.IO
+import System.Exit
 import System.Environment
 import Data.List.Split
 import RungeKutta
@@ -11,8 +12,8 @@ import RungeKutta
 g = -9.81
 -- Andere Konstanten
 time = 120.0
-timestep = 0.0001
-optFps = 80
+timestep = 0.001
+optFps = 60
 
 -- Startbedingungen
 l1 = 4
@@ -20,7 +21,7 @@ l2 = 3
 m1 = 2
 m2 = 1
 
-phi1_0 = (pi+0.1)
+phi1_0 = (pi+0.01)
 phi2_0 = (pi)
 
 k1 = (1/3) * l1^2 * m1
@@ -30,10 +31,10 @@ k4 = (1/3) * l2^2 * m2
 k5 = (1/2) * l2   * m2
 
 -- Differentialgleichungen
-fphi1 phi1 phi2 p1 p2 = (k4*p1-k5*l1*(sin (phi1-phi2))*p2) / (k1*k4+l1*(k3*k4-k5^2*l1*(sin (phi1-phi2))*(cos (phi1-phi2))))
-fphi2 phi1 phi2 p1 p2 = (k1*p2+(k3*p2-k5*p1*(cos (phi1-phi2)))*l1) / (k1*k4+l1*(k3*k4-k5^2*l1*(sin (phi1-phi2))*(cos (phi1-phi2))))
-fp1 phi1 phi2 p1 p2 = -l1*(fphi1 phi1 phi2 p1 p2)*(fphi2 phi1 phi2 p1 p2)*k5*(sin (phi1-phi2)) - g*k2*(sin phi1) - g*l1*k3*(sin phi1)
-fp2 phi1 phi2 p1 p2 = -l1*(fphi1 phi1 phi2 p1 p2)*(fphi2 phi1 phi2 p1 p2)*k5*(sin (phi1-phi2)) - g*k5*(sin phi2)
+fphi1 (phi1:phi2:p1:p2:_) = (k4*p1-k5*l1*(sin (phi1-phi2))*p2) / (k1*k4+l1*(k3*k4-k5^2*l1*(sin (phi1-phi2))*(cos (phi1-phi2))))
+fphi2 (phi1:phi2:p1:p2:_) = (k1*p2+(k3*p2-k5*p1*(cos (phi1-phi2)))*l1) / (k1*k4+l1*(k3*k4-k5^2*l1*(sin (phi1-phi2))*(cos (phi1-phi2))))
+fp1 input@(phi1:phi2:p1:p2:_) = -l1*(fphi1 input)*(fphi2 input)*k5*(sin (phi1-phi2)) - g*k2*(sin phi1) - g*l1*k3*(sin phi1)
+fp2 input@(phi1:phi2:p1:p2:_) = -l1*(fphi1 input)*(fphi2 input)*k5*(sin (phi1-phi2)) - g*k5*(sin phi2)
 
 -- energies
 t1 phi1' = (1/2) * phi1'^2 * k1
@@ -44,13 +45,9 @@ v2 phi1 phi2 = (-g) * l1 * k3 * (cos phi1) - g * k5 * (cos phi2)
 -- Data structure for Pendulum:
 data Pendulum = Pendulum {
   getPhi1     :: Double, -- Auslenkung 1 als Winkel
-  getPhi1Diff :: Double,
-  getP1     :: Double,
-  getP1Diff :: Double,
   getPhi2     :: Double, -- Auslenkung 2 als Winkel
-  getPhi2Diff :: Double,
-  getP2     :: Double,
-  getP2Diff :: Double
+  getP1     :: Double,
+  getP2     :: Double
 } deriving (Read, Show)
 
 -------
@@ -65,25 +62,25 @@ main = do
   hPutStrLn stderr $ "frames_loss   ="++(show $ 1-optFps*timestep)
   hPutStrLn stderr $ "l1="++(show l1)
   hPutStrLn stderr $ "l2="++(show l2)
-  let pend = Pendulum phi1_0 0 0 0 phi2_0 0 0 0
+  let pend = Pendulum phi1_0 phi2_0 0 0
       fullres = step pend timestep time
       outres = every (fromIntegral $ toInteger $ ceiling ((1/timestep)/optFps)) fullres
   putStr . formatCSV $ outres
-  hPutStrLn stderr $ "t1min="++(show $ minimum $ map (\xs -> xs !! 8) outres)
-  hPutStrLn stderr $ "v1min="++(show $ minimum $ map (\xs -> xs !! 9) outres)
-  hPutStrLn stderr $ "t2min="++(show $ minimum $ map (\xs -> xs !! 10) outres)
-  hPutStrLn stderr $ "v2min="++(show $ minimum $ map (\xs -> xs !! 11) outres)
-  hPutStrLn stderr $ "tmin=" ++(show $ minimum $ map (\xs -> xs !! 12) outres)
-  hPutStrLn stderr $ "vmin=" ++(show $ minimum $ map (\xs -> xs !! 13) outres)
-  hPutStrLn stderr $ "emin=" ++(show $ minimum $ map (\xs -> xs !! 14) outres)
-  hPutStrLn stderr $ "t1max="++(show $ maximum $ map (\xs -> xs !! 8) outres)
-  hPutStrLn stderr $ "v1max="++(show $ maximum $ map (\xs -> xs !! 9) outres)
-  hPutStrLn stderr $ "t2max="++(show $ maximum $ map (\xs -> xs !! 10) outres)
-  hPutStrLn stderr $ "v2max="++(show $ maximum $ map (\xs -> xs !! 11) outres)
-  hPutStrLn stderr $ "tmax=" ++(show $ maximum $ map (\xs -> xs !! 12) outres)
-  hPutStrLn stderr $ "vmax=" ++(show $ maximum $ map (\xs -> xs !! 13) outres)
-  hPutStrLn stderr $ "emax=" ++(show $ maximum $ map (\xs -> xs !! 14) outres)
-  
+  hPutStrLn stderr $ "t1min="++(show $ minimum $ map (\xs -> xs !! 4) outres)
+  hPutStrLn stderr $ "v1min="++(show $ minimum $ map (\xs -> xs !! 5) outres)
+  hPutStrLn stderr $ "t2min="++(show $ minimum $ map (\xs -> xs !! 6) outres)
+  hPutStrLn stderr $ "v2min="++(show $ minimum $ map (\xs -> xs !! 7) outres)
+  hPutStrLn stderr $ "tmin=" ++(show $ minimum $ map (\xs -> xs !! 8) outres)
+  hPutStrLn stderr $ "vmin=" ++(show $ minimum $ map (\xs -> xs !! 9) outres)
+  hPutStrLn stderr $ "emin=" ++(show $ minimum $ map (\xs -> xs !! 10) outres)
+  hPutStrLn stderr $ "t1max="++(show $ maximum $ map (\xs -> xs !! 4) outres)
+  hPutStrLn stderr $ "v1max="++(show $ maximum $ map (\xs -> xs !! 5) outres)
+  hPutStrLn stderr $ "t2max="++(show $ maximum $ map (\xs -> xs !! 6) outres)
+  hPutStrLn stderr $ "v2max="++(show $ maximum $ map (\xs -> xs !! 7) outres)
+  hPutStrLn stderr $ "tmax=" ++(show $ maximum $ map (\xs -> xs !! 8) outres)
+  hPutStrLn stderr $ "vmax=" ++(show $ maximum $ map (\xs -> xs !! 9) outres)
+  hPutStrLn stderr $ "emax=" ++(show $ maximum $ map (\xs -> xs !! 10) outres)
+  exitWith ExitSuccess
 
 -- Formatiert eine Liste von Listen mit Doubles als Comma-separated values in einen String.
 formatCSV :: [[Double]] -> String
@@ -100,21 +97,15 @@ toDeg :: Double -> Double
 toDeg = (180/pi *)
 
 step :: Pendulum -> Double -> Double -> [[Double]]
-step (Pendulum phi1 phi1d p1 p1d phi2 phi2d p2 p2d) timeStep time
+step (Pendulum phi1 phi2 p1 p2) timeStep time
   | time <= 0 = [] -- Abbruchbedingung fuer Rekursion
   | (isNaN phi1) || (isNaN phi2) || (isNaN p1) || (isNaN p2) || (isInfinite phi1) || (isInfinite phi2) || (isInfinite p1) || (isInfinite p2) = []
   | otherwise =
-    let phi1d' = fphi1 phi1 phi2 p1 p2
-        phi1'  = phi1 + phi1d' * timeStep
-        phi2d' = fphi2 phi1 phi2 p1 p2
-        phi2'  = phi2 + phi2d' * timeStep
-        p1d' = fp1 phi1 phi2 p1 p2
-        p1'  = p1 + p1d' * timeStep
-        p2d' = fp2 phi1 phi2 p1 p2
-        p2'  = p2 + p2d' * timeStep
-        kin1 = t1 phi1d
+    let input = [phi1, phi2, p1, p2]
+        kin1 = t1 $ fphi1 input
         pot1 = v1 phi1
-        kin2 = t2 phi1 phi2 phi1d phi2d
+        kin2 = t2 phi1 phi2 (fphi1 input) (fphi2 input)
         pot2 = v2 phi1 phi2
-    in  [phi1d, phi1, phi2d, phi2, p1d, p1, p2d, p2, kin1, pot1, kin2, pot2, (kin1+kin2), (pot1+pot2), (kin1+kin2+pot1+pot2)] : (step (Pendulum phi1' phi1d' p1' p1d' phi2' phi2d' p2' p2d') timeStep (time-timeStep))
+        (phi1':phi2':p1':p2':_) = multiRungeKuttaStep [fphi1, fphi2, fp1, fp2] input timeStep
+    in  [phi1, phi2, p1, p2, kin1, pot1, kin2, pot2, (kin1+kin2), (pot1+pot2), (kin1+kin2+pot1+pot2)] : (step (Pendulum phi1' phi2' p1' p2') timeStep (time-timeStep))
 
