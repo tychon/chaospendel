@@ -4,12 +4,13 @@
 import System.IO
 import System.Environment
 import Data.List.Split
+import RungeKutta
 
 -- Naturkonstante:
 -- Durchschnittliche Ortskraft in Mitteleuropa.
 g = -9.81
 -- Andere Konstanten
-time = 60.0
+time = 120.0
 timestep = 0.0001
 optFps = 80
 
@@ -19,7 +20,7 @@ l2 = 3
 m1 = 2
 m2 = 1
 
-phi1_0 = (pi+0.01)
+phi1_0 = (pi+0.1)
 phi2_0 = (pi)
 
 k1 = (1/3) * l1^2 * m1
@@ -29,12 +30,10 @@ k4 = (1/3) * l2^2 * m2
 k5 = (1/2) * l2   * m2
 
 -- Differentialgleichungen
-fphi1 p1 phi2 phi1d phi2d phi1 = ((-1)*k5*l1*(cos (phi1-phi2))*phi2d + p1)
-                                 / (k1 + k3*l1)
-fphi2 p2 phi1 phi1d phi2d phi2 = ((-1)*k5*l1*(cos (phi1-phi2))*phi1d + p2) / k4
-fp1 phi1 phi2 phi1d phi2d = (-1)*k5*l1*phi1d*phi2d*(sin (phi1-phi2))
-                               - g*k2*(sin phi1)- l1*g*k3*(sin phi1)
-fp2 phi1 phi2 phi1d phi2d = k5*l1*phi1d*phi2d*(sin (phi2-phi2)) - g*k5*(sin phi2)
+fphi1 phi1 phi2 p1 p2 = (k4*p1-k5*l1*(sin (phi1-phi2))*p2) / (k1*k4+l1*(k3*k4-k5^2*l1*(sin (phi1-phi2))*(cos (phi1-phi2))))
+fphi2 phi1 phi2 p1 p2 = (k1*p2+(k3*p2-k5*p1*(cos (phi1-phi2)))*l1) / (k1*k4+l1*(k3*k4-k5^2*l1*(sin (phi1-phi2))*(cos (phi1-phi2))))
+fp1 phi1 phi2 p1 p2 = -l1*(fphi1 phi1 phi2 p1 p2)*(fphi2 phi1 phi2 p1 p2)*k5*(sin (phi1-phi2)) - g*k2*(sin phi1) - g*l1*k3*(sin phi1)
+fp2 phi1 phi2 p1 p2 = -l1*(fphi1 phi1 phi2 p1 p2)*(fphi2 phi1 phi2 p1 p2)*k5*(sin (phi1-phi2)) - g*k5*(sin phi2)
 
 -- energies
 t1 phi1' = (1/2) * phi1'^2 * k1
@@ -103,14 +102,15 @@ toDeg = (180/pi *)
 step :: Pendulum -> Double -> Double -> [[Double]]
 step (Pendulum phi1 phi1d p1 p1d phi2 phi2d p2 p2d) timeStep time
   | time <= 0 = [] -- Abbruchbedingung fuer Rekursion
+  | (isNaN phi1) || (isNaN phi2) = []
   | otherwise =
-    let phi1d' = fphi1 p1 phi2 phi1d phi2d phi1
+    let phi1d' = fphi1 phi1 phi2 p1 p2
         phi1'  = phi1 + phi1d' * timeStep
-        phi2d' = fphi2 p2 phi1 phi1d phi2d phi2
+        phi2d' = fphi2 phi1 phi2 p1 p2
         phi2'  = phi2 + phi2d' * timeStep
-        p1d' = fp1 phi1 phi2 phi1d phi2d
+        p1d' = fp1 phi1 phi2 p1 p2
         p1'  = p1 + p1d' * timeStep
-        p2d' = fp2 phi1 phi2 phi1d phi2d
+        p2d' = fp2 phi1 phi2 p1 p2
         p2'  = p2 + p2d' * timeStep
         kin1 = t1 phi1d
         pot1 = v1 phi1
