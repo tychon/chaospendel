@@ -159,7 +159,7 @@ def main():
     req_fps = opt_fps
   
   print "favoured framerate:", req_fps
-  print "estimated time zoom:", req_fps/opt_fps
+  print "estimated time scale:", req_fps/opt_fps
   
   energymin = min(tmin, vmin, emin)
   energymax = max(tmax, vmax, emax)
@@ -215,8 +215,11 @@ def main():
   tbar = Bar(pygame.Rect(RECT_SIZE+ENERGY_WIDTH/barnum*2, 0, ENERGY_WIDTH/barnum, RECT_SIZE), energymin, energymax, fix=True, fixval=data[12])
   vbar = Bar(pygame.Rect(RECT_SIZE+ENERGY_WIDTH/barnum*5, 0, ENERGY_WIDTH/barnum, RECT_SIZE), energymin, energymax, fix=True, fixval=data[13])
   ebar = Bar(pygame.Rect(RECT_SIZE+ENERGY_WIDTH/barnum*6, 0, ENERGY_WIDTH/barnum, RECT_SIZE), energymin, energymax, fix=True, fixval=data[14])
-  fouriershow = Fourier2Show(pygame.Rect(RECT_SIZE+ENERGY_WIDTH, 0, fourier_freqn, RECT_SIZE), pgmmax)
-  allsprites = pygame.sprite.RenderPlain([pend, t1bar, v1bar, t2bar, v2bar, tbar, vbar, ebar, fouriershow])
+  spritelist = [pend, t1bar, v1bar, t2bar, v2bar, tbar, vbar, ebar]
+  if fourier_window > 0:
+    fouriershow = Fourier2Show(pygame.Rect(RECT_SIZE+ENERGY_WIDTH, 0, fourier_freqn, RECT_SIZE), pgmmax)
+    spritelist.append(fourier_window)
+  allsprites = pygame.sprite.RenderPlain(spritelist)
   
   ##########
   #Main Loop
@@ -284,7 +287,7 @@ def main():
     frameTimes.insert(0, time.time() - loopstart)
   
   csvf.close()
-  pgmf.close()
+  if fourier_window > 0: pgmf.close()
 
 #this calls the 'main' function when this script is executed
 if __name__ == '__main__': main()

@@ -84,6 +84,11 @@ int main(int argc, char** argv) {
   printf("number of samples: %d\n", samples);
   printf("window: %d\n", window);
   
+  if (window <= 0) {
+    printf("Exit. Window too small: %d\n", window);
+    return 0;
+  }
+  
   if (samples <= window) {
     printf("you should give me more samples: samples > window.\n");
     return -1;
