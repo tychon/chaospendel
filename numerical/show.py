@@ -218,7 +218,7 @@ def main():
   spritelist = [pend, t1bar, v1bar, t2bar, v2bar, tbar, vbar, ebar]
   if fourier_window > 0:
     fouriershow = Fourier2Show(pygame.Rect(RECT_SIZE+ENERGY_WIDTH, 0, fourier_freqn, RECT_SIZE), pgmmax)
-    spritelist.append(fourier_window)
+    spritelist.append(fouriershow)
   allsprites = pygame.sprite.RenderPlain(spritelist)
   
   ##########
