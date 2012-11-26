@@ -100,7 +100,8 @@ def main():
   while len(args) > 0:
     arg = args.pop(0)
     if arg == "-fps":
-      req_fps = float(args.pop(0))
+      val = args.pop(0)
+      if val != "default": req_fps = float(val)
     elif not project_name:
       project_name = arg
     else: print "Argument ignored: ", arg

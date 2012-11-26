@@ -1,5 +1,6 @@
 
 FWINDOW=512
+FPS=default
 
 all: main fourier
 
@@ -22,7 +23,7 @@ test: main fourier show.py
 	./main > out.csv 2> out.info
 	./fourier --inputfile out.csv --samples `cat out.csv | wc -l` --window $(FWINDOW) --column 1 --projectfile out.info --outputfile out.pend1.pgm
 	./fourier --inputfile out.csv --samples `cat out.csv | wc -l` --window $(FWINDOW) --column 3 --projectfile out.info --outputfile out.pend2.pgm
-	python show.py out
+	python show.py -fps $(FPS) out
 
 # generate haskell doc
 documentation:

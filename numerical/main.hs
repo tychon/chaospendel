@@ -10,8 +10,8 @@ import Data.List.Split
 g = -9.81
 -- Andere Konstanten
 time = 60.0
-timestep = 0.001
-optFps = 100
+timestep = 0.0001
+optFps = 80
 
 -- Startbedingungen
 l1 = 4
