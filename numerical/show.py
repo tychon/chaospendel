@@ -200,6 +200,7 @@ def main():
   
   ##################
   #Initialize pygame
+  print "initializing pygame ..."
   pygame.init()
   screen = pygame.display.set_mode((RECT_SIZE+ENERGY_WIDTH+fourier_freqn, RECT_SIZE))
   pygame.display.set_caption('Chaos')
@@ -223,6 +224,7 @@ def main():
   
   ##########
   #Main Loop
+  print "starting game loop ..."
   artificial_time = 0.0
   real_time_start = time.time()
   frameTimes = []
@@ -286,8 +288,11 @@ def main():
     if len(frameTimes) > 30: frameTimes.pop()
     frameTimes.insert(0, time.time() - loopstart)
   
+  print "end of data."
+  print "closing files ..."
   csvf.close()
   if fourier_window > 0: pgmf.close()
+  print "finish."
 
 #this calls the 'main' function when this script is executed
 if __name__ == '__main__': main()

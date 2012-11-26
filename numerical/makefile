@@ -20,9 +20,12 @@ RungeKutta: RungeKutta.hs
 
 # run all the programms and scripts
 test: main fourier show.py
-	./main > out.csv 2> out.info
-	./fourier --inputfile out.csv --samples `cat out.csv | wc -l` --window $(FWINDOW) --column 1 --projectfile out.info --outputfile out.pend1.pgm
-	./fourier --inputfile out.csv --samples `cat out.csv | wc -l` --window $(FWINDOW) --column 3 --projectfile out.info --outputfile out.pend2.pgm
+	time ./main > out.csv 2> out.info
+	echo "\n"
+	time ./fourier --inputfile out.csv --samples `cat out.csv | wc -l` --window $(FWINDOW) --column 1 --projectfile out.info --outputfile out.pend1.pgm
+	echo "\n"
+	time ./fourier --inputfile out.csv --samples `cat out.csv | wc -l` --window $(FWINDOW) --column 3 --projectfile out.info --outputfile out.pend2.pgm
+	echo "\n"
 	python show.py -fps $(FPS) out
 
 # generate haskell doc
