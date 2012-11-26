@@ -20,7 +20,7 @@ RungeKutta: RungeKutta.hs
 
 # run all the programms and scripts
 test: main fourier show.py
-	time ./main > out.csv 2> out.info
+	./main > out.csv 2> out.info
 	echo "\n"
 	time ./fourier --inputfile out.csv --samples `cat out.csv | wc -l` --window $(FWINDOW) --column 1 --projectfile out.info --outputfile out.pend1.pgm
 	echo "\n"

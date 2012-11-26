@@ -152,6 +152,7 @@ int main(int argc, char** argv) {
   fclose(f);
   
   printf("I read %d samples and have %d fourier transform results.\n", samplecount, resindex);
+  printf("max freq magnitude: %f\n", maxval);
   
   // append some data to .info project file
   if (projectfilepath) {

@@ -102,7 +102,7 @@ toDeg = (180/pi *)
 step :: Pendulum -> Double -> Double -> [[Double]]
 step (Pendulum phi1 phi1d p1 p1d phi2 phi2d p2 p2d) timeStep time
   | time <= 0 = [] -- Abbruchbedingung fuer Rekursion
-  | (isNaN phi1) || (isNaN phi2) = []
+  | (isNaN phi1) || (isNaN phi2) || (isNaN p1) || (isNaN p2) || (isInfinite phi1) || (isInfinite phi2) || (isInfinite p1) || (isInfinite p2) = []
   | otherwise =
     let phi1d' = fphi1 phi1 phi2 p1 p2
         phi1'  = phi1 + phi1d' * timeStep

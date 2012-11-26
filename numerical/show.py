@@ -157,7 +157,7 @@ def main():
   if req_fps < 0:
     # since no argument for fps was given, we will try opt_fps
     req_fps = opt_fps
-  
+  if fourier_window > 0 and fourier_scale == 0.0: fourier_window = -1
   print "favoured framerate:", req_fps
   print "estimated time scale:", req_fps/opt_fps
   
