@@ -247,7 +247,7 @@ def main():
       runon = False
       break
     data = [float(x) for x in numberstrs ]
-    pend.setAngles([data[1], data[3]])
+    pend.setAngles([data[0], data[1]])
     t1bar.set_value(data[4]);
     v1bar.set_value(data[5]);
     t2bar.set_value(data[6]);
