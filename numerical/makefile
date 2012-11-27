@@ -19,14 +19,18 @@ RungeKutta: RungeKutta.hs
 ### not included in the "all" target
 
 # run all the programms and scripts
-test: main fourier show.py
-	./main > out.csv 2> out.info
-	echo "\n"
-	time ./fourier --inputfile out.csv --samples `cat out.csv | wc -l` --window $(FWINDOW) --column 1 --projectfile out.info --outputfile out.pend1.pgm
-	echo "\n"
-	time ./fourier --inputfile out.csv --samples `cat out.csv | wc -l` --window $(FWINDOW) --column 3 --projectfile out.info --outputfile out.pend2.pgm
-	echo "\n"
+run: main fourier show.py out.info out.csv out.pend1.pgm out.pend2.pgm
 	python show.py -fps $(FPS) out
+# this target runs the simulation and fourier transforms
+# it's only used by the "run" target
+out.csv out.info: ./main
+	./main > out.csv 2> out.info
+out.pend1.pgm out.pend2.pgm: ./fourier out.csv
+	time ./fourier --inputfile out.csv --samples `cat out.csv | wc -l` --window $(FWINDOW) --column 0 --projectfile out.info --outputfile out.pend1.pgm
+	echo "\n"
+	time ./fourier --inputfile out.csv --samples `cat out.csv | wc -l` --window $(FWINDOW) --column 1 --projectfile out.info --outputfile out.pend2.pgm
+	echo "\n"
+	
 
 # generate haskell doc
 documentation:
