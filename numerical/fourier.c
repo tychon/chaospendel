@@ -127,8 +127,7 @@ int main(int argc, char** argv) {
     // copy and post process results
     result[resindex*freqn] = 0.0; // delete DC
     for (int i = 1; i < freqn; i++) {
-      result[resindex*freqn+i] =   (fftwout[i][0]/window)*(fftwout[i][0]/window)
-                                 + (fftwout[i][1]/window)*(fftwout[i][1]/window);
+      result[resindex*freqn+i] = log1p((fftwout[i][0]/window)*(fftwout[i][0]/window)+(fftwout[i][1]/window)*(fftwout[i][1]/window));
       if (result[resindex*freqn+i] > maxval)
         maxval = result[resindex*freqn+i];
     }

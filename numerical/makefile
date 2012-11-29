@@ -29,8 +29,7 @@ out.pend1.pgm out.pend2.pgm: ./fourier out.csv
 	time ./fourier --inputfile out.csv --samples `cat out.csv | wc -l` --window $(FWINDOW) --column 0 --projectfile out.info --outputfile out.pend1.pgm
 	echo "\n"
 	time ./fourier --inputfile out.csv --samples `cat out.csv | wc -l` --window $(FWINDOW) --column 1 --projectfile out.info --outputfile out.pend2.pgm
-	echo "\n"
-	
+	echo "\n"	
 
 # generate haskell doc
 documentation:
