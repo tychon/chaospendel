@@ -21,4 +21,5 @@ doc-ger/*.aux
 povray/*.png
 povray/solenoid/*.png
 
+*octave-core
 
