@@ -97,11 +97,14 @@ def main():
   args = sys.argv[1:]
   project_name = None
   req_fps = -1
+  gototime = -1
   while len(args) > 0:
     arg = args.pop(0)
     if arg == "-fps":
       val = args.pop(0)
       if val != "default": req_fps = float(val)
+    elif arg == "-time":
+      gototime = float(args.pop(0))
     elif not project_name:
       project_name = arg
     else: print "Argument ignored: ", arg
@@ -222,14 +225,40 @@ def main():
     spritelist.append(fouriershow)
   allsprites = pygame.sprite.RenderPlain(spritelist)
   
+  samplenum = 0
+  artificial_time = 0.0
+  fouriersampnum = 0
+  real_time_start = time.time()
+  ######
+  # skip some samples?
+  if gototime > 0:
+    framestoskip = int(opt_fps * gototime)
+    print "skipping", framestoskip, "samples ..."
+    for i in range(framestoskip):
+      if csvf.readline() == '':
+        csvf.close()
+        pgmf.close()
+        pgmf2.close()
+        print "reached end of csv data."
+        return
+      samplenum += 1
+      if fourier_window > 0 and samplenum > fourier_window/2 and fouriersampnum < fourier_rows:
+        if pgmf.readline() == '' or pgmf2.readline() == '':
+          csvf.close()
+          pgmf.close()
+          pgmf2.close()
+          print "reached end of fourier data."
+          return
+        fouriersampnum += 1
+    artificial_time = gototime
+    real_time_start = time.time()-artificial_time
+      
+        
+  
   ##########
   #Main Loop
   print "starting game loop ..."
-  artificial_time = 0.0
-  real_time_start = time.time()
   frameTimes = []
-  samplenum = 0
-  fouriersampnum = 0
   
   runon = True
   while runon:

@@ -1,6 +1,7 @@
 
 FWINDOW=512
 FPS=default
+SKIPT=0
 
 all: main fourier
 
@@ -20,7 +21,7 @@ RungeKutta: RungeKutta.hs
 
 # run all the programms and scripts
 run: main fourier show.py out.info out.csv out.pend1.pgm out.pend2.pgm
-	python show.py -fps $(FPS) out
+	python show.py -fps $(FPS) -time $(SKIPT) out
 # this target runs the simulation and fourier transforms
 # it's only used by the "run" target
 out.csv out.info: ./main
