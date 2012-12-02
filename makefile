@@ -13,8 +13,3 @@ fftw/fourier: fftw/fourier.hs fftw/fourierplot.m
 	./fourier > in.csv 2> out.csv    ;\
 	octave octaveplot.m
 
-doc-ger: doc-ger/Dokumentation.pdf doc-ger/Herleitung_standalone.pdf
-
-%.pdf: %.tex
-	rubber --inplace -pdf $*.tex
-
