@@ -18,6 +18,6 @@ difference {
   box { <0.15, 3.1, -0.1> <1.4, 4.4, 1.1> } // upper left
   // textures
   texture { Chrome_Metal }
-  finish { reflection 0 }
+  finish { reflection 0.05 }
 }
 
