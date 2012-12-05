@@ -7,19 +7,18 @@
 *.info
 *.pgm
 
+*.png
+
 fftw/fourier
 numerical/main
 numerical/fourier
 numerical/doc/
 wikihaskell/main
-fftw/*.png
 doc-ger/*.ps
 doc-ger/*.dvi
 doc-ger/*.pdf
 doc-ger/*.log
 doc-ger/*.aux
-povray/*.png
-povray/solenoid/*.png
 
 *octave-core
 

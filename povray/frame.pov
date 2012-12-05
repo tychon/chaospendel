@@ -8,22 +8,22 @@
 
 #declare solenoid_r1 = 10;
 #declare solenoid_r2 = 27;
-#declare solenoid_r3 = 40;
+#declare solenoid_r3 = 46;
 
 #declare phi1 = 10;
 #declare phi2 = 100;
 
 #macro toRad (deg) (deg / 360 * (2*pi)) #end
 
-
-// front view
 camera {
-  location <20, 40, -100>
+  location <70*cos(2*pi*clock), 50, ((-100)*abs(sin(2*pi*clock)))>
   look_at <0, 40, 0>
 }
-/*
-// side view
-camera {
+/* camera { // back view
+  location <10, 30, 110>
+  look_at <0, 10, 0>
+} */
+/* camera { // side view
   location <80, 50, 0>
   look_at <0, 25, 0>
 } */
@@ -39,10 +39,11 @@ light_source {
   color White
 }
 */
+
 light_source {
   <-30, 10, -50>
   color White
-  area_light <10, 0, 0>, <0, 10, 0>, 5, 5
+  area_light <10, 0, 0>, <0, 0, 10>, 5, 5
   adaptive 1
   jitter
 }
@@ -53,9 +54,18 @@ light_source {
   adaptive 1
   jitter
 }
+
+/* light_source { // backlight
+  <-30, 10, 50>
+  color White
+  area_light <10, 0, 0>, <0, 0, 10>, 5, 5
+  adaptive 1
+  jitter
+} */
+
 // */
 
-/* // slows things down
+//* // slows things down
 plane {
   y, -4.5
   pigment {
@@ -93,48 +103,6 @@ box {
   texture { Brushed_Aluminum }
 }
 
-/*
-//////
-// some marks
-sphere {
-  <0, 0, 0>, 1
-  texture { Ruby_Glass }
-}
-
-sphere {
-  <-50, 0, 0>, 1
-  texture { Jade }
-}
-sphere {
-  <50, 0, 0>, 1
-  texture { Jade }
-}
-sphere {
-  <-50, 0, depth>, 1
-  texture { Jade }
-}
-sphere {
-  <50, 0, depth>, 1
-  texture { Jade }
-}
-
-sphere {
-  <-50, 0, depth+4.5+depth_overspan>, 1
-  texture { Copper_Metal }
-}
-sphere {
-  <-50, 0, -4.5-depth_overspan>, 1
-  texture { Copper_Metal }
-}
-sphere {
-  <50, 0, depth+4.5+depth_overspan>, 1
-  texture { Copper_Metal }
-}
-sphere {
-  <50, 0, -4.5-depth_overspan>, 1
-  texture { Copper_Metal }
-}
-*/
 cylinder {
   <0, 50+3.18, -10> <0, 50+3.18, depth+10> 0.8
   texture { Brushed_Aluminum }
@@ -171,6 +139,33 @@ object {
   translate <50, -4.5, -depth_overspan-4.5>
 }
 
+///////
+// lower rect angles
+// back right
+object {
+  squareangle
+  rotate <0, 0, 90>
+  translate <50, -4.25, depth-4>
+}
+// front right
+object {
+  squareangle
+  rotate <90, 0, 90>
+  translate <50-4, -4.25, 0>
+}
+// back left
+object {
+  squareangle
+  rotate <-90, 0, 90>
+  translate <-50+4, -4.25, depth>
+}
+// back front
+object {
+  squareangle
+  rotate <180, 0, 90>
+  translate <-50, -4.25, 4>
+}
+
 
 //////////////
 //// triangles
@@ -186,7 +181,7 @@ difference {
     rotate <45, 0, 0>
     translate <0, 0, 4.5>
   }
-  translate <0, -4.5 0,>
+  translate <0, -4.5, 0>
 }
 #declare rectsidelong =
 difference {
@@ -199,7 +194,7 @@ difference {
     rotate <45, 0, 0>
     translate <0, 0, 4.5>
   }
-  translate <0, -4.5 0,>
+  translate <0, -4.5, 0>
 }
 
 #declare twosides =
@@ -214,6 +209,11 @@ union {
     rotate <0, -90, -45>
     translate <50+6.36, 0, -4.5>
   }
+  object {
+    squareangle
+    rotate <0, 90, 135>
+    translate <2.83843, 50-2.83843, -0.25>
+  }
 }
 
 object {
@@ -222,6 +222,27 @@ object {
 object {
   twosides
   translate <0, 0, +4.5+depth>
+}
+
+object {
+  squareangle
+  translate <-50-4-0.25, 0, -4-4.5>
+  //pigment {color Red }
+}
+object {
+  squareangle
+  translate <50+0.25, 0, -4-4.5>
+  //pigment {color Red }
+}
+object {
+  squareangle
+  rotate <0, 180, 0>
+  translate <50+4+0.25, 0, depth+4.5+4>
+}
+object {
+  squareangle
+  rotate <0, 180, 0>
+  translate <-50-0.25, 0, depth+4.5+4>
 }
 
 ///////////////
@@ -233,8 +254,16 @@ box {
 }
 
 #declare solenoidbox =
-box {
-  0, <4.6, 6.7, 4>
+union {
+  box { <0, 4.5, 0>, <4.6, 6.7, 4> }
+  box {
+    0, <4.6, 4.5, 4>
+    pigment { color Grey }
+  }
+  box {
+    <1.25, 1.25, -0.5>, <3.35, 3.35, 4.2>
+    texture { Rusty_Iron }
+  }
   translate <-2.3, -2.25, 0>
 }
 
@@ -242,7 +271,7 @@ box {
 #while(theta < 360)
   object {
     solenoidbox
-    pigment { color Green }
+    pigment { color DarkGreen }
     translate <0, solenoid_r1, 0>
     rotate <0, 0, theta>
     translate <0, 50+3.18, depth>
@@ -254,7 +283,7 @@ box {
 #while(theta < 360)
   object {
     solenoidbox
-    pigment { color Green }
+    pigment { color DarkGreen }
     translate <0, solenoid_r2, 0>
     rotate <0, 0, theta+360/16>
     translate <0, 50+3.18, depth>

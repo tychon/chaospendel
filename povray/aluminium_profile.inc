@@ -1,5 +1,3 @@
-#include "colors.inc"
-#include "textures.inc"
 
 #declare alprofile =
 difference {
@@ -19,5 +17,17 @@ difference {
   // textures
   texture { Chrome_Metal }
   finish { reflection 0.05 }
+}
+
+#declare squareangle =
+difference {
+  box { 0 4 }
+  box {
+    <-0.1, 0, -0.1> 7
+    rotate <-45, 0, 0>
+    translate <0, 0.5, 0>
+  }
+  box { <0.5, 0.5, -0.1> <3.5, 4, 3.4> }
+  pigment { color Gray25 }
 }
 
