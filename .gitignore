@@ -11,6 +11,7 @@
 *.avi
 
 network/replay
+network/testreader
 fftw/fourier
 numerical/main
 numerical/fourier
