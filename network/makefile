@@ -1,4 +1,9 @@
+GCC=gcc -std=c99 -Wall -Werror
+
+all: replay testreader
 
 replay: replay.c
-	gcc -std=c99 -Wall -Werror replay.c -lc -o replay
+	$(GCC) -lc replay.c -o replay
 
+testreader: testreader.c
+	$(GCC) -lc testreader.c -o testreader

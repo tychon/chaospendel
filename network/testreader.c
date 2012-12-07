@@ -2,10 +2,12 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/un.h>
+#include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
-main(int argc, char *argv[]) {
+int main(int argc, char *argv[]) {
   int sock;
   struct sockaddr_un server;
   
