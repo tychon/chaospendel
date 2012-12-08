@@ -11,8 +11,17 @@ int main(int argc, char *argv[]) {
   int sock;
   struct sockaddr_un server;
   
-  if (argc < 2) {
-    printf("usage: %s <pathname>", argv[0]);
+  char *sockpath = NULL;
+  int showcharacters = 0;
+  for (int i = 0; i < argc; i++) {
+    if (strcmp("-c", argv[i]) == 0) {
+      showcharacters = 1;
+    } else if (strcmp("-b", argv[i]) == 0) {
+      showcharacters = 2;
+    } else sockpath = argv[i];
+  }
+  if (! sockpath) {
+    printf("usage: %s [-c | -b] <pathname>", argv[0]);
     exit(1);
   }
   
@@ -44,7 +53,10 @@ int main(int argc, char *argv[]) {
       printf("end of data\n");
       exit(0);
     }
-    printf("%d (%c) ", (int)c, c);
+    if (showcharacters == 0) printf("%d ", (int)c);
+    else if (showcharacters == 1) printf("%c", c);
+    else if (showcharacters == 2) printf("%d (%c) ", (int)c, c);
+    fflush(stdout);
   }
   
   close(sock);
