@@ -96,7 +96,7 @@ int main(int argc, char *argv[]) {
     if (lineLength >= 0) {
       printf(">"); fflush(stdout);
       if (samplerate > 0) usleep(sleepmillis*1000);
-      // get time stap
+      // get time step
       ftime(&tmb);
       timetm = *localtime(& tmb.time);
       millisecs =                              (long int)tmb.millitm
@@ -115,10 +115,10 @@ int main(int argc, char *argv[]) {
         goto CLOSING_ERR;
       }
       bufferReadPos += lineLength;
-      if (write(msgsock, "\n", 1) < 0) {
+      /*if (write(msgsock, "\n", 1) < 0) {
         perror("sending data");
         goto CLOSING_ERR;
-      }
+      }*/
     } else {
       //// read new data
       // shift data to beginning:
