@@ -1,7 +1,12 @@
 
+#define _XOPEN_SOURCE 500 // for usleep in unistd
+#define _GNU_SOURCE
+#include <features.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/un.h>
+#include <sys/timeb.h>
+#include <time.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -27,7 +32,7 @@ int main(int argc, char *argv[]) {
       i ++;
       socketpath = argv[i];
     }
-    else if (strcmp("-fps", argv[i]) == 0) {
+    else if (strcmp("--rate", argv[i]) == 0) {
       i ++;
       samplerate = atoi(argv[i]);
     }
@@ -36,7 +41,7 @@ int main(int argc, char *argv[]) {
   }
   
   if (! socketpath || ! csvpath) {
-    fprintf(stderr, "usage [-f] [-d] -in CSVFILEPATH --socket SOCKETPATH\n");
+    fprintf(stderr, "usage [-f] [-d] [--rate SAMPLERATE] -in CSVFILEPATH --socket SOCKETPATH\n");
     exit(1);
   }
   
@@ -75,17 +80,36 @@ int main(int argc, char *argv[]) {
     goto CLOSING_ERR;
   }
   
-  if (samplerate < 0) printf("Sending samples as fast as we can ...\n");
+  if (samplerate <= 0) printf("Sending samples as fast as we can ...\n");
   else printf("Sendings a rate of %d samples per second ...\n", samplerate);
+  int sleepmillis = (int) (1.0/ ((double)samplerate) * 1000.0);
   
   int bufferReadPos = 0;
   int bufferWritePos = 0;
   int lineLength = -1; // indicates if there is a full line in outbuffer and its length
   char buffer[BUFFERSIZES]; // this buffer the read method writes to
+  struct timeb tmb; // for the timestamp
+  struct tm timetm;
+  long int millisecs;
+  // enless loop til end of csv file
   for (;;) {
     if (lineLength >= 0) {
-      printf(">");
+      printf(">"); fflush(stdout);
+      if (samplerate > 0) usleep(sleepmillis*1000);
+      // get time stap
+      ftime(&tmb);
+      timetm = *localtime(& tmb.time);
+      millisecs =                              (long int)tmb.millitm
+                  +                       1000*(long int)timetm.tm_sec
+                  +                    60*1000*(long int)timetm.tm_min
+                  +                 60*60*1000*(long int)timetm.tm_hour
+                  +              24*60*60*1000*(long int)timetm.tm_yday
+                  +(long int)365*24*60*60*1000*(long int)timetm.tm_year;
       // send data
+      if (dprintf(msgsock, "[%ld]", millisecs) < 0) {
+        perror("sending data");
+        goto CLOSING_ERR;
+      }
       if (write(msgsock, buffer+bufferReadPos, lineLength) < 0) {
         perror("sending data");
         goto CLOSING_ERR;
@@ -103,7 +127,7 @@ int main(int argc, char *argv[]) {
       bufferReadPos = 0;
       // read data from file
       int rval = fread(buffer+bufferReadPos, sizeof(char), BUFFERSIZES-bufferWritePos, csvf);
-      printf("<");
+      printf("<\n");// fflush(stdin);
       if (rval < 0) {
         perror("reading from csv file");
         goto CLOSING_ERR;
