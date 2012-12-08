@@ -2,35 +2,14 @@
 import sys, socket, re
 import pygame
 from pygame.locals import *
+
+from color import *
+import graph
+
 if not pygame.font: print 'Warning, fonts disabled'
 
-class Graph(pygame.sprite.Sprite):
-  def __init__(self, rect, dots, minval, maxval):
-    pygame.sprite.Sprite.__init__(self)
-    self.rect = rect
-    self.image = pygame.Surface((rect.width, rect.height))
-    self.minval = minval
-    self.maxval = maxval
-    self.dots = dots
-    self.scale = rect.height / float(maxval-minval)
-    self.xstep = rect.width / float(dots)
-    self.vals = []
-  
-  def push_val(self, val):
-    self.vals.append(val)
-    if len(self.vals) > self.dots: self.vals.pop(0)
-  
-  def update(self):
-    self.image.fill( (0, 0, 0) )
-    xpos = -2
-    last_ypos = 0.0
-    print len(self.vals), self.vals
-    for val in self.vals:
-      ypos = (self.maxval-val)*self.scale
-      pygame.draw.line(self.image, (0, 255, 0), (xpos-self.xstep, last_ypos), (xpos, ypos))
-      xpos += self.xstep
-      last_ypos = ypos
-      
+RECT_SIZE = 400
+AVERAGE_LENGTHs = [5, 10, 20]
 
 def main():
   # read arguments
@@ -50,16 +29,18 @@ def main():
   #Initialize pygame
   print "initializing pygame ..."
   pygame.init()
-  screen = pygame.display.set_mode((400, 400))
+  screen = pygame.display.set_mode((RECT_SIZE, RECT_SIZE))
   pygame.display.set_caption('Chaos')
-  #pygame.mouse.set_visible(0)
   font = pygame.font.Font(None, 18)
   #Prepare Game Objects
-  graph = Graph(pygame.Rect(0, 0, 400, 400), 400, 660, 720)
-  allsprites = pygame.sprite.RenderPlain([graph])
+  graphic = graph.Graph(pygame.Rect(0, 0, RECT_SIZE, RECT_SIZE)
+                      , RECT_SIZE*2, 660, 720
+                      , [BLUE, (255, 100, 0), (255, 50, 0), RED])
+  allsprites = pygame.sprite.RenderPlain([graphic])
   
   ################
   # open socket
+  print "opening socket ..."
   s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
   s.connect(socketname)
   
@@ -69,6 +50,8 @@ def main():
   prog = re.compile(r"\[(\d+)\](\d+)")
   data = ""
   runon = True
+  rollingaverages = [0.0 for i in range(len(AVERAGE_LENGTHs))]
+  averageelems = [[] for i in range(len(AVERAGE_LENGTHs))]
   while runon:
     # Handle Input Events
     for event in pygame.event.get():
@@ -85,9 +68,19 @@ def main():
     while True:
       mo = prog.match(data)
       if not mo: break;
-      #print repr(mo.group(2))
       data = data[mo.end():]
-      graph.push_val(int(mo.group(2)))
+      val = int(mo.group(2))
+      # new averages
+      for i in range(len(AVERAGE_LENGTHs)):
+        averageelems[i].append(val)
+        if len(averageelems[i]) > AVERAGE_LENGTHs[i]:
+          rollingaverages[i] -= averageelems[i].pop(0) / float(AVERAGE_LENGTHs[i])
+        rollingaverages[i] += val / float(AVERAGE_LENGTHs[i])
+      #print ":", rollingaverages
+      # put new data into graph
+      vals = [float(val)]
+      vals.extend([int(x) for x in rollingaverages])
+      graphic.push_val(vals)
     
     allsprites.update()
     allsprites.draw(screen)
