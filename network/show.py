@@ -9,7 +9,7 @@ import graph
 if not pygame.font: print 'Warning, fonts disabled'
 
 RECT_SIZE = 400
-AVERAGE_LENGTHs = [5, 10, 20]
+AVERAGE_LENGTHs = [20]
 
 def main():
   # read arguments
@@ -34,8 +34,8 @@ def main():
   font = pygame.font.Font(None, 18)
   #Prepare Game Objects
   graphic = graph.Graph(pygame.Rect(0, 0, RECT_SIZE, RECT_SIZE)
-                      , RECT_SIZE*2, 660, 720
-                      , [BLUE, GREEN, (255, 100, 0), (255, 50, 0), RED])
+                      , RECT_SIZE/2, 660, 720
+                      , [BLUE, GREEN, (0, 100, 0), RED])
   allsprites = pygame.sprite.RenderPlain([graphic])
   
   ################
@@ -59,7 +59,7 @@ def main():
       if event.type == QUIT: # react to normal window closing action
         print "User input causing QUIT."
         runon = False
-        break;
+        break
     
     newdata = s.recv(1024)
     if len(newdata) <= 0:
@@ -67,8 +67,8 @@ def main():
       break
     data = data+newdata
     while True:
-      mo = prog.match(data)
-      if not mo: break;
+      mo = prog.search(data)
+      if not mo: break
       data = data[mo.end():]
       val = int(mo.group(2))
       # new averages
@@ -77,16 +77,16 @@ def main():
         if len(averageelems[i]) > AVERAGE_LENGTHs[i]:
           rollingaverages[i] -= averageelems[i].pop(0) / float(AVERAGE_LENGTHs[i])
         rollingaverages[i] += val / float(AVERAGE_LENGTHs[i])
-      #print ":", rollingaverages
       # calc gradient
-      gradient = rollingaverages[2] - lastaverage
-      lastaverage = rollingaverages[2]
+      gradient = rollingaverages[0] - lastaverage
+      lastaverage = rollingaverages[0]
       sys.stderr.write(str(gradient)+'\n')
       # put new data into graph
-      vals = [float(val), gradient*5+670]
-      vals.extend([int(x) for x in rollingaverages])
+      vals = [float(val), gradient*5+670, int(gradient*5+670)]
+      #vals.extend([int(x) for x in rollingaverages])
+      vals.extend(rollingaverages)
       graphic.push_val(vals)
-      
+      if abs(int(gradient*5)) >= 2: sys.stdout.write("!!!\n");
     
     allsprites.update()
     allsprites.draw(screen)
