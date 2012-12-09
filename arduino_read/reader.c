@@ -20,6 +20,9 @@ int main(void) {
   if(tcsetattr(serial_fd, TCSAFLUSH, &config) < 0) exit(1);
   FILE *serial = fdopen(serial_fd, "r");
 
+  setbuf(stdout, NULL);
+  setbuf(serial, NULL);
+
   char l[255];
   while (1) {
     if (fgets(l, 255, serial) == NULL) return 0;
