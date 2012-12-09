@@ -1,5 +1,5 @@
 
-import sys, socket, re
+import sys, socket, re, time
 import pygame
 from pygame.locals import *
 
@@ -15,15 +15,18 @@ def main():
   # read arguments
   args = sys.argv[1:]
   socketname = None
+  maxfps = 80
   while len(args) > 0:
     arg = args.pop(0)
+    if arg == "-fps":
+      maxfps = int(args.pop(0))
     if not socketname:
       socketname = arg
     else: print "Argument ignored: ", arg
   if not socketname:
     print "Give me some socket name!"
     exit(1)
-  
+  spf = 1.0 / float(maxfps)
   
   ##################
   #Initialize pygame
@@ -53,6 +56,7 @@ def main():
   rollingaverages = [0.0 for i in range(len(AVERAGE_LENGTHs))]
   averageelems = [[] for i in range(len(AVERAGE_LENGTHs))]
   lastaverage = 0
+  lasttime = time.time()-spf
   while runon:
     # Handle Input Events
     for event in pygame.event.get():
@@ -61,11 +65,13 @@ def main():
         runon = False
         break
     
+    # receive new data
     newdata = s.recv(1024)
     if len(newdata) <= 0:
       print "end of data"
       break
     data = data+newdata
+    # handle new data (parse all the new values)
     while True:
       mo = prog.search(data)
       if not mo: break
@@ -88,9 +94,12 @@ def main():
       graphic.push_val(vals)
       if abs(int(gradient*5)) >= 2: sys.stdout.write("!!!\n");
     
-    allsprites.update()
-    allsprites.draw(screen)
-    pygame.display.flip()
+    currtime = time.time()
+    if currtime - lasttime > spf:
+      allsprites.update()
+      allsprites.draw(screen)
+      pygame.display.flip()
+      lasttime = currtime
   
   s.close()
 
