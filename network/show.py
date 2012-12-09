@@ -8,7 +8,6 @@ import graph
 
 if not pygame.font: print 'Warning, fonts disabled'
 
-RECT_SIZE = 400
 AVERAGE_LENGTHs = [20]
 
 def main():
@@ -16,11 +15,17 @@ def main():
   args = sys.argv[1:]
   socketname = None
   maxfps = 80
+  windowwidth = 600
+  windowheight = 400
   while len(args) > 0:
     arg = args.pop(0)
     if arg == "-fps":
       maxfps = int(args.pop(0))
-    if not socketname:
+    elif arg == "--width":
+      windowwidth = int(args.pop(0))
+    elif arg == "--height":
+      windowheight = int(args.pop(0))
+    elif not socketname:
       socketname = arg
     else: print "Argument ignored: ", arg
   if not socketname:
@@ -32,12 +37,12 @@ def main():
   #Initialize pygame
   print "initializing pygame ..."
   pygame.init()
-  screen = pygame.display.set_mode((RECT_SIZE, RECT_SIZE))
+  screen = pygame.display.set_mode((windowwidth, windowheight))
   pygame.display.set_caption('Chaos')
   font = pygame.font.Font(None, 18)
   #Prepare Game Objects
-  graphic = graph.Graph(pygame.Rect(0, 0, RECT_SIZE, RECT_SIZE)
-                      , RECT_SIZE/2, 660, 720
+  graphic = graph.Graph(pygame.Rect(0, 0, windowwidth, windowheight)
+                      , windowwidth/2, 660, 720
                       , [BLUE, GREEN, (0, 100, 0), RED])
   allsprites = pygame.sprite.RenderPlain([graphic])
   
