@@ -10,9 +10,14 @@
  *       return NULL without crashing.
  */
 
+#ifndef _MEMORY_WRAPPERS_H
+#define _MEMORY_WRAPPERS_H
+
 #include <stdlib.h>
 
 void *assert_calloc(size_t nmemb, size_t size);
 void *assert_malloc(size_t size);
 void *assert_realloc(void *ptr, size_t size);
+
+#endif // MEMORY_WRAPPERS_H
 

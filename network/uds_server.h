@@ -1,4 +1,7 @@
 
+#ifndef _UDS_SERVER_H
+#define _UDS_SERVER_H
+
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/un.h>
@@ -30,4 +33,6 @@ void uds_stop(udsserversocket*);
 
 void uds_dprintf_all(udsserversocket*, const char *format, ...);
 void uds_write_all(udsserversocket*, const void *buffer, size_t nbytes);
+
+#endif // _UDS_SERVER_H
 
