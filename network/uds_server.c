@@ -34,7 +34,7 @@ void *uds_run(void *ptr) {
 /////////////////////
 // declared in header
 
-udsserversocket *uds_create(char *socketpath) {
+udsserversocket *uds_create_server(char *socketpath) {
   udsserversocket* udsss = assert_malloc(sizeof(udsserversocket));
   udsss->connection_count = 0;
   // initialize mutex with standard attributes
@@ -59,14 +59,14 @@ udsserversocket *uds_create(char *socketpath) {
   return udsss;
 }
 
-void uds_start(udsserversocket *udsss) {
+void uds_start_server(udsserversocket *udsss) {
   if (pthread_create(&(udsss->thread), NULL, uds_run, (void*)udsss)) {
     perror("creating unix domain socket server thread");
     exit(1);
   }
 }
 
-void uds_stop(udsserversocket *udsss) {
+void uds_stop_server(udsserversocket *udsss) {
   if (close(udsss->socketfd)) {
     perror("closing server socket");
     exit(1);

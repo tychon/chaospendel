@@ -46,8 +46,8 @@ int main(int argc, char *argv[]) {
   
   if (deleteOldSocket) unlink(socketpath);
   printf("opening socket with path \"%s\"\n", socketpath);
-  udsserversocket *udsss = uds_create(socketpath);
-  uds_start(udsss);
+  udsserversocket *udsss = uds_create_server(socketpath);
+  uds_start_server(udsss);
   
   printf("Opening csv file \"%s\" ...\n", csvpath);
   FILE *csvf = fopen(csvpath, "r");
@@ -125,7 +125,7 @@ END:
   fclose(csvf);
   
   printf("closing sockets ...\n");
-  uds_stop(udsss);
+  uds_stop_server(udsss);
   if (deleteSocketAfterUse) {
     printf("deleting socket file ...\n");
     unlink(socketpath);
