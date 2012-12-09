@@ -35,7 +35,7 @@ def main():
   #Prepare Game Objects
   graphic = graph.Graph(pygame.Rect(0, 0, RECT_SIZE, RECT_SIZE)
                       , RECT_SIZE*2, 660, 720
-                      , [BLUE, (255, 100, 0), (255, 50, 0), RED])
+                      , [BLUE, GREEN, (255, 100, 0), (255, 50, 0), RED])
   allsprites = pygame.sprite.RenderPlain([graphic])
   
   ################
@@ -52,6 +52,7 @@ def main():
   runon = True
   rollingaverages = [0.0 for i in range(len(AVERAGE_LENGTHs))]
   averageelems = [[] for i in range(len(AVERAGE_LENGTHs))]
+  lastaverage = 0
   while runon:
     # Handle Input Events
     for event in pygame.event.get():
@@ -77,10 +78,15 @@ def main():
           rollingaverages[i] -= averageelems[i].pop(0) / float(AVERAGE_LENGTHs[i])
         rollingaverages[i] += val / float(AVERAGE_LENGTHs[i])
       #print ":", rollingaverages
+      # calc gradient
+      gradient = rollingaverages[2] - lastaverage
+      lastaverage = rollingaverages[2]
+      sys.stderr.write(str(gradient)+'\n')
       # put new data into graph
-      vals = [float(val)]
+      vals = [float(val), gradient*5+670]
       vals.extend([int(x) for x in rollingaverages])
       graphic.push_val(vals)
+      
     
     allsprites.update()
     allsprites.draw(screen)
