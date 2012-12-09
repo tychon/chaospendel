@@ -2,9 +2,6 @@
 #define _XOPEN_SOURCE 500 // for usleep in unistd
 #define _GNU_SOURCE
 #include <features.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/un.h>
 #include <sys/timeb.h>
 #include <time.h>
 #include <unistd.h>
@@ -12,6 +9,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+
+#include "uds_server.h"
 
 #define BUFFERSIZES 1024
 
@@ -45,39 +44,16 @@ int main(int argc, char *argv[]) {
     exit(1);
   }
   
+  if (deleteOldSocket) unlink(socketpath);
   printf("opening socket with path \"%s\"\n", socketpath);
-  
-  int sock, msgsock;
-  struct sockaddr_un server;
-  sock = socket(AF_UNIX, SOCK_STREAM, 0);
-  if (sock < 0) {
-    perror("opening stream socket");
-    exit(1);
-  }
-  server.sun_family = AF_UNIX;
-  strcpy(server.sun_path, socketpath);
-  if (deleteOldSocket) unlink(server.sun_path);
-  if (bind(sock, (struct sockaddr *) &server, sizeof(struct sockaddr_un))) {
-    perror("binding stream socket");
-    exit(1);
-  }
-  
-  
-  listen(sock, 5);
-  printf("Waiting for incoming connection ...\n");
-  msgsock = accept(sock, 0, 0);
-  if (msgsock == -1) {
-    perror("accept");
-    exit(1);
-  }
-  
-  printf("Connection established.\n");
+  udsserversocket *udsss = uds_create(socketpath);
+  uds_start(udsss);
   
   printf("Opening csv file \"%s\" ...\n", csvpath);
   FILE *csvf = fopen(csvpath, "r");
   if (! csvf) {
     perror("opening csv file");
-    goto CLOSING_ERR;
+    exit(1);
   }
   
   if (samplerate <= 0) printf("Sending samples as fast as we can ...\n");
@@ -106,19 +82,9 @@ int main(int argc, char *argv[]) {
                   +              24*60*60*1000*(long int)timetm.tm_yday
                   +(long int)365*24*60*60*1000*(long int)timetm.tm_year;
       // send data
-      if (dprintf(msgsock, "[%ld]", millisecs) < 0) {
-        perror("sending data");
-        goto CLOSING_ERR;
-      }
-      if (write(msgsock, buffer+bufferReadPos, lineLength) < 0) {
-        perror("sending data");
-        goto CLOSING_ERR;
-      }
+      uds_dprintf_all(udsss, "[%ld]", millisecs);
+      uds_write_all(udsss, buffer+bufferReadPos, lineLength);
       bufferReadPos += lineLength;
-      /*if (write(msgsock, "\n", 1) < 0) {
-        perror("sending data");
-        goto CLOSING_ERR;
-      }*/
     } else {
       //// read new data
       // shift data to beginning:
@@ -130,7 +96,6 @@ int main(int argc, char *argv[]) {
       printf("<\n");// fflush(stdin);
       if (rval < 0) {
         perror("reading from csv file");
-        goto CLOSING_ERR;
       } else if (rval == 0) {
         printf("\nend of data.\n");
         break;
@@ -151,30 +116,20 @@ int main(int argc, char *argv[]) {
     }
     if (lineLength == 0) {
       fprintf(stderr, "empty line\n");
-      goto CLOSING_ERR;
+      goto END;
     }
   }
   
+END:
   printf("closing file ...\n");
   fclose(csvf);
   
   printf("closing sockets ...\n");
-  close(msgsock);
-  close(sock);
+  uds_stop(udsss);
   if (deleteSocketAfterUse) {
     printf("deleting socket file ...\n");
     unlink(socketpath);
   }
   exit(0);
-  
-CLOSING_ERR:
-  printf("closing sockets ...\n");
-  close(msgsock);
-  close(sock);
-  if (deleteSocketAfterUse) {
-    printf("deleting socket file ...\n");
-    unlink(socketpath);
-  }
-  exit(1);
 }
 
