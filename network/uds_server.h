@@ -17,7 +17,6 @@
 
 struct udsserversocket {
   char *socketpath;
-  int deleteSocketAfterUse;
   struct sockaddr_un server;
   int socketfd;
   int connection_count;
@@ -27,7 +26,7 @@ struct udsserversocket {
 };
 typedef struct udsserversocket udsserversocket;
 
-udsserversocket *uds_create(char *socketpath, int deleteSocketAfterUse);
+udsserversocket *uds_create(char *socketpath);
 void uds_start(udsserversocket*);
 void uds_stop(udsserversocket*);
 

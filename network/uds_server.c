@@ -25,6 +25,7 @@ void *uds_run(void *ptr) {
     } else {
       udsss->messagesocketsfds[udsss->connection_count] = msgsock;
       udsss->connection_count ++;
+      fprintf(stderr, "new connection accepted");
     }
     pthread_mutex_unlock( &(udsss->mutex) );
   }
@@ -33,9 +34,8 @@ void *uds_run(void *ptr) {
 /////////////////////
 // declared in header
 
-udsserversocket *uds_create(char *socketpath, int deleteSocketAfterUse) {
+udsserversocket *uds_create(char *socketpath) {
   udsserversocket* udsss = assert_malloc(sizeof(udsserversocket));
-  udsss->deleteSocketAfterUse = deleteSocketAfterUse;
   udsss->connection_count = 0;
   // initialize mutex with standard attributes
   if (pthread_mutex_init(&(udsss->mutex), NULL)) {
@@ -71,6 +71,9 @@ void uds_stop(udsserversocket *udsss) {
     perror("closing server socket");
     exit(1);
   }
+  pthread_cancel(udsss->thread);
+  //pthread_join(udsss->thread, NULL);
+  free(udsss);
 }
 
 void uds_dprintf_all(udsserversocket *udsss, const char *format, ...) {
