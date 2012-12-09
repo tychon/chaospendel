@@ -8,7 +8,7 @@ import graph
 
 if not pygame.font: print 'Warning, fonts disabled'
 
-AVERAGE_LENGTHs = [20]
+AVERAGE_LENGTHs = [50]
 
 def main():
   # read arguments
@@ -43,7 +43,7 @@ def main():
   #Prepare Game Objects
   graphic = graph.Graph(pygame.Rect(0, 0, windowwidth, windowheight)
                       , windowwidth/2, 660, 720
-                      , [BLUE, GREEN, (0, 100, 0), RED])
+                      , [(0, 0, 255), GREEN, (0, 100, 0), (100, 100, 255)])
   allsprites = pygame.sprite.RenderPlain([graphic])
   
   ################
