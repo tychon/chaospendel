@@ -25,9 +25,9 @@ struct udsserversocket {
 typedef struct udsserversocket udsserversocket;
 
 udsserversocket *uds_create(char *socketpath, int deleteSocketAfterUse);
-int uds_start(udsserversocket*);
-int uds_stop(udsserversocket*);
+void uds_start(udsserversocket*);
+void uds_stop(udsserversocket*);
 
-int uds_dprintf_all(udsserversocket*, const char *format, ...);
-int uds_write_all(udsserversocket*, const void *buffer, size_t nbytes);
+void uds_dprintf_all(udsserversocket*, const char *format, ...);
+void uds_write_all(udsserversocket*, const void *buffer, size_t nbytes);
 

@@ -1,11 +1,14 @@
 
-
-#include <unistd.h>
-#include <stdio.h>
 #include <stdlib.h>
+#include <stdio.h>
+#include <stdarg.h>
+#include <unistd.h>
 
 #include "memory_wrappers.h"
 #include "uds_server.h"
+
+////////
+// local
 
 void *uds_run(void *ptr) {
   udsserversocket *udsss = (udsserversocket*)ptr;
@@ -13,19 +16,22 @@ void *uds_run(void *ptr) {
   for (;;) {
     int msgsock = accept(udsss->socketfd, 0, 0);
     if (msgsock == -1) {
-      perror("accept");
-      exit(1);
-    }
-    if (udsss->connection_count == MAXCONNECTIONS-1) {
-      fprintf(stderr, "connection refused because maximum connection counf of %d was reached", MAXCONNECTIONS);
-      continue;
+      perror("accepting for server socket");
+      return NULL;
     }
     pthread_mutex_lock( &(udsss->mutex) );
-    //TODO
+    if (udsss->connection_count == MAXCONNECTIONS-1) {
+      fprintf(stderr, "connection refused because maximum connection counf of %d was reached", MAXCONNECTIONS);
+    } else {
+      udsss->messagesocketsfds[udsss->connection_count] = msgsock;
+      udsss->connection_count ++;
+    }
     pthread_mutex_unlock( &(udsss->mutex) );
   }
-  return udsss;
 }
+
+/////////////////////
+// declared in header
 
 udsserversocket *uds_create(char *socketpath, int deleteSocketAfterUse) {
   udsserversocket* udsss = assert_malloc(sizeof(udsserversocket));
@@ -53,12 +59,55 @@ udsserversocket *uds_create(char *socketpath, int deleteSocketAfterUse) {
   return udsss;
 }
 
-/**
- * Returns zero, if the listening thread was started successfully.
- * @see pthread_create
- */
-int uds_start(udsserversocket *server) {
-  return pthread_create(&(server->thread), NULL, uds_run, (void*)server);
+void uds_start(udsserversocket *udsss) {
+  if (pthread_create(&(udsss->thread), NULL, uds_run, (void*)udsss)) {
+    perror("creating unix domain socket server thread");
+    exit(1);
+  }
+}
+
+void uds_stop(udsserversocket *udsss) {
+  if (close(udsss->socketfd)) {
+    perror("closing server socket");
+    exit(1);
+  }
+}
+
+void uds_dprintf_all(udsserversocket *udsss, const char *format, ...) {
+  va_list argp;
+  va_start(argp, format);
+  pthread_mutex_lock( &(udsss->mutex) );
+  for (int i = 0; i < udsss->connection_count; i++) {
+    int retv = vdprintf(udsss->messagesocketsfds[i], format, argp);
+    if (retv < 0) {
+      // this socket was closed
+      perror("message socket was closed");
+      // remove socket
+      for (int x = i; x < udsss->connection_count-1; i++) // shift following sockets
+        udsss->messagesocketsfds[x] = udsss->messagesocketsfds[x+1];
+      i --;
+      udsss->connection_count --;
+    }
+  }
+  va_end(argp);
+  pthread_mutex_unlock( &(udsss->mutex) );
+}
+
+void uds_write_all(udsserversocket *udsss, const void *buffer, size_t nbytes) {
+  pthread_mutex_lock( &(udsss->mutex) );
+  for (int i = 0; i < udsss->connection_count; i++) {
+    int retv = write(udsss->messagesocketsfds[i], buffer, nbytes);
+    if (retv < 0) {
+      // this socket was closed
+      perror("message socket was closed");
+      // remove socket
+      for (int x = i; x < udsss->connection_count-1; i++) // shift following sockets
+        udsss->messagesocketsfds[x] = udsss->messagesocketsfds[x+1];
+      i --;
+      udsss->connection_count --;
+    }
+  }
+  pthread_mutex_unlock( &(udsss->mutex) );
 }
 
 
