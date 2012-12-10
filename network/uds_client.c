@@ -10,7 +10,7 @@ udsclientsocket *uds_create_client(char *socketpath) {
   udsclientsocket *udscs = assert_malloc(sizeof(udsclientsocket));
   
   udscs->socketfd = socket(AF_UNIX, SOCK_STREAM, 0);
-  if (udscs->socketfd) {
+  if (udscs->socketfd == -1) {
     perror("uds client, opening stream socket");
     exit(1);
   }
