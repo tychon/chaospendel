@@ -2,7 +2,7 @@
 CFLAGS = -std=gnu99 -Wall -Werror
 LIBS = -lc -lpthread
 
-NONMAINOBJS = uds_server.o uds_client.o memory_wrappers.o
+NONMAINOBJS = uds_server.o uds_client.o time_join.o memory_wrappers.o
 HEADERFILES = $(NONMAINOBJS:.o=.h)
 
 all: replay testreader tracker
