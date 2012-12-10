@@ -66,7 +66,7 @@ int main(int argc, char *argv[]) {
   char buffer[BUFFERSIZES]; // this buffer the read method writes to
   struct timeb tmb; // for the timestamp
   struct tm timetm;
-  long int millisecs;
+  long long millisecs;
   // enless loop til end of csv file
   for (;;) {
     if (lineLength >= 0) {
@@ -75,12 +75,12 @@ int main(int argc, char *argv[]) {
       // get time step
       ftime(&tmb);
       timetm = *localtime(& tmb.time);
-      millisecs =                              (long int)tmb.millitm
-                  +                       1000*(long int)timetm.tm_sec
-                  +                    60*1000*(long int)timetm.tm_min
-                  +                 60*60*1000*(long int)timetm.tm_hour
-                  +              24*60*60*1000*(long int)timetm.tm_yday
-                  +(long int)365*24*60*60*1000*(long int)timetm.tm_year;
+      millisecs =                              (long long)tmb.millitm
+                  +                       1000*(long long)timetm.tm_sec
+                  +                    60*1000*(long long)timetm.tm_min
+                  +                 60*60*1000*(long long)timetm.tm_hour
+                  +              24*60*60*1000*(long long)timetm.tm_yday
+                  +(long long)365*24*60*60*1000*(long long)timetm.tm_year;
       // send data
       uds_dprintf_all(udsss, "[%ld]", millisecs);
       uds_write_all(udsss, buffer+bufferReadPos, lineLength);
