@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <unistd.h>
+#include <signal.h>
 
 #include "memory_wrappers.h"
 #include "uds_server.h"
@@ -35,6 +36,10 @@ void *uds_run(void *ptr) {
 // declared in header
 
 udsserversocket *uds_create_server(char *socketpath) {
+  // don't die just because you can't talk to someone anymore. it's not
+  // that bad.
+  signal(SIGPIPE, SIG_IGN);
+
   udsserversocket* udsss = assert_malloc(sizeof(udsserversocket));
   udsss->connection_count = 0;
   // initialize mutex with standard attributes
