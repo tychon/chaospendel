@@ -22,11 +22,11 @@ void *uds_run(void *ptr) {
     }
     pthread_mutex_lock( &(udsss->mutex) );
     if (udsss->connection_count == MAXCONNECTIONS-1) {
-      fprintf(stderr, "connection refused: maximum connection counf of %d was reached", MAXCONNECTIONS);
+      fprintf(stderr, "connection refused: maximum connection counf of %d was reached\n", MAXCONNECTIONS);
     } else {
       udsss->messagesocketsfds[udsss->connection_count] = msgsock;
       udsss->connection_count ++;
-      fprintf(stderr, "new connection accepted");
+      fprintf(stderr, "new connection accepted\n");
     }
     pthread_mutex_unlock( &(udsss->mutex) );
   }

@@ -16,7 +16,9 @@ udsclientsocket *uds_create_client(char *socketpath) {
   }
   udscs->server.sun_family = AF_UNIX;
   strcpy(udscs->server.sun_path, socketpath);
-  if (connect(udscs->socketfd, (struct sockaddr *) &(udscs->server), sizeof(struct sockaddr_un)) < 0) {
+  if ( connect(udscs->socketfd,
+               (struct sockaddr *) &(udscs->server),
+               sizeof(struct sockaddr_un)            ) < 0) {
     close(udscs->socketfd);
     perror("uds client, connecting stream socket");
     exit(1);
