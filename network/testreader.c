@@ -7,6 +7,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "uds_client.h"
+
 #define CMP(str, index) (strcmp(str, argv[index]) == 0)
 #define FORMATHEX 1
 #define FORMATDEC 2
@@ -27,13 +29,10 @@
 #define PRINTABLE(ch) (ch >= 32 && ch <= 126)
 
 int main(int argc, char *argv[]) {
-  int sock;
-  struct sockaddr_un server;
-  
   char *sockpath = NULL;
   int format = FORMATHEX;
   for (int i = 1; i < argc; i++) {
-    if (strcmp("--format", argv[i]) == 0 || strcmp("-f", argv[i]) == 0) {
+    if (CMP("--format", i) || CMP("-f", i)) {
       i++;
       if (CMP("bin", i) || CMP("binary", i)) format = FORMATBIN;
       else if (CMP("dec", i) || CMP("decimal", i)) format = FORMATDEC;
@@ -48,31 +47,12 @@ int main(int argc, char *argv[]) {
     exit(1);
   }
   
-  sock = socket(AF_UNIX, SOCK_STREAM, 0);
-  if (sock < 0) {
-    perror("opening stream socket");
-    exit(1);
-  }
   
-  server.sun_family = AF_UNIX;
-  strcpy(server.sun_path, argv[1]);
+  udsclientsocket *udscs = uds_create_client(sockpath);
   
-  
-  if (connect(sock, (struct sockaddr *) &server, sizeof(struct sockaddr_un)) < 0) {
-    close(sock);
-    perror("connecting stream socket");
-    exit(1);
-  }
-  
-  int rval;
   char c;
   for (;;) {
-    rval = read(sock, &c, 1);
-    if (rval < 0) {
-      perror("reading data");
-      exit(1);
-    }
-    if (rval == 0) {
+    if (uds_read(udscs, &c, 1) == 0) {
       printf("end of data\n");
       exit(0);
     }
@@ -89,6 +69,6 @@ int main(int argc, char *argv[]) {
     fflush(stdout);
   }
   
-  close(sock);
+  uds_close_client(udscs);
 }
 
