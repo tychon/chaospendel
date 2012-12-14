@@ -59,11 +59,11 @@ int main(int argc, char *argv[]) {
     switch (format) {
       case FORMATBIN: {
         if (PRINTABLE(c)) printf(BYTETOBINARYPATTERN"\t%c\n", BYTETOBINARY(c), c);
-        else printf(BYTETOBINARYPATTERN"\t%x\n", BYTETOBINARY(c), (int)c);
+        else printf(BYTETOBINARYPATTERN"\t%02x\n", BYTETOBINARY(c), c);
         break;
       }
       case FORMATDEC: printf("%d ", (int)c); break;
-      case FORMATHEX: printf("%x ", (int)c); break;
+      case FORMATHEX: printf("%02x ", (int)c); break;
       case FORMATASC: printf("%c", c); break;
     }
     fflush(stdout);

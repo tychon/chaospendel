@@ -21,3 +21,6 @@ tracker: $(NONMAINOBJS) tracker.o
 testreader: $(NONMAINOBJS) testreader.o
 	gcc $(NONMAINOBJS) testreader.o $(LIBS) -o testreader
 
+protocol_test: $(NONMAINOBJS) protocol_test.o
+	gcc $(NONMAINOBJS) protocol_test.o $(LIBS) -o protocol_test
+
