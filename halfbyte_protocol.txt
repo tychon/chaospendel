@@ -11,8 +11,8 @@ Meta Codes
 Zwei Bit lang:
 
 00 : Anfang der ersten Zahl im Datensatz
-10 : Anfang einer Zahl
-01 : Nicht erster Teil einer Zahl
+01 : Anfang einer Zahl
+10 : Nicht erster Teil einer Zahl
 11 : Ende der letzten Zahl im Datensatz
 
 Vier Bit lang:

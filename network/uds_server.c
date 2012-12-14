@@ -81,7 +81,7 @@ void uds_stop_server(udsserversocket *udsss) {
   free(udsss);
 }
 
-void uds_dprintf_all(udsserversocket *udsss, const char *format, ...) {
+void uds_dprintf_toall(udsserversocket *udsss, const char *format, ...) {
   va_list argp;
   va_start(argp, format);
   pthread_mutex_lock( &(udsss->mutex) );
@@ -101,7 +101,7 @@ void uds_dprintf_all(udsserversocket *udsss, const char *format, ...) {
   pthread_mutex_unlock( &(udsss->mutex) );
 }
 
-void uds_write_all(udsserversocket *udsss, const void *buffer, size_t nbytes) {
+void uds_write_toall(udsserversocket *udsss, const void *buffer, size_t nbytes) {
   pthread_mutex_lock( &(udsss->mutex) );
   for (int i = 0; i < udsss->connection_count; i++) {
     int retv = write(udsss->messagesocketsfds[i], buffer, nbytes);

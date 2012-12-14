@@ -11,6 +11,7 @@
 #include <assert.h>
 
 #include "uds_server.h"
+#include "protocol.h"
 
 #define BUFFERSIZES 1024
 
@@ -64,8 +65,6 @@ int main(int argc, char *argv[]) {
   int bufferWritePos = 0;
   int lineLength = -1; // indicates if there is a full line in outbuffer and its length
   char buffer[BUFFERSIZES]; // this buffer the read method writes to
-  struct timeb tmb; // for the timestamp
-  struct tm timetm;
   long long millisecs;
   // enless loop til end of csv file
   for (;;) {
@@ -73,17 +72,10 @@ int main(int argc, char *argv[]) {
       printf(">"); fflush(stdout);
       if (samplerate > 0) usleep(sleepmillis*1000);
       // get time step
-      ftime(&tmb);
-      timetm = *localtime(& tmb.time);
-      millisecs =                              (long long)tmb.millitm
-                  +                       1000*(long long)timetm.tm_sec
-                  +                    60*1000*(long long)timetm.tm_min
-                  +                 60*60*1000*(long long)timetm.tm_hour
-                  +              24*60*60*1000*(long long)timetm.tm_yday
-                  +(long long)365*24*60*60*1000*(long long)timetm.tm_year;
+      millisecs = getUnixMillis();
       // send data
-      uds_dprintf_all(udsss, "[%ld]", millisecs);
-      uds_write_all(udsss, buffer+bufferReadPos, lineLength);
+      uds_dprintf_toall(udsss, "[%ld]", millisecs);
+      uds_write_toall(udsss, buffer+bufferReadPos, lineLength);
       bufferReadPos += lineLength;
     } else {
       //// read new data
