@@ -1,0 +1,57 @@
+
+Protokoll
+#########
+
+Alle Bytes an Nutzdaten werden als zwei Bytes im Protokoll BigEndian codiert,
+wobei die ersten 2 Bits Metadaten enthalten und die anderen Bits einen Teil
+der Nutzdaten.
+
+Meta Codes
+==========
+Zwei Bit lang:
+
+00 : Anfang der ersten Zahl im Datensatz
+10 : Anfang einer Zahl
+01 : Nicht erster Teil einer Zahl
+11 : Ende der letzten Zahl im Datensatz
+
+Vier Bit lang:
+
+Die vorderen zwei Bits sind wie im 2 Bits langen MetaCode, die anderen zwei
+Bits markieren
+
+=== 2-Byte-Datentypen: short, unsigned short
+Gesamt: 2 Bytes = 16 Bits
+xxxxxxxx xxxxxxxx
+
+wird zu
+
+Gesamt: 3 Bytes = 24 Bits
+Metadaten: 6 Bits
+Ungenutzt: 2 Bits (Bit 3 und 4 im letzten Byte)
+yyxxxxxx yyxxxxxx yy00xxxx 
+
+=== 4-Byte-Datentypen: int, unsigned int, long int, float
+Gesamt: 4 Bytes = 32 Bits
+xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx 
+
+wird zu 
+
+Gesamt: 6 Bytes = 48 Bits
+Nutzdaten: 5*6 + 2 Bits = 32 Bits
+Metadaten: 6*2 Bits = 12 Bits
+Ungenutzt: 4 Bits
+yyxxxxxx yyxxxxxx yyxxxxxx yyxxxxxx yyxxxxxx yy0000xx
+
+=== 8-Byte-Datentypen: long long int, double
+Nutzdaten: 8 Bytes = 64 Bits
+xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx 
+
+wird zu
+
+Gesamt: 11 Bytes = 128 Bits
+Nutzdaten: 10*6 + 4 Bits = 64 Bits
+Metadaten: 11*2 Bits = 22 Bits
+Ungenutzt: 2 Bits
+yyxxxxxx yyxxxxxx yyxxxxxx yyxxxxxx yyxxxxxx yyxxxxxx yyxxxxxx yyxxxxxx yyxxxxxx yyxxxxxx yy00xxxx 
+
