@@ -23,9 +23,9 @@ long long getUnixMillis();
 int formatHalfbyte2Packet(char *buffer, int bufferlength
                         , long long timestamp
                         , uint16_t *values, int nvalues);
-int parseHalfbyte2Packet(char *buffer, int bufferlength
+int parseHalfbyte2Packet(unsigned char *buffer, int bufferlength
                        , struct halfbyte2 *result, int timestamp, int nvalues
-                       , char **startptr, char **endptr);
+                       , unsigned char **startptr, unsigned char **endptr);
 
 #endif // _PROTOCOL_H
 

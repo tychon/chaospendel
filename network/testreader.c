@@ -103,8 +103,8 @@ int main(int argc, char *argv[]) {
     }
     
     // start reading
-    char buffer[1024], *startptr, *endptr;
-    int retv = 0;
+    unsigned char buffer[1024], *startptr, *endptr;
+    int retv = 0, retv2;
     for (;;) {
       if ((retv = uds_read(udscs, buffer, 1024)) == 0) {
         printf("end of data\n");
@@ -112,10 +112,12 @@ int main(int argc, char *argv[]) {
       }
       switch (format) {
         case FORMATHALFBYTE2: {
-          if (parseHalfbyte2Packet(buffer, retv
+          if ( (retv2 = parseHalfbyte2Packet(buffer, retv
                                  , (struct halfbyte2*)parsed, timestamped, nvalues
-                                 , &startptr, &endptr                ) < 0) {
-            fprintf(stderr, "parsing failed\n");
+                                 , &startptr, &endptr                )) < 0) {
+            fprintf(stderr, "parsing failed with (%d), buffer: ", retv2);
+            for (int i = 0; i < retv; i++) fprintf(stderr, " %02x", buffer[i]);
+            fprintf(stderr, "\n");
           }
           printf("[%lld]", ((struct halfbyte2*)parsed)->timestamp);
           for (int i = 0; i < nvalues; i++) 

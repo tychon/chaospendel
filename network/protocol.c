@@ -24,9 +24,15 @@ int format2Bytes(char *buffer, uint16_t data) {
   
   return 3;
 }
-
+// Looks for 3 bytes of data
+int validate2Bytes(unsigned char *buffer) {
+  if (! ((buffer[0] & 0xc0) == 0x40  ||  (buffer[0] & 0xc0) ==  0x0)) return 0;
+  if (! ((buffer[1] & 0xc0) == 0x80)) return 1;
+  if (! ((buffer[2] & 0xc0) == 0x80  ||  (buffer[2] & 0xc0) == 0xc0)) return 2;
+  return -1;
+}
 // Reads 3 bytes of data
-uint16_t parse2Bytes(char *buffer) {
+uint16_t parse2Bytes(unsigned char *buffer) {
   uint16_t result = 0;
   result  = (buffer[0] & 0x3f) << 10;
   result |= (buffer[1] & 0x3f) <<  4;
@@ -63,9 +69,20 @@ int format8Bytes(char *buffer, uint64_t data) {
   
   return 11;
 }
-
+// Looks for 11 bytes of data
+int validate8Bytes(unsigned char *buffer) {
+  // first byte
+  if (! ((buffer[0] & 0xc0) == 0x40  ||  (buffer[0] & 0xc0) ==  0x0)) return 0;
+  // 9 middle bytes
+  for (int i = 1; i < 10; i++)
+    if (! (buffer[i] & 0xc0) == 0x80) return i;
+  // last byte
+  if (! ((buffer[10] & 0xc0) == 0x80  ||  (buffer[10] & 0xc0) == 0xc0)) return 10;
+  // everything is ok
+  return -1;
+}
 // Reads 11 bytes of data
-uint64_t parse8Bytes(char *buffer) {
+uint64_t parse8Bytes(unsigned char *buffer) {
   uint64_t result = 0;
   for (int i = 0; i < 10; i ++)
     result |= ((uint64_t)buffer[i] & 0x3f) << (6*(9-i)+4);
@@ -118,22 +135,28 @@ int formatHalfbyte2Packet(char *buffer
 }
 
 /**
- * @returns The length of the valid data packet.
+ * @returns The length >= 0 of the valid data packet
+ *          (*endptr points to first byte after dataset)
+ *  or:
+ *   -1 if there was no beginning of a dataset found
+ *   -2 if the buffer is too small to contain a timestamp
+ *      (only with the timestamp option)
+ *   -3 if the timestamp contains invalid bits
+ *      (*endptr points to the first invalid byte found)
+ *   -4 if the buffer is too small to contain all the values
+ *   -5 if there was invalid data in the dataset
+ *      (*endptr points to the first invalid byte found)
+ *   -6 if the last byte of the dataset is invalid
+ *      (*endptr points to the first byte after the invalid byte)
  */
-int parseHalfbyte2Packet(char *buffer
+int parseHalfbyte2Packet(unsigned char *buffer
                        , int bufferlength
                        , struct halfbyte2 *result
                        , int timestamp
                        , int nvalues
-                       , char **startptr
-                       , char **endptr) {
+                       , unsigned char **startptr
+                       , unsigned char **endptr) {
   // find start of dataset
-  /*
-  for (*startptr = buffer; *startptr < buffer+bufferlength; *startptr ++)
-    if ( ! (**startptr & 0xc0))
-      break;
-  if (*startptr >= buffer+bufferlength) return -1;
-  */
   *startptr = NULL;
   for (int i = 0; i < bufferlength; i++) {
     if ( ! (buffer[i] & 0xc0)) {
@@ -143,29 +166,38 @@ int parseHalfbyte2Packet(char *buffer
   }
   if (! startptr) return -1;
   
-  int bpos = *startptr - buffer;
+  int bpos = *startptr - buffer; // is on first valid bit
+  int retv; // return value of validator functions
   
   // parse timestamp (maybe)
   if (timestamp) {
     if (bufferlength-bpos < 11) return -2;
-    // TODO validate meta data
+    if ( (retv = validate8Bytes(buffer)) >= 0) {
+      *endptr = buffer+bpos+retv;
+      return -3;
+    }
     result->timestamp = parse8Bytes(buffer+bpos);
     bpos += 11;
   } else result->timestamp = 0;
   
-  if (bufferlength-bpos < nvalues*3) return -3;
+  // parse uint16_ts
+  if (bufferlength-bpos < nvalues*3) return -4;
   for (int i = 0; i < nvalues; i++) {
-    // TODO validate metadata
+    if ( (retv = validate2Bytes(buffer+bpos)) >= 0) {
+      *endptr = buffer+bpos+retv;
+      return -5;
+    }
     result->values[i] = parse2Bytes(buffer+bpos);
     bpos += 3;
   }
   
   *endptr = buffer+bpos;
-  return bpos - (*startptr - buffer);
+  
+  // validate last byte
+  if ((buffer[bpos-1] & 0xc0) != 0xc0) {
+    return -6;
+  }
+  
+  return *endptr - *startptr;
 }
-
-
-
-
-
 
