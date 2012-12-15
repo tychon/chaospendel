@@ -13,6 +13,7 @@
 network/replay
 network/testreader
 network/tracker
+network/protocol_test
 fftw/fourier
 numerical/main
 numerical/fourier
