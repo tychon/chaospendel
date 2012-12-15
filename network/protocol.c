@@ -25,7 +25,16 @@ int format2Bytes(char *buffer, uint16_t data) {
   return 3;
 }
 
-// Writes 11 Bytes of data
+// Reads 3 bytes of data
+uint16_t parse2Bytes(char *buffer) {
+  uint16_t result = 0;
+  result  = (buffer[0] & 0x3f) << 10;
+  result |= (buffer[1] & 0x3f) <<  4;
+  result |= (buffer[2] &  0xf);
+  return be16toh(result);
+}
+
+// Writes 11 bytes of data
 int format8Bytes(char *buffer, uint64_t data) {
   data = htobe64(data);
   
@@ -53,6 +62,15 @@ int format8Bytes(char *buffer, uint64_t data) {
   buffer[10] = (data            &  0xf) | 0x80;
   
   return 11;
+}
+
+// Reads 11 bytes of data
+uint64_t parse8Bytes(char *buffer) {
+  uint64_t result = 0;
+  for (int i = 0; i < 10; i ++)
+    result |= ((uint64_t)buffer[i] & 0x3f) << (6*(9-i)+4);
+  result |= ((uint64_t)buffer[10] & 0xf);
+  return be64toh(result);
 }
 
 
@@ -88,14 +106,66 @@ int formatHalfbyte2Packet(char *buffer
     bpos += 11;
   }
   
-  if (bufferlength-bpos < nvalues*3) return -1;
+  if (bufferlength-bpos < nvalues*3 || (!timestamp && !nvalues)) return -1;
   for (int i = 0; i < nvalues; i++) {
     bpos += format2Bytes(buffer+bpos, values[i]);
   }
   
   buffer[0] &= 0x3f; // meta data of first byte
-  buffer[bpos-1] &= 0xc0; // meta data of last byte
+  buffer[bpos-1] |= 0xc0; // meta data of last byte
   
   return bpos;
 }
+
+/**
+ * @returns The length of the valid data packet.
+ */
+int parseHalfbyte2Packet(char *buffer
+                       , int bufferlength
+                       , struct halfbyte2 *result
+                       , int timestamp
+                       , int nvalues
+                       , char **startptr
+                       , char **endptr) {
+  // find start of dataset
+  /*
+  for (*startptr = buffer; *startptr < buffer+bufferlength; *startptr ++)
+    if ( ! (**startptr & 0xc0))
+      break;
+  if (*startptr >= buffer+bufferlength) return -1;
+  */
+  *startptr = NULL;
+  for (int i = 0; i < bufferlength; i++) {
+    if ( ! (buffer[i] & 0xc0)) {
+      *startptr = buffer+i;
+      break;
+    }
+  }
+  if (! startptr) return -1;
+  
+  int bpos = *startptr - buffer;
+  
+  // parse timestamp (maybe)
+  if (timestamp) {
+    if (bufferlength-bpos < 11) return -2;
+    // TODO validate meta data
+    result->timestamp = parse8Bytes(buffer+bpos);
+    bpos += 11;
+  } else result->timestamp = 0;
+  
+  if (bufferlength-bpos < nvalues*3) return -3;
+  for (int i = 0; i < nvalues; i++) {
+    // TODO validate metadata
+    result->values[i] = parse2Bytes(buffer+bpos);
+    bpos += 3;
+  }
+  
+  *endptr = buffer+bpos;
+  return bpos - (*startptr - buffer);
+}
+
+
+
+
+
 

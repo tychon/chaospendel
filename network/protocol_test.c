@@ -1,4 +1,5 @@
 
+#define _BSD_SOURCE
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -23,7 +24,7 @@ int main(int argc, char *argv[]) {
       exit(1);
     }
     uds_write_toall(udsss, buffer, retv);
-    sleep(1);
+    usleep(100*1000);
   }
   
   uds_stop_server(udsss);
