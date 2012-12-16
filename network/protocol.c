@@ -12,7 +12,7 @@
 // local
 
 // Writes 3 bytes of data
-int format2Bytes(char *buffer, uint16_t data) {
+int format2Bytes(unsigned char *buffer, uint16_t data) {
   data = htobe16(data);
   
   // 11111100 00000000
@@ -41,7 +41,7 @@ uint16_t parse2Bytes(unsigned char *buffer) {
 }
 
 // Writes 11 bytes of data
-int format8Bytes(char *buffer, uint64_t data) {
+int format8Bytes(unsigned char *buffer, uint64_t data) {
   data = htobe64(data);
   
   // 11111100 00000000 00000000 00000000 00000000 00000000 00000000 00000000
@@ -109,7 +109,7 @@ long long getUnixMillis() {
         +(long long)365*24*60*60*1000*(long long)timetm.tm_year;
 }
 
-int formatHalfbyte2Packet(char *buffer
+int formatHalfbyte2Packet(unsigned char *buffer
                         , int bufferlength
                         , long long timestamp
                         , uint16_t *values

@@ -10,109 +10,112 @@
 #include <string.h>
 #include <assert.h>
 
+#include "common.h"
 #include "uds_server.h"
 #include "protocol.h"
 
-#define BUFFERSIZES 1024
+#define BUFFERSIZES 100
 
 int main(int argc, char *argv[]) {
   int deleteOldSocket = 0;
   int deleteSocketAfterUse = 0;
+  int quiet = 0;
   char *socketpath = NULL;
   char *csvpath = NULL;
   int samplerate = -1; // default value: send as fast as we can
   
   for (int i = 1; i < argc; i++) {
-    if (strcmp("-f", argv[i]) == 0) deleteOldSocket = 1;
-    else if (strcmp("-in", argv[i]) == 0) {
+    if (ARGCMP("-i", i) || ARGCMP("--inputfile", i)) {
       i ++;
       csvpath = argv[i];
     }
-    else if (strcmp("--socket", argv[i]) == 0) {
+    else if (ARGCMP("-o", i) || ARGCMP("--outputsocket", i)) {
       i ++;
       socketpath = argv[i];
     }
-    else if (strcmp("--rate", argv[i]) == 0) {
+    else if (ARGCMP("-r", i) || ARGCMP("--samplerate", i)) {
       i ++;
       samplerate = atoi(argv[i]);
     }
-    else if (strcmp("-d", argv[i]) == 0) deleteSocketAfterUse = 1;
-    else fprintf(stderr, "Ignoring unknown argument: \"%s\"", argv[i]);
+    else if (ARGCMP("-f", i)) deleteOldSocket = 1;
+    else if (ARGCMP("-d", i)) deleteSocketAfterUse = 1;
+    else if (ARGCMP("-q", i) || ARGCMP("--quiet", i)) quiet = 1;
+    else fprintf(stderr, "Ignoring unknown argument: \"%s\"\n", argv[i]);
   }
   
   if (! socketpath || ! csvpath) {
-    fprintf(stderr, "usage [-f] [-d] [--rate SAMPLERATE] -in CSVFILEPATH --socket SOCKETPATH\n");
+    fprintf(stderr, "usage [-f] [-d] [--samplerate SAMPLERATE] --inputfile CSVFILEPATH --outputsocket SOCKETPATH\n");
     exit(1);
   }
   
   if (deleteOldSocket) unlink(socketpath);
-  printf("opening socket with path \"%s\"\n", socketpath);
+  if ( ! quiet) printf("opening socket with path \"%s\"\n", socketpath);
   udsserversocket *udsss = uds_create_server(socketpath);
   uds_start_server(udsss);
   
-  printf("Opening csv file \"%s\" ...\n", csvpath);
+  if ( ! quiet) printf("Opening csv file \"%s\" ...\n", csvpath);
   FILE *csvf = fopen(csvpath, "r");
   if (! csvf) {
     perror("opening csv file");
     exit(1);
   }
   
-  if (samplerate <= 0) printf("Sending samples as fast as we can ...\n");
-  else printf("Sendings a rate of %d samples per second ...\n", samplerate);
+  if (samplerate <= 0 && ! quiet) printf("Sending samples as fast as we can ...\n");
+  else if ( ! quiet) printf("Sending at a rate of %d samples per second ...\n", samplerate);
   int sleepmillis = (int) (1.0/ ((double)samplerate) * 1000.0);
   
-  int bufferReadPos = 0;
-  int bufferWritePos = 0;
-  int lineLength = -1; // indicates if there is a full line in outbuffer and its length
-  char buffer[BUFFERSIZES]; // this buffer the read method writes to
-  long long millisecs;
+  int retv, shift, inbufferlength = 0;
+  unsigned short nextNumber = -1; // indicates if there is a full line in outbuffer and its length
+  char *endptr;
+  char inbuffer[BUFFERSIZES]; // this buffer the read method writes to
+  unsigned char outbuffer[BUFFERSIZES]; // this buffer the protocol formatter writes to
   // enless loop til end of csv file
   for (;;) {
-    if (lineLength >= 0) {
-      printf(">"); fflush(stdout);
-      if (samplerate > 0) usleep(sleepmillis*1000);
-      // get time step
-      millisecs = getUnixMillis();
-      // send data
-      uds_dprintf_toall(udsss, "[%ld]", millisecs);
-      uds_write_toall(udsss, buffer+bufferReadPos, lineLength);
-      bufferReadPos += lineLength;
-    } else {
-      //// read new data
-      // shift data to beginning:
-      for (int i = bufferReadPos; i < BUFFERSIZES; i++) buffer[i-bufferReadPos] = buffer[i];
-      bufferWritePos -= bufferReadPos;
-      bufferReadPos = 0;
-      // read data from file
-      int rval = fread(buffer+bufferReadPos, sizeof(char), BUFFERSIZES-bufferWritePos, csvf);
-      printf("<\n");// fflush(stdin);
-      if (rval < 0) {
+    //// parse data
+    nextNumber = (unsigned short)strtol(inbuffer, &endptr, 0);
+    if (endptr == inbuffer || (endptr == inbuffer+inbufferlength)) { // no valid digits found
+      // read data
+      if ( ! quiet) { printf("<\n"); fflush(stdout); }
+      retv = fread(inbuffer+inbufferlength, sizeof(char), BUFFERSIZES-inbufferlength, csvf);
+      if (retv < 0) {
         perror("reading from csv file");
-      } else if (rval == 0) {
-        printf("\nend of data.\n");
+        exit(1);
+      } else if (retv == 0) {
+        if ( ! quiet) printf("\nend of data.\n");
         break;
       }
-      bufferWritePos += rval;
-      assert(bufferWritePos <= BUFFERSIZES);
+      inbufferlength += retv;
+      
+      continue;
+    } // else
+    if (endptr == NULL) {
+      inbufferlength = 0; // whole input is valid
+      inbuffer[0] = '_'; // put some invalid character in it
+    }
+    else {
+      // shift unread data to beginning of inbuffer
+      shift = endptr - inbuffer;
+      for (int i = shift; i < BUFFERSIZES; i ++)
+        inbuffer[i-shift] = inbuffer[i];
+      inbufferlength -= shift;
+      inbuffer[inbufferlength] = '_';
     }
     
-    // skipt trailing newlines
-    while (buffer[bufferReadPos] == '\n' && bufferReadPos < bufferWritePos) bufferReadPos ++;
-    // find next lineLength
-    lineLength = -1;
-    for (int i = bufferReadPos; i < bufferWritePos; i++) {
-      if (buffer[i] == '\n') {
-        lineLength = i - bufferReadPos;
-        break;
-      }
+    //// write data
+    if ( ! quiet) { printf(">"); fflush(stdout); }
+    if (samplerate > 0) usleep(sleepmillis*1000);
+    // format dataset
+    retv = formatHalfbyte2Packet(outbuffer, BUFFERSIZES
+                               , getUnixMillis()
+                               , &nextNumber, 1);
+    if (retv <= 0) {
+      fprintf(stderr, "error while formatting packet, code: (%d)\n", retv);
+      break;
     }
-    if (lineLength == 0) {
-      fprintf(stderr, "empty line\n");
-      goto END;
-    }
+    // send data
+    uds_write_toall(udsss, outbuffer, retv);
   }
   
-END:
   printf("closing file ...\n");
   fclose(csvf);
   

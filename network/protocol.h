@@ -20,7 +20,7 @@ struct halfbyte8 {
 
 long long getUnixMillis();
 
-int formatHalfbyte2Packet(char *buffer, int bufferlength
+int formatHalfbyte2Packet(unsigned char *buffer, int bufferlength
                         , long long timestamp
                         , uint16_t *values, int nvalues);
 int parseHalfbyte2Packet(unsigned char *buffer, int bufferlength

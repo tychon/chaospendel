@@ -13,7 +13,7 @@ int main(int argc, char *argv[]) {
   udsserversocket *udsss = uds_create_server(socketpath);
   uds_start_server(udsss);
   
-  char buffer[1024];
+  unsigned char buffer[1024];
   int retv;
   unsigned short values[10];
   for (;;) {

@@ -7,11 +7,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "common.h"
 #include "memory_wrappers.h"
 #include "uds_client.h"
 #include "protocol.h"
-
-#define CMP(str, index) (strcmp(str, argv[index]) == 0)
 
 #define FORMATHEX 1
 #define FORMATDEC 2
@@ -40,24 +39,24 @@ int main(int argc, char *argv[]) {
   int timestamped = 0;
   int nvalues = -1;
   for (int i = 1; i < argc; i++) {
-    if (CMP("--format", i) || CMP("-f", i)) {
+    if (ARGCMP("--format", i) || ARGCMP("-f", i)) {
       i ++;
-      if (CMP("bin", i) || CMP("binary", i)) format = FORMATBIN;
-      else if (CMP("dec", i) || CMP("decimal", i)) format = FORMATDEC;
-      else if (CMP("hex", i) || CMP("hexadecimal", i)) format = FORMATHEX;
-      else if (CMP("asc", i) || CMP("ascii", i)) format = FORMATASC;
-      else if (CMP("half2", i)) format = FORMATHALFBYTE2;
-      else if (CMP("half4", i)) format = FORMATHALFBYTE4;
-      else if (CMP("half8", i)) format = FORMATHALFBYTE8;
+      if (ARGCMP("bin", i) || ARGCMP("binary", i)) format = FORMATBIN;
+      else if (ARGCMP("dec", i) || ARGCMP("decimal", i)) format = FORMATDEC;
+      else if (ARGCMP("hex", i) || ARGCMP("hexadecimal", i)) format = FORMATHEX;
+      else if (ARGCMP("asc", i) || ARGCMP("ascii", i)) format = FORMATASC;
+      else if (ARGCMP("half2", i)) format = FORMATHALFBYTE2;
+      else if (ARGCMP("half4", i)) format = FORMATHALFBYTE4;
+      else if (ARGCMP("half8", i)) format = FORMATHALFBYTE8;
     }
-    else if (CMP("--timestamped", i) || CMP("-t", i)) {
+    else if (ARGCMP("--timestamped", i) || ARGCMP("-t", i)) {
       if (format >= FORMATHALFBYTE2 && format <=  FORMATHALFBYTE8) timestamped = 1;
       else {
         fprintf(stderr, "The timestamp option only goes with the halfX format.\n");
         exit(1);
       }
     }
-    else if (CMP("--nvalues", i) || CMP("-v", i)) {
+    else if (ARGCMP("--nvalues", i) || ARGCMP("-v", i)) {
       i ++;
       nvalues = atoi(argv[i]);
     }
@@ -97,7 +96,7 @@ int main(int argc, char *argv[]) {
     switch (format) {
       case FORMATHALFBYTE2: {
         parsed = assert_malloc(sizeof(struct halfbyte2));
-        ((struct halfbyte2*)parsed)->values = assert_malloc(sizeof(uint16_t)*10);
+        ((struct halfbyte2*)parsed)->values = assert_malloc(sizeof(uint16_t)*nvalues);
       } break;
       // TODO other halfbyte formats
     }
@@ -118,11 +117,12 @@ int main(int argc, char *argv[]) {
             fprintf(stderr, "parsing failed with (%d), buffer: ", retv2);
             for (int i = 0; i < retv; i++) fprintf(stderr, " %02x", buffer[i]);
             fprintf(stderr, "\n");
+          } else {
+            printf("[%lld]", ((struct halfbyte2*)parsed)->timestamp);
+            for (int i = 0; i < nvalues; i++) 
+              printf(" %d", ((struct halfbyte2*)parsed)->values[i]);
+            printf("\n");
           }
-          printf("[%lld]", ((struct halfbyte2*)parsed)->timestamp);
-          for (int i = 0; i < nvalues; i++) 
-            printf(" %d", ((struct halfbyte2*)parsed)->values[i]);
-          printf("\n");
         } break;
         // TODO other halfbyte formats
       }

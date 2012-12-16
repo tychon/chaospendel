@@ -15,7 +15,7 @@ int machineEndianness() {
       return BIG_ENDIAN;
 }
 
-void main() {
+int main() {
   int x = machineEndianness();
   if (x == LITTLE_ENDIAN) printf("little endian\n");
   else printf("big endian\n");
