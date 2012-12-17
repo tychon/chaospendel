@@ -12,15 +12,18 @@ void setup() {
   Serial.begin(57600);
 }
 
-int lastSensorValue = 255;
-
 // the loop routine runs over and over again forever:
 void loop() {
-  // read the input on analog pin 0:
-  int sensorValue = analogRead(A0);
-  // print out the value you read:
-  // if (lastSensorValue != sensorValue) {
-    Serial.println(sensorValue);
-  // }
-  lastSensorValue = sensorValue;
+  Serial.print(analogRead(A0));
+  Serial.print(" ");
+  Serial.print(analogRead(A1));
+  Serial.print(" ");
+  Serial.print(analogRead(A2));
+  Serial.print(" ");
+  Serial.print(analogRead(A3));
+  Serial.print(" ");
+  Serial.print(analogRead(A4));
+  Serial.print(" ");
+  Serial.print(analogRead(A5));
+  Serial.print("\n");
 }
