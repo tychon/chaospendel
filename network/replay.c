@@ -110,15 +110,16 @@ int main(int argc, char *argv[]) {
     // format dataset
     millisecs = 0;
     if (printtimestamp) millisecs = getUnixMillis();
-    retv = formatHalfbyte2Packet(outbuffer, BUFFERSIZES
+    retv = format2bytePacket(outbuffer, BUFFERSIZES
                                , millisecs
                                , &nextNumber, 1);
     if (retv <= 0) {
       fprintf(stderr, "error while formatting packet, code: (%d)\n", retv);
       break;
     }
+    
     // send data
-    uds_write_toall(udsss, outbuffer, retv);
+    uds_send_toall(udsss, outbuffer, retv);
   }
   
   printf("closing file ...\n");

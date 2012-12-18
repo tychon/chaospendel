@@ -109,7 +109,7 @@ long long getUnixMillis() {
         +(long long)365*24*60*60*1000*(long long)timetm.tm_year;
 }
 
-int formatHalfbyte2Packet(unsigned char *buffer
+int format2bytePacket(unsigned char *buffer
                         , int bufferlength
                         , long long timestamp
                         , uint16_t *values
@@ -149,9 +149,9 @@ int formatHalfbyte2Packet(unsigned char *buffer
  *   -6 if the last byte of the dataset is invalid
  *      (*endptr points to the first byte after the invalid byte)
  */
-int parseHalfbyte2Packet(unsigned char *buffer
+int parse2bytePacket(unsigned char *buffer
                        , int bufferlength
-                       , struct halfbyte2 *result
+                       , struct packet2byte *result
                        , int timestamp
                        , int nvalues
                        , unsigned char **startptr
@@ -169,8 +169,8 @@ int parseHalfbyte2Packet(unsigned char *buffer
   int bpos = *startptr - buffer; // is on first valid bit
   int retv; // return value of validator functions
   
-  // parse timestamp (maybe)
   if (timestamp) {
+    // parse timestamp
     if (bufferlength-bpos < 11) return -2;
     if ( (retv = validate8Bytes(buffer)) >= 0) {
       *endptr = buffer+bpos+retv;

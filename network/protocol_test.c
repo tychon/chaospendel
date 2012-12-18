@@ -18,12 +18,12 @@ int main(int argc, char *argv[]) {
   unsigned short values[10];
   for (;;) {
     for (int i = 0; i < 10; i++) values[i] ++;
-    retv = formatHalfbyte2Packet(buffer, 1024, getUnixMillis(), values, 10);
+    retv = format2bytePacket(buffer, 1024, getUnixMillis(), values, 10);
     if (retv < 0) {
       printf("error: buffer overflow\n");
       exit(1);
     }
-    uds_write_toall(udsss, buffer, retv);
+    uds_send_toall(udsss, buffer, retv);
     usleep(100*1000);
   }
   

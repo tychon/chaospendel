@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <unistd.h>
+#include <sys/socket.h>
 #include <signal.h>
 
 #include "memory_wrappers.h"
@@ -81,30 +82,10 @@ void uds_stop_server(udsserversocket *udsss) {
   free(udsss);
 }
 
-void uds_dprintf_toall(udsserversocket *udsss, const char *format, ...) {
-  va_list argp;
-  va_start(argp, format);
+void uds_send_toall(udsserversocket *udsss, const void *buffer, size_t nbytes) {
   pthread_mutex_lock( &(udsss->mutex) );
   for (int i = 0; i < udsss->connection_count; i++) {
-    int retv = vdprintf(udsss->messagesocketsfds[i], format, argp);
-    if (retv < 0) {
-      // this socket was closed
-      perror("message socket was closed");
-      // remove socket
-      for (int x = i; x < udsss->connection_count-1; i++) // shift following sockets
-        udsss->messagesocketsfds[x] = udsss->messagesocketsfds[x+1];
-      i --;
-      udsss->connection_count --;
-    }
-  }
-  va_end(argp);
-  pthread_mutex_unlock( &(udsss->mutex) );
-}
-
-void uds_write_toall(udsserversocket *udsss, const void *buffer, size_t nbytes) {
-  pthread_mutex_lock( &(udsss->mutex) );
-  for (int i = 0; i < udsss->connection_count; i++) {
-    int retv = write(udsss->messagesocketsfds[i], buffer, nbytes);
+    int retv = send(udsss->messagesocketsfds[i], buffer, nbytes, MSG_EOR);
     if (retv < 0) {
       // this socket was closed
       perror("message socket was closed");

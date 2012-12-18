@@ -95,8 +95,8 @@ int main(int argc, char *argv[]) {
     void *parsed = NULL;
     switch (format) {
       case FORMATHALFBYTE2: {
-        parsed = assert_malloc(sizeof(struct halfbyte2));
-        ((struct halfbyte2*)parsed)->values = assert_malloc(sizeof(uint16_t)*nvalues);
+        parsed = assert_malloc(sizeof(struct packet2byte));
+        ((struct packet2byte*)parsed)->values = assert_malloc(sizeof(uint16_t)*nvalues);
       } break;
       // TODO other halfbyte formats
     }
@@ -111,16 +111,16 @@ int main(int argc, char *argv[]) {
       }
       switch (format) {
         case FORMATHALFBYTE2: {
-          if ( (retv2 = parseHalfbyte2Packet(buffer, retv
-                                 , (struct halfbyte2*)parsed, timestamped, nvalues
+          if ( (retv2 = parse2bytePacket(buffer, retv
+                                 , (struct packet2byte*)parsed, timestamped, nvalues
                                  , &startptr, &endptr                )) < 0) {
             fprintf(stderr, "parsing failed with (%d), buffer: ", retv2);
             for (int i = 0; i < retv; i++) fprintf(stderr, " %02x", buffer[i]);
             fprintf(stderr, "\n");
           } else {
-            printf("[%lld]", ((struct halfbyte2*)parsed)->timestamp);
+            printf("[%lld]", ((struct packet2byte*)parsed)->timestamp);
             for (int i = 0; i < nvalues; i++) 
-              printf(" %d", ((struct halfbyte2*)parsed)->values[i]);
+              printf(" %d", ((struct packet2byte*)parsed)->values[i]);
             printf("\n");
           }
         } break;

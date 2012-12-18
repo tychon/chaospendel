@@ -5,26 +5,26 @@
 #include <stdint.h>
 #include "uds_server.h"
 
-struct halfbyte2 {
+struct packet2byte {
   long long timestamp;
   uint16_t *values;
 };
-struct halfbyte4 {
+struct packet4byte {
   long long timestamp;
   uint32_t *values;
 };
-struct halfbyte8 {
+struct packet8byte {
   long long timestamp;
   uint64_t *values;
 };
 
 long long getUnixMillis();
 
-int formatHalfbyte2Packet(unsigned char *buffer, int bufferlength
+int format2bytePacket(unsigned char *buffer, int bufferlength
                         , long long timestamp
                         , uint16_t *values, int nvalues);
-int parseHalfbyte2Packet(unsigned char *buffer, int bufferlength
-                       , struct halfbyte2 *result, int timestamp, int nvalues
+int parse2bytePacket(unsigned char *buffer, int bufferlength
+                       , struct packet2byte *result, int timestamp, int nvalues
                        , unsigned char **startptr, unsigned char **endptr);
 
 #endif // _PROTOCOL_H

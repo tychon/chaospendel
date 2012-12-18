@@ -30,8 +30,7 @@ udsserversocket *uds_create_server(char *socketpath);
 void uds_start_server(udsserversocket*);
 void uds_stop_server(udsserversocket*);
 
-void uds_dprintf_toall(udsserversocket*, const char *format, ...);
-void uds_write_toall(udsserversocket*, const void *buffer, size_t nbytes);
+void uds_send_toall(udsserversocket*, const void *buffer, size_t nbytes);
 
 #endif // _UDS_SERVER_H
 
