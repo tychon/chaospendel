@@ -20,6 +20,7 @@ int main(int argc, char *argv[]) {
   int deleteOldSocket = 0;
   int deleteSocketAfterUse = 0;
   int quiet = 0;
+  int printtimestamp = 1;
   char *socketpath = NULL;
   char *csvpath = NULL;
   int samplerate = -1; // default value: send as fast as we can
@@ -40,6 +41,7 @@ int main(int argc, char *argv[]) {
     else if (ARGCMP("-f", i)) deleteOldSocket = 1;
     else if (ARGCMP("-d", i)) deleteSocketAfterUse = 1;
     else if (ARGCMP("-q", i) || ARGCMP("--quiet", i)) quiet = 1;
+    else if (ARGCMP("--notimestamp", i)) printtimestamp = 0;
     else fprintf(stderr, "Ignoring unknown argument: \"%s\"\n", argv[i]);
   }
   
@@ -69,6 +71,7 @@ int main(int argc, char *argv[]) {
   char *endptr;
   char inbuffer[BUFFERSIZES]; // this buffer the read method writes to
   unsigned char outbuffer[BUFFERSIZES]; // this buffer the protocol formatter writes to
+  long long millisecs;
   // enless loop til end of csv file
   for (;;) {
     //// parse data
@@ -105,8 +108,10 @@ int main(int argc, char *argv[]) {
     if ( ! quiet) { printf(">"); fflush(stdout); }
     if (samplerate > 0) usleep(sleepmillis*1000);
     // format dataset
+    millisecs = 0;
+    if (printtimestamp) millisecs = getUnixMillis();
     retv = formatHalfbyte2Packet(outbuffer, BUFFERSIZES
-                               , getUnixMillis()
+                               , millisecs
                                , &nextNumber, 1);
     if (retv <= 0) {
       fprintf(stderr, "error while formatting packet, code: (%d)\n", retv);
