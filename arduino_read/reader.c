@@ -27,11 +27,14 @@ int main(void) {
   while (1) {
     if (fgets(l, 255, serial) == NULL) return 0;
     char *c=l;
+    int spaces = 0;
     while (*c != 0) {
-      if ((*c < '0' || *c > '9') && *c != '\r') *c='\n';
+      if ((*c < '0' || *c > '9') && *c != '\r' && *c != ' ') *c='\n';
+      if (*c == '\r') { *c = '\n'; *(c+1)='\0'; break; }
+      if (*c == ' ') spaces++;
       c++;
     }
-    printf("%s", l);
+    if (spaces == 5) printf("%s", l);
   }
   return 42;
 }
