@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "memory_wrappers.h"
+#include "common.h"
 #include "uds_client.h"
 #include "protocol.h"
 
