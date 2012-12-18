@@ -14,7 +14,7 @@
 #include "uds_server.h"
 #include "protocol.h"
 
-#define BUFFERSIZES 2048
+#define BUFFERSIZES 1024
 
 int main(int argc, char *argv[]) {
   int deleteOldSocket = 0;

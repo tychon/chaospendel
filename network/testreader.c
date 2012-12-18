@@ -71,23 +71,30 @@ int main(int argc, char *argv[]) {
   fprintf(stderr, "opening socket on \"%s\"\n", sockpath);
   udsclientsocket *udscs = uds_create_client(sockpath);
   
+  int retv;
+  unsigned char buffer[1024];
+  unsigned char c;
+  
   if (format <= FORMATASC) {
-    char c;
     for (;;) {
-      if (uds_read(udscs, &c, 1) == 0) {
+      if ( (retv = uds_read(udscs, buffer, 1024)) == 0) {
         printf("end of data\n");
         break;
       }
-      switch (format) {
-        case FORMATBIN: {
-          if (PRINTABLE(c)) printf(BYTETOBINARYPATTERN"\t%c\n", BYTETOBINARY(c), c);
-          else printf(BYTETOBINARYPATTERN"\t%02x\n", BYTETOBINARY(c), (unsigned char)c);
-          break;
+      for (int i = 0; i < retv; i++) {
+        c = buffer[i];
+        switch (format) {
+          case FORMATBIN: {
+            if (PRINTABLE(c)) printf(BYTETOBINARYPATTERN"\t%c\n", BYTETOBINARY(c), c);
+            else printf(BYTETOBINARYPATTERN"\t%02x\n", BYTETOBINARY(c), c);
+            break;
+          }
+          case FORMATDEC: printf("%d ", c); break;
+          case FORMATHEX: printf("%02x ", c); break;
+          case FORMATASC: printf("%c", c); break;
         }
-        case FORMATDEC: printf("%d ", (int)c); break;
-        case FORMATHEX: printf("%02x ", (int)c); break;
-        case FORMATASC: printf("%c", c); break;
       }
+      printf("\n");
       fflush(stdout);
     }
   } else {
@@ -102,8 +109,7 @@ int main(int argc, char *argv[]) {
     }
     
     // start reading
-    unsigned char buffer[1024], *startptr, *endptr;
-    int retv = 0, retv2;
+    int retv2;
     for (;;) {
       if ((retv = uds_read(udscs, buffer, 1024)) == 0) {
         printf("end of data\n");
@@ -112,8 +118,8 @@ int main(int argc, char *argv[]) {
       switch (format) {
         case FORMATHALFBYTE2: {
           if ( (retv2 = parse2bytePacket(buffer, retv
-                                 , (struct packet2byte*)parsed, timestamped, nvalues
-                                 , &startptr, &endptr                )) < 0) {
+                                 , (struct packet2byte*)parsed, timestamped
+                                 , nvalues)) < 0) {
             fprintf(stderr, "parsing failed with (%d), buffer: ", retv2);
             for (int i = 0; i < retv; i++) fprintf(stderr, " %02x", buffer[i]);
             fprintf(stderr, "\n");
