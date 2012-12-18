@@ -48,7 +48,7 @@ udsserversocket *uds_create_server(char *socketpath) {
     exit(1);
   }
   
-  udsss->socketfd = socket(AF_UNIX, SOCK_STREAM, 0);
+  udsss->socketfd = socket(AF_UNIX, SOCK_SEQPACKET, 0);
   if (udsss->socketfd < 0) {
     perror("opening stream socket");
     exit(1);
