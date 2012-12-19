@@ -4,6 +4,8 @@
 
 #include <math.h>
 #include <fmt.h>
+#include <stdio.h>
+#include <unistd.h>
 
 // Naturkonstante:
 // Durchschnittliche Ortskraft in Mitteleuropa.
@@ -16,21 +18,27 @@ static double optFps = 60;
 
 
 // Startbedingungen
-static double l1 = 4;
-static double l2 = 3;
-static double m1 = 2;
-static double m2 = 1;
+/*
+static const double l1 = 4;
+static const double l2 = 3;
+static const double m1 = 2;
+static const double m2 = 1;
+*/
+#define l1 4
+#define l2 3
+#define m1 2
+#define m2 1
 
-static double phi1_0 = M_PI*1.5;
-static double phi2_0 = M_PI;
-static double p1_0 = 0;
-static double p2_0 = 0;
+static const double phi1_0 = M_PI*1.5;
+static const double phi2_0 = M_PI;
+static const double p1_0 = 0;
+static const double p2_0 = 0;
 
-static double k1 = (1/3) * l1^2 * m1;
-static double k2 = (1/2) * l1   * m1;
-static double k3 = m2;
-static double k4 = (1/3) * l2^2 * m2;
-static double k5 = (1/2) * l2   * m2;
+static const double k1 = (1/3) * (l1*l1) * m1;
+static const double k2 = (1/2) * l1      * m1;
+static const double k3 = m2;
+static const double k4 = (1/3) * l2*(l2) * m2;
+static const double k5 = (1/2) * l2      * m2;
 
 
 // Statistiken
@@ -84,12 +92,14 @@ static double fp2(const pstate s) {
 
 
 // Energien
-double t1(double phi1_) { return (1/2) * (phi1_*phi1_) * k1; }
-double v1(double phi1) = { return (-g) * k2 * cos(phi1); }
-double t2(phi1, phi2, phi1_, phi2_) {
+static double t1(double phi1_) { return (1/2) * (phi1_*phi1_) * k1; }
+static double v1(double phi1) { return (-g) * k2 * cos(phi1); }
+static double t2(double phi1, double phi2, double phi1_, double phi2_) {
   return (1/2)*l1*(phi1_*phi1_)*k3+(1/2)*(phi2_*phi2_)*k4+l1*phi1_*phi2_*k5*cos(phi1-phi2);
 }
-double v2(phi1, phi2) { return (-g) * l1 * k3 * cos(phi1) - g * k5 * cos(phi2); }
+static double v2(double phi1, double phi2) {
+  return (-g) * l1 * k3 * cos(phi1) - g * k5 * cos(phi2);
+}
 
 
 static char outbuf[10001];
@@ -117,7 +127,7 @@ static void print_state_as_csv(pstate s) {
   outbuf_pos = p - outbuf;
 }
 static void flush_outbuf() {
-  if (output_pos > 0) {
+  if (outbuf_pos > 0) {
     *(outbuf+outbuf_pos) = '\0';
     write(1, outbuf, outbuf_pos+1);
     outbuf_pos = 0;
@@ -128,8 +138,8 @@ static void flush_outbuf() {
 (phi1':phi2':p1':p2':_) = multiRungeKuttaStep [fphi1, fphi2, fp1, fp2] state timeStep
 */
 
-static state calc_s_(state s) {
-  state s_;
+static pstate calc_s_(pstate s) {
+  pstate s_;
   s_.phi1 = fphi1(s);
   s_.phi2 = fphi2(s);
   s_.p1   = fp1(s);
@@ -137,39 +147,39 @@ static state calc_s_(state s) {
   return s_;
 }
 
-static state step(state s0, double h) {
+static pstate step(pstate s0, double h) {
   // see http://de.wikipedia.org/wiki/Klassisches_Runge-Kutta-Verfahren
   // sxd is the first derivation of sx
 
-  state s0d = calc_s_(s0);
+  pstate s0d = calc_s_(s0);
 
-  state sa;
+  pstate sa;
   sa.phi1 = s0.phi1 + h/2 * s0d.phi1;
   sa.phi2 = s0.phi2 + h/2 * s0d.phi2;
   sa.p1 =   s0.p1   + h/2 * s0d.p1;
   sa.p2 =   s0.p2   + h/2 * s0d.p2;
-  state sad = calc_s_(sa);
+  pstate sad = calc_s_(sa);
 
-  state sb;
+  pstate sb;
   sb.phi1 = s0.phi1 + h/2 * sad.phi1;
   sb.phi2 = s0.phi2 + h/2 * sad.phi2;
   sb.p1 =   s0.p1   + h/2 * sad.p1;
   sb.p2 =   s0.p2   + h/2 * sad.p2;
-  state sbd = calc_s_(sb);
+  pstate sbd = calc_s_(sb);
 
-  state sc;
+  pstate sc;
   sc.phi1 = s0.phi1 + h   * sbd.phi1;
   sc.phi2 = s0.phi2 + h   * sbd.phi2;
   sc.p1 =   s0.p1   + h   * sbd.p1;
   sc.p2 =   s0.p2   + h   * sbd.p2;
-  state scd = calc_s_(sc);
+  pstate scd = calc_s_(sc);
 
-  state s1;
-  s1.phi1 = s0.phi1 + h/6 * (s0d.phi1 + 2*(sad.phi1+sbd.phi1) + sbc.phi1);
-  s1.phi2 = s0.phi2 + h/6 * (s0d.phi2 + 2*(sad.phi2+sbd.phi2) + sbc.phi2);
-  s1.p1 = s0.p1 + h/6 * (s0d.p1 + 2*(sad.p1+sbd.p1) + sbc.p1);
-  s1.p2 = s0.p2 + h/6 * (s0d.p2 + 2*(sad.p2+sbd.p2) + sbc.p2);
-  return s;
+  pstate s1;
+  s1.phi1 = s0.phi1 + h/6 * (s0d.phi1 + 2*(sad.phi1+sbd.phi1) + scd.phi1);
+  s1.phi2 = s0.phi2 + h/6 * (s0d.phi2 + 2*(sad.phi2+sbd.phi2) + scd.phi2);
+  s1.p1 = s0.p1 + h/6 * (s0d.p1 + 2*(sad.p1+sbd.p1) + scd.p1);
+  s1.p2 = s0.p2 + h/6 * (s0d.p2 + 2*(sad.p2+sbd.p2) + scd.p2);
+  return s1;
 }
 
 // Parameters:

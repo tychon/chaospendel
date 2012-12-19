@@ -3,7 +3,7 @@ FWINDOW=512
 FPS=default
 SKIPT=0
 
-all: main fourier
+all: main fourier pendulum
 
 main: main.hs RungeKutta.hs
 	ghc --make main -o main
@@ -35,3 +35,6 @@ out.pend1.pgm out.pend2.pgm: ./fourier out.csv
 # generate haskell doc
 documentation:
 	haddock -h -odoc main.hs RungeKutta.hs
+
+pendulum: pendulum.c
+	gcc -O3 -fwhole-program -flto -fno-math-errno -funsafe-math-optimizations -std=gnu99 -o pendulum pendulum.c -lm -lowfat
