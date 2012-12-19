@@ -34,11 +34,11 @@ static const double phi2_0 = M_PI;
 static const double p1_0 = 0;
 static const double p2_0 = 0;
 
-static const double k1 = (1/3) * (l1*l1) * m1;
-static const double k2 = (1/2) * l1      * m1;
+static const double k1 = (1.0/3) * (l1*l1) * m1;
+static const double k2 = (1.0/2) * l1      * m1;
 static const double k3 = m2;
-static const double k4 = (1/3) * l2*(l2) * m2;
-static const double k5 = (1/2) * l2      * m2;
+static const double k4 = (1.0/3) * l2*(l2) * m2;
+static const double k5 = (1.0/2) * l2      * m2;
 
 
 // Statistiken
