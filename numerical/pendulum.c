@@ -24,10 +24,10 @@ static const double l2 = 3;
 static const double m1 = 2;
 static const double m2 = 1;
 */
-#define l1 4
-#define l2 3
-#define m1 2
-#define m2 1
+#define l1 ((double)4)
+#define l2 ((double)3)
+#define m1 ((double)2)
+#define m2 ((double)1)
 
 static const double phi1_0 = M_PI*1.5;
 static const double phi2_0 = M_PI;
@@ -102,36 +102,47 @@ static double v2(double phi1, double phi2) {
 }
 
 
-static char outbuf[10001];
-static int outbuf_pos = 0;
+//static char outbuf[10000];
+//static int outbuf_pos = 0;
 static void print_state_as_csv(pstate s) {
-  if (outbuf_pos + 177 >= 10000) {
-    *(outbuf+outbuf_pos) = '\0';
-    write(1, outbuf, outbuf_pos+1);
-    outbuf_pos = 0;
-  }
-  char *p = outbuf + outbuf_pos;
-  // 11 times 15+1 bytes max plus one newline => 177 bytes max
-  p+=fmt_double(p,s.phi1,15,10); *(p++) = ',';
-  p+=fmt_double(p,s.phi2,15,10); *(p++) = ',';
-  p+=fmt_double(p,s.p1  ,15,10); *(p++) = ',';
-  p+=fmt_double(p,s.p2  ,15,10); *(p++) = ',';
-  p+=fmt_double(p,s.kin1,15,10); *(p++) = ',';
-  p+=fmt_double(p,s.pot1,15,10); *(p++) = ',';
-  p+=fmt_double(p,s.kin2,15,10); *(p++) = ',';
-  p+=fmt_double(p,s.pot2,15,10); *(p++) = ',';
-  p+=fmt_double(p,s.kin ,15,10); *(p++) = ',';
-  p+=fmt_double(p,s.pot ,15,10); *(p++) = ',';
-  p+=fmt_double(p,s.e   ,15,10); *(p++) = ',';
-  *(p++) = '\n';
-  outbuf_pos = p - outbuf;
+//  if (outbuf_pos + 177 >= 10000) {
+//    write(1, outbuf, outbuf_pos);
+//    outbuf_pos = 0;
+//  }
+//  char *p = outbuf + outbuf_pos;
+//  // 11 times 15+1 bytes max plus one newline => 177 bytes max
+//  p+=fmt_double(p,s.phi1,15,10); *(p++) = ',';
+//  p+=fmt_double(p,s.phi2,15,10); *(p++) = ',';
+//  p+=fmt_double(p,s.p1  ,15,10); *(p++) = ',';
+//  p+=fmt_double(p,s.p2  ,15,10); *(p++) = ',';
+//  p+=fmt_double(p,s.kin1,15,10); *(p++) = ',';
+//  p+=fmt_double(p,s.pot1,15,10); *(p++) = ',';
+//  p+=fmt_double(p,s.kin2,15,10); *(p++) = ',';
+//  p+=fmt_double(p,s.pot2,15,10); *(p++) = ',';
+//  p+=fmt_double(p,s.kin ,15,10); *(p++) = ',';
+//  p+=fmt_double(p,s.pot ,15,10); *(p++) = ',';
+//  p+=fmt_double(p,s.e   ,15,10); *(p++) = ',';
+//  *(p++) = '\n';
+//  outbuf_pos = p - outbuf;
+  printf("%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f\n"
+        , s.phi1
+        , s.phi2
+        , s.p1
+        , s.p2
+        , s.kin1
+        , s.pot1
+        , s.kin2
+        , s.pot2
+        , s.kin
+        , s.pot
+        , s.e);
 }
 static void flush_outbuf() {
-  if (outbuf_pos > 0) {
-    *(outbuf+outbuf_pos) = '\0';
-    write(1, outbuf, outbuf_pos+1);
-    outbuf_pos = 0;
-  }
+//  if (outbuf_pos > 0) {
+//    *(outbuf+outbuf_pos) = '\0';
+//    write(1, outbuf, outbuf_pos+1);
+//    outbuf_pos = 0;
+//  }
 }
 
 /*
@@ -206,6 +217,24 @@ static void run(pstate s, double timestep, double time, int output_each_nth) {
       s.pot = s.pot1 + s.pot2;
       s.e = s.kin + s.pot;
 
+      #define UPDATEIF(var, cond, newval) if (newval cond var) var = newval;
+
+      UPDATEIF(t1min, <, s.kin1)
+      UPDATEIF(v1min, <, s.pot1)
+      UPDATEIF(t2min, <, s.kin2)
+      UPDATEIF(v2min, <, s.pot2)
+      UPDATEIF(tmin, <, s.kin)
+      UPDATEIF(vmin, <, s.pot)
+      UPDATEIF(emin, <, s.e)
+
+      UPDATEIF(t1max, >, s.kin1)
+      UPDATEIF(v1max, >, s.pot1)
+      UPDATEIF(t2max, >, s.kin2)
+      UPDATEIF(v2max, >, s.pot2)
+      UPDATEIF(tmax, >, s.kin)
+      UPDATEIF(vmax, >, s.pot)
+      UPDATEIF(emax, >, s.e)
+
       print_state_as_csv(s);
     }
   }
@@ -218,11 +247,10 @@ int main(void) {
   fprintf(stderr, "opt_fps       = %f\n", optFps);
   fprintf(stderr, "time_step     = %f\n", 1/optFps);
   fprintf(stderr, "frames_loss   = %f\n", 1-optFps*timestep);
-  fprintf(stderr, "l1=%f", l1);
-  fprintf(stderr, "l2=%f", l2);
+  fprintf(stderr, "l1=%f\n", l1);
+  fprintf(stderr, "l2=%f\n", l2);
   pstate state0 = {.phi1=phi1_0, .phi2 = phi2_0, .p1 = p1_0, .p2 = p2_0 };
   run(state0, timestep, time, (int)ceil((1/timestep)/optFps));
-  //putStr . formatCSV $ outres
   fprintf(stderr, "t1min=%f\n", t1min);
   fprintf(stderr, "v1min=%f\n", v1min);
   fprintf(stderr, "t2min=%f\n", t2min);

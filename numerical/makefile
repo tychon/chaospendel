@@ -37,4 +37,4 @@ documentation:
 	haddock -h -odoc main.hs RungeKutta.hs
 
 pendulum: pendulum.c
-	gcc -O3 -fwhole-program -flto -fno-math-errno -funsafe-math-optimizations -std=gnu99 -o pendulum pendulum.c -lm -lowfat
+	gcc -Werror -Wall -O3 -fwhole-program -flto -fno-math-errno -funsafe-math-optimizations -std=gnu99 -o pendulum pendulum.c -lm -lowfat
