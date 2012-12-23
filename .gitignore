@@ -2,6 +2,7 @@
 *.hi
 *.o
 *.pyc
+*.x
 
 *.csv
 *.info
@@ -10,12 +11,6 @@
 *.png
 *.avi
 
-network/replay
-network/testreader
-network/tracker
-network/protocol_test
-network/uds_parrot
-network/test_endianness
 fftw/fourier
 numerical/main
 numerical/fourier
