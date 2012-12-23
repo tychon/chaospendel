@@ -17,15 +17,7 @@ int main(int argc, char *argv[]) {
   
   char buffer[GLOBALSEQPACKETSIZE];
   int retv;
-  for (;;) {
-    retv = uds_read(udscs, buffer, GLOBALSEQPACKETSIZE);
-    if (retv < 0) {
-      perror("reading data");
-      exit(1);
-    }
-    if (retv == 0) {
-      break;
-    }
+  while ( (retv = uds_read(udscs, buffer, GLOBALSEQPACKETSIZE)) > 0) {
     fwrite(buffer, sizeof(char), retv, stdout);
     fflush(stdout);
   }
