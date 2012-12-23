@@ -32,6 +32,11 @@ void uds_close_client(udsclientsocket *udscs) {
   free(udscs);
 }
 
+/**
+ * Forwards 'buffer' and 'nbytes' to blocking 'read' in unistd.
+ * Kills the program with an error message on stderr, if the reading fails.
+ * @returns length of bytes read (>= 0).
+ */
 int uds_read(udsclientsocket *udscs, void *buffer, size_t nbytes) {
   int retval = read(udscs->socketfd, buffer, nbytes);
   if (retval < 0) {
