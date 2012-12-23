@@ -4,9 +4,10 @@ LIBS := -lc -lpthread
 
 NONMAINOBJS := uds_server.o uds_client.o protocol.o memory_wrappers.o projectreader.o
 HEADERFILES := $(NONMAINOBJS:.o=.h) common.h
-MAINOBJS := replay.x testreader.x tracker.x protocol_test.x test_endianness.x
 
-all: $(MAINOBJS)
+EXECUTABLES := replay.x testreader.x tracker.x protocol_test.x test_endianness.x normalisation.x uds_parrot.x
+
+all: $(EXECUTABLES)
 
 # make executables
 %.x: %.o $(NONMAINOBJS)

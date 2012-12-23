@@ -21,10 +21,10 @@ struct packet8byte {
 long long getUnixMillis();
 
 int format2bytePacket(unsigned char *buffer, int bufferlength
-                        , uint64_t timestamp
-                        , uint16_t *values, int nvalues);
+                    , uint64_t timestamp
+                    , uint16_t *values, int nvalues);
 int parse2bytePacket(unsigned char *buffer, int bufferlength
-                       , struct packet2byte *result, int timestamp, int nvalues);
+                   , struct packet2byte *result, int timestamp, int nvalues);
 
 #endif // _PROTOCOL_H
 

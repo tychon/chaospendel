@@ -24,7 +24,7 @@ int main(int argc, char *argv[]) {
     }
   }
   
-  if (! socketpath) { //TODO
+  if (! socketpath) { //TODO paths to data files
     printf("usage: %s SOCKETPATHNAME\n", argv[0]);
     exit(1);
   }
