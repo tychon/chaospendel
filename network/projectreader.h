@@ -18,15 +18,15 @@ struct projectdata {
   // array of solenoids (with length 'solnum'), where the second array index is:
   // 0: radius (read by 'readPendulumData')
   // 1: angle in radians (read by 'readPendulumData')
-  // 3: zero level (read by 'readZeroLevelData')
-  // 4: normalization factor (read by 'readZeroLevelData')
+  // 3: zero level (read by 'readNormalisationData')
+  // 4: normalization factor (read by 'readNormalisationData')
   double **sols;
 };
 typedef struct projectdata projectdata;
 
 projectdata *readPendulumData(projectdata*, const char *filepath);
 projectdata *readCalibrationData(projectdata*, const char *filepath);
-projectdata *readZeroLevelData(projectdata*, const char *filepath);
+projectdata *readNormalisationData(projectdata*, const char *filepath);
 
 #endif // _PROJECTREADER_H
 

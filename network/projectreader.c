@@ -20,7 +20,7 @@
 // You pass these defines to 'readData' as mode argument.
 #define PENDULUM_DATA 1
 #define CALIBRATION_DATA 2
-#define ZERO_LEVEL_DATA 3
+#define NORMALISATION_DATA 3
 
 #define DEBUG
 
@@ -75,7 +75,7 @@ int readToken(char *line, int linelength, char **endptr
 /**
  * Parse key-value-pairs in file given by 'filepath' and store them in 'dest'.
  * The 'mode' gives wich pairs are to be found in the file, see the 3 defines
- * PENDULUM_DATA, CALIBRATION_DATA and ZERO_LEVEL_DATA.
+ * PENDULUM_DATA, CALIBRATION_DATA and NORMALISATION_DATA.
  * @returns 'dest'
  */
 projectdata *readData(projectdata *dest, const char *filepath, const int mode) {
@@ -198,7 +198,7 @@ projectdata *readData(projectdata *dest, const char *filepath, const int mode) {
       else if CMPREAD("k3", dest->k3)
       else if CMPREAD("k4", dest->k4)
     }
-    //TODO read zero level data
+    //TODO read normalisation data
     
     #undef CMPREAD
     
@@ -231,7 +231,7 @@ projectdata *readPendulumData(projectdata *dest, const char *filepath) {
 projectdata *readCalibrationData(projectdata *dest, const char *filepath) {
   return readData(dest, filepath, CALIBRATION_DATA);
 }
-projectdata *readZeroLevelData(projectdata *dest, const char *filepath) {
-  return readData(dest, filepath, ZERO_LEVEL_DATA);
+projectdata *readNormalisationData(projectdata *dest, const char *filepath) {
+  return readData(dest, filepath, NORMALISATION_DATA);
 }
 
