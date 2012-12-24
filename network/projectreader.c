@@ -24,6 +24,9 @@
 
 #define DEBUG
 
+////////////////////////////////////////////////////////////////////////////////
+// local functions
+
 /**
  * @returns the length of the line without comments or -1 if not valid
  * characters (by ISVALID macro) were found before a '#' character.
@@ -213,8 +216,9 @@ projectdata *readData(projectdata *dest, const char *filepath, const int mode) {
   return dest;
 }
 
-////////////////////
+////////////////////////////////////////////////////////////////////////////////
 // declared in header
+////////////////////////////////////////////////////////////////////////////////
 
 /**
  * Parses the keys l1a, l1b, l1, l2a, l2b, l1m, l2m and the number of solenoids

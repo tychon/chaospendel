@@ -120,7 +120,7 @@ int main(int argc, char *argv[]) {
           if ( (retv2 = parse2bytePacket(buffer, retv
                                  , (struct packet2byte*)parsed, timestamped
                                  , nvalues)) < 0) {
-            fprintf(stderr, "parsing failed with (%d), buffer: ", retv2);
+            fprintf(stderr, "parsing failed with code (%d), buffer: ", retv2);
             for (int i = 0; i < retv; i++) fprintf(stderr, " %02x", buffer[i]);
             fprintf(stderr, "\n");
           } else {
