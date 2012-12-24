@@ -52,6 +52,11 @@ int format2bytePacket(unsigned char *buffer
   return bpos;
 }
 
+/**
+ * @returns the number of uint16_ts read by this function (>= 0) or an error code (< 0):
+ *   -1: buffer too short for timestamp
+ *   -2: buffer too short for values
+ */
 int parse2bytePacket(unsigned char *buffer
                    , int bufferlength
                    , struct packet2byte *result
@@ -69,12 +74,13 @@ int parse2bytePacket(unsigned char *buffer
   
   // parse uint16_ts
   if (bufferlength-bpos < nvalues*2) return -2;
-  for (int i = 0; i < nvalues; i++) {
+  int i;
+  for (i = 0; i < nvalues; i++) {
     memcpy(result->values + i, buffer+bpos, 2);
     result->values[i] = be16toh(result->values[i]);
     bpos += 2;
   }
   
-  return bpos;
+  return i;
 }
 
