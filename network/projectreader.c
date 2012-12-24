@@ -22,7 +22,7 @@
 #define CALIBRATION_DATA 2
 #define NORMALISATION_DATA 3
 
-#define DEBUG
+// #define DEBUG
 
 ////////////////////////////////////////////////////////////////////////////////
 // local functions

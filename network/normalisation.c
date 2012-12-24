@@ -1,18 +1,19 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <math.h>
 
 #include "common.h"
 #include "uds_client.h"
 #include "protocol.h"
 #include "projectreader.h"
 
+#define ESCAPE_CLEARLINE "\x1B[80D\x1B[K"
 #define BUFFERSIZE 1024
 
 int main(int argc, char *argv[]) {
   char *socketpath = NULL;
   char *pendulumdatapath = NULL;
-  char *outputdatafilepath = NULL;
   int samplenum = 1000;
   
   for (int i = 1; i < argc; i++) {
@@ -24,10 +25,6 @@ int main(int argc, char *argv[]) {
       i++;
       pendulumdatapath = argv[i];
     }
-    else if (ARGCMP("--datafile", i) || ARGCMP("-o", i)) {
-      i ++;
-      outputdatafilepath = argv[i];
-    }
     else if (ARGCMP("--inputsocket", i) || ARGCMP("-i", i)) {
       i ++;
       socketpath = argv[i];
@@ -35,7 +32,7 @@ int main(int argc, char *argv[]) {
   }
   
   if (!socketpath || !pendulumdatapath) {
-    printf("usage: %s [--samplenum INT] --pendulumdata|-p PATH --inputsocket|-i PATH [--datafile|-o OUTPUTFILE]\n", argv[0]);
+    printf("usage: %s [--samplenum INT] --pendulumdata|-p PATH --inputsocket|-i PATH\n", argv[0]);
     exit(1);
   }
   
@@ -47,27 +44,59 @@ int main(int argc, char *argv[]) {
   fprintf(stderr, "opening connection to server on \"%s\" ...\n", socketpath);
   udsclientsocket *udscs = uds_create_client(socketpath);
   
-  unsigned char buffer[BUFFERSIZE];
-  int length;
+  int samplecount = 0; // counts number of received valid packets
+  unsigned char buffer[BUFFERSIZE]; // data from socket goes here
+  int length; // valid data in 'buffer'
+  // this contains the parsed data out of 'buffer'
   struct packet2byte *parsedinput = allocate2bytePacket(pd->solnum);
+  
+  double *average = assert_calloc(pd->solnum, sizeof(double)); // the mean value E(X)
+  double *average_powered = assert_calloc(pd->solnum, sizeof(double)); // this is E(X^2)
   
   fprintf(stderr, "Waiting for %d samples ...\n", samplenum);
   while ( (length = uds_read(udscs, buffer, BUFFERSIZE)) > 0) {
     if (parse2bytePacket(buffer, length, parsedinput, 1, pd->solnum) != pd->solnum) {
-      fprintf(stderr, "Received invalid packet.\n");
+      fprintf(stderr, ESCAPE_CLEARLINE"Received invalid packet.\n");
       continue;
     }
     
-    printf("%lld\n", parsedinput->timestamp);
-    // TODO
+    fprintf(stderr, ESCAPE_CLEARLINE"%3.0f%% ", (double)samplecount / (double)samplenum * 100.0);
+    fflush(stderr);
+    
+    for (int i = 0; i < pd->solnum; i++) {
+      average[i] += (double)parsedinput->values[i] / (double)samplenum;
+      average_powered[i] += (double)parsedinput->values[i] * (double)parsedinput->values[i] / (double)samplenum;
+    }
+    
+    samplecount ++;
+    if (samplecount == samplenum) {
+      fprintf(stderr, "\n");
+      break;
+    }
+  }
+  if (samplecount != samplenum) {
+    fprintf(stderr, ESCAPE_CLEARLINE"\nERROR: collected %d samples instead of %d samples.\n", samplecount, samplenum);
+    exit(1);
   }
   
-  if (outputdatafilepath) {
-    fprintf(stderr, "writing data to file \"%s\" ...\n", outputdatafilepath);
-    //TODO
-  }
-  
-  fprintf(stderr, "end of data\n");
+  fprintf(stderr, "closing unix domain socket ...\n");
   uds_close_client(udscs);
+  
+  
+  fprintf(stderr, "writing data ...\n\n");
+  
+  double variance, stddeviation;
+  for (int i = 0; i < pd->solnum; i++) {
+    variance = average_powered[i] - average[i] * average[i];
+    stddeviation = sqrt(variance);
+    
+    printf("sol%darithmetic_mean = %f\n", i, average[i]);
+    printf("sol%dvariance = %lf\n", i, variance);
+    printf("sol%dstandard_deviation = %f\n", i, stddeviation);
+  }
+  printf("\n");
+  
+  fflush(stdout);
+  // end!
 }
 
