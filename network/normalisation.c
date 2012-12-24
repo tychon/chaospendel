@@ -49,10 +49,15 @@ int main(int argc, char *argv[]) {
   
   unsigned char buffer[BUFFERSIZE];
   int length;
-  struct packet2byte *parsedinput = assert_malloc(sizeof(struct packet2byte));
+  struct packet2byte *parsedinput = allocate2bytePacket(pd->solnum);
   
   fprintf(stderr, "Waiting for %d samples ...\n", samplenum);
   while ( (length = uds_read(udscs, buffer, BUFFERSIZE)) > 0) {
+    if (parse2bytePacket(buffer, length, parsedinput, 1, pd->solnum) != pd->solnum) {
+      fprintf(stderr, "Received invalid packet.\n");
+      continue;
+    }
+    
     printf("%lld\n", parsedinput->timestamp);
     // TODO
   }

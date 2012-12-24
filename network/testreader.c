@@ -102,8 +102,7 @@ int main(int argc, char *argv[]) {
     void *parsed = NULL;
     switch (format) {
       case FORMATHALFBYTE2: {
-        parsed = assert_malloc(sizeof(struct packet2byte));
-        ((struct packet2byte*)parsed)->values = assert_malloc(sizeof(uint16_t)*nvalues);
+        parsed = allocate2bytePacket(nvalues);
       } break;
       // TODO other halfbyte formats
     }

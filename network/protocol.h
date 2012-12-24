@@ -20,6 +20,7 @@ struct packet8byte {
 
 long long getUnixMillis();
 
+struct packet2byte *allocate2bytePacket(int valnum);
 int format2bytePacket(unsigned char *buffer, int bufferlength
                     , uint64_t timestamp
                     , uint16_t *values, int nvalues);
