@@ -1,6 +1,7 @@
 
-#define _XOPEN_SOURCE 500 // for usleep in unistd
+#define _XOPEN_SOURCE 700 // for 'usleep' in unistd and 'getline' in stdio
 #define _GNU_SOURCE
+
 #include <features.h>
 #include <sys/timeb.h>
 #include <time.h>
@@ -13,22 +14,57 @@
 #include "common.h"
 #include "uds_server.h"
 #include "protocol.h"
+#include "projectreader.h"
 
 #define BUFFERSIZES 1024
+
+/**
+ * @returns the number of long long integers read.
+ *  or -1 if the end of the file was reached (last dataset gets lost)
+ */
+int readCSVLine(FILE *f, long long *dest, char delimiter) {
+  static char *buffer;
+  if (! buffer) buffer = assert_malloc(BUFFERSIZES);
+  size_t size = BUFFERSIZES;
+  if (getline(&buffer, &size, f) < 0) {
+    if (! feof(f)) {
+      perror("reading from csv file");
+      exit(1);
+    } else return -1;
+  }
+  
+  int destpos = 0;
+  char *tmp = buffer;
+  char *endptr;
+  for (;;) {
+    long long num = strtoll(tmp, &endptr, 10);
+    if (endptr == tmp) {
+      // no more valid digits found
+      return destpos;
+    }
+    dest[destpos++] = num;
+    tmp = endptr;
+  }
+}
 
 int main(int argc, char *argv[]) {
   int deleteOldSocket = 0;
   int deleteSocketAfterUse = 0;
   int quiet = 0;
-  int printtimestamp = 1;
   char *socketpath = NULL;
+  char *pendulumdatapath = NULL;
   char *csvpath = NULL;
+  int readtimestamp = 1; // if a timestamp is in csv file present
   int samplerate = -1; // default value: send as fast as we can
   
   for (int i = 1; i < argc; i++) {
     if (ARGCMP("-i", i) || ARGCMP("--inputfile", i)) {
       i ++;
       csvpath = argv[i];
+    }
+    else if (ARGCMP("-p", i) || ARGCMP("--pendulum", i)) {
+      i ++;
+      pendulumdatapath = argv[i];
     }
     else if (ARGCMP("-o", i) || ARGCMP("--outputsocket", i)) {
       i ++;
@@ -41,14 +77,18 @@ int main(int argc, char *argv[]) {
     else if (ARGCMP("-f", i)) deleteOldSocket = 1;
     else if (ARGCMP("-d", i)) deleteSocketAfterUse = 1;
     else if (ARGCMP("-q", i) || ARGCMP("--quiet", i)) quiet = 1;
-    else if (ARGCMP("--notimestamp", i)) printtimestamp = 0;
+    else if (ARGCMP("--notimestamp", i) || ARGCMP("-t", i)) readtimestamp = 0;
     else fprintf(stderr, "Ignoring unknown argument: \"%s\"\n", argv[i]);
   }
   
-  if (! socketpath || ! csvpath) {
-    fprintf(stderr, "usage [-f] [-d] [--samplerate SAMPLERATE] --inputfile CSVFILEPATH --outputsocket SOCKETPATH\n");
+  if (! socketpath || ! csvpath || ! pendulumdatapath) {
+    fprintf(stderr, "usage [-f] [-d] [--quiet|-q] [--notimestamp|-t] [--samplerate|-r SAMPLERATE] --inputfile|-i CSVFILEPATH --pendulum|-p PENDULUMDATAPATH --outputsocket|-o SOCKETPATH\n");
     exit(1);
   }
+  
+  projectdata *pd = assert_malloc(sizeof(projectdata));
+  fprintf(stderr, "reading pendulum data from \"%s\" ...\n", pendulumdatapath);
+  readPendulumData(pd, pendulumdatapath);
   
   if (deleteOldSocket) unlink(socketpath);
   if ( ! quiet) printf("opening socket with path \"%s\"\n", socketpath);
@@ -66,53 +106,41 @@ int main(int argc, char *argv[]) {
   else if ( ! quiet) printf("Sending at a rate of %d samples per second ...\n", samplerate);
   int sleepmillis = (int) (1.0/ ((double)samplerate) * 1000.0);
   
-  int retv, shift, inbufferlength = 0;
-  unsigned short nextNumber = -1; // indicates if there is a full line in outbuffer and its length
-  char *endptr;
-  char inbuffer[BUFFERSIZES]; // this buffer the read method writes to
+  long long *parsedLLs = assert_malloc(sizeof(long long int) * pd->solnum);
+  uint16_t *parsedShorts = assert_malloc(sizeof(uint16_t) * pd->solnum);
+  int numcount, retv;
   unsigned char outbuffer[BUFFERSIZES]; // this buffer the protocol formatter writes to
   long long millisecs;
   // enless loop til end of csv file
   for (;;) {
-    //// parse data
-    nextNumber = (unsigned short)strtol(inbuffer, &endptr, 0);
-    if (endptr == inbuffer || (endptr == inbuffer+inbufferlength)) { // no valid digits found
-      // read data
-      if ( ! quiet) { printf("<\n"); fflush(stdout); }
-      retv = fread(inbuffer+inbufferlength, sizeof(char), BUFFERSIZES-inbufferlength, csvf);
-      if (retv < 0) {
-        perror("reading from csv file");
-        exit(1);
-      } else if (retv == 0) {
-        if ( ! quiet) printf("\nend of data.\n");
-        break;
-      }
-      inbufferlength += retv;
-      
-      continue;
-    } // else
-    if (endptr == NULL) {
-      inbufferlength = 0; // whole input is valid
-      inbuffer[0] = '_'; // put some invalid character in it
+    // parse data
+    numcount = readCSVLine(csvf, parsedLLs, ' ');
+    if (numcount == -1) {
+      if ( ! quiet) printf(" end of data\n");
+      break;
     }
-    else {
-      // shift unread data to beginning of inbuffer
-      shift = endptr - inbuffer;
-      for (int i = shift; i < BUFFERSIZES; i ++)
-        inbuffer[i-shift] = inbuffer[i];
-      inbufferlength -= shift;
-      inbuffer[inbufferlength] = '_';
+    if (   (readtimestamp && numcount-1 != pd->solnum)
+        || (!readtimestamp && numcount != pd->solnum) ) {
+      fprintf(stderr, "skipping invalid csv line, not exactly %d values found (plus possible timestamp).\n", pd->solnum);
+      continue;
     }
     
-    //// write data
     if ( ! quiet) { printf(">"); fflush(stdout); }
+    // sleep
     if (samplerate > 0) usleep(sleepmillis*1000);
+    
+    // extract timestamp (if it should exist)
+    int lli = 0; // index iterating through parsedLLs
+    if (readtimestamp) {
+      millisecs = parsedLLs[lli++];
+    } else millisecs = getUnixMillis();
+    for (int i = 0; i < pd->solnum; i++) 
+      parsedShorts[i] = parsedLLs[lli++];
+    
     // format dataset
-    millisecs = 0;
-    if (printtimestamp) millisecs = getUnixMillis();
     retv = format2bytePacket(outbuffer, BUFFERSIZES
-                               , millisecs
-                               , &nextNumber, 1);
+                           , millisecs
+                           , parsedShorts, pd->solnum);
     if (retv <= 0) {
       fprintf(stderr, "error while formatting packet, code: (%d)\n", retv);
       break;
