@@ -1,6 +1,6 @@
 
-CFLAGS := -std=gnu99 -Wall -Werror
-LIBS := -lc -lpthread -lm
+CFLAGS := -g -std=gnu99 -Wall -Werror
+LIBS := -g -lc -lpthread -lm
 
 NONMAINOBJS := uds_server.o uds_client.o protocol.o memory_wrappers.o projectreader.o
 HEADERFILES := $(NONMAINOBJS:.o=.h) common.h
