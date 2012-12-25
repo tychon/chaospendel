@@ -11,7 +11,7 @@ struct projectdata {
   
   // constants of differentials
   // these are read with 'readCalibrationData'
-  double k1, k2, k3, k4;
+  double k1, k2, k3, k4, k5;
   
   // solenoids
   int solnum; // number of solenoids

@@ -200,6 +200,7 @@ projectdata *readData(projectdata *dest, const char *filepath, const int mode) {
       else if CMPREAD("k2", dest->k2)
       else if CMPREAD("k3", dest->k3)
       else if CMPREAD("k4", dest->k4)
+      else if CMPREAD("k5", dest->k5)
     }
     //TODO read normalisation data
     
