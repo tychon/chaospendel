@@ -9,7 +9,6 @@
 #include "projectreader.h"
 
 #define ESCAPE_CLEARLINE "\x1B[80D\x1B[K"
-#define BUFFERSIZE 1024
 
 int main(int argc, char *argv[]) {
   char *socketpath = NULL;
@@ -45,7 +44,7 @@ int main(int argc, char *argv[]) {
   udsclientsocket *udscs = uds_create_client(socketpath);
   
   int samplecount = 0; // counts number of received valid packets
-  unsigned char buffer[BUFFERSIZE]; // data from socket goes here
+  unsigned char buffer[GLOBALSEQPACKETSIZE]; // data from socket goes here
   int length; // valid data in 'buffer'
   // this contains the parsed data out of 'buffer'
   struct packet2byte *parsedinput = allocate2bytePacket(pd->solnum);
@@ -54,7 +53,7 @@ int main(int argc, char *argv[]) {
   double *average_powered = assert_calloc(pd->solnum, sizeof(double)); // this is E(X^2)
   
   fprintf(stderr, "Waiting for %d samples ...\n", samplenum);
-  while ( (length = uds_read(udscs, buffer, BUFFERSIZE)) > 0) {
+  while ( (length = uds_read(udscs, buffer, GLOBALSEQPACKETSIZE)) > 0) {
     if (parse2bytePacket(buffer, length, parsedinput, 1, pd->solnum) != pd->solnum) {
       fprintf(stderr, ESCAPE_CLEARLINE"Received invalid packet.\n");
       continue;
@@ -90,9 +89,9 @@ int main(int argc, char *argv[]) {
     variance = average_powered[i] - average[i] * average[i];
     stddeviation = sqrt(variance);
     
-    printf("sol%darithmetic_mean = %f\n", i, average[i]);
-    printf("sol%dvariance = %lf\n", i, variance);
-    printf("sol%dstandard_deviation = %f\n", i, stddeviation);
+    printf("arithmetic_mean%d = %f\n", i, average[i]);
+    printf("variance%d = %lf\n", i, variance);
+    printf("standard_deviation%d = %f\n", i, stddeviation);
   }
   printf("\n");
   

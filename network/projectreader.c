@@ -15,7 +15,7 @@
 #define BUFFERSIZE 1024
 
 // conditional for valid characters in keys and values
-#define ISVALID(c) (isalnum(c) || c == '.')
+#define ISVALID(c) (isalnum(c) || c == '.' || c == '-' || c == '_')
 
 // You pass these defines to 'readData' as mode argument.
 #define PENDULUM_DATA 1
@@ -174,7 +174,7 @@ projectdata *readData(projectdata *dest, const char *filepath, const int mode) {
             exit(1);
           }
           // parse double
-          dest->sols[solindex][0] = strtod(valbuffer, &endptr);
+          dest->sols[solindex][IDX_RADIUS] = strtod(valbuffer, &endptr);
           if (endptr == valbuffer) {
             fprintf(stderr, "error: Invalid radius in line %d\n", linenum);
             exit(1);
@@ -187,7 +187,7 @@ projectdata *readData(projectdata *dest, const char *filepath, const int mode) {
             exit(1);
           }
           // parse double
-          dest->sols[solindex][1] = strtod(valbuffer, &endptr);
+          dest->sols[solindex][IDX_ANGLE] = strtod(valbuffer, &endptr);
           if (endptr == valbuffer) {
             fprintf(stderr, "error: Invalid angle in line %d\n", linenum);
             exit(1);
@@ -205,24 +205,24 @@ projectdata *readData(projectdata *dest, const char *filepath, const int mode) {
     else if (mode == NORMALISATION_DATA) {
       int solindex;
       // average
-      if (sscanf(keybuffer, "sol%darithmetic_mean", &solindex) == 1) {
+      if (sscanf(keybuffer, "arithmetic_mean%d", &solindex) == 1) {
         if (solindex < 0 && solindex >= dest->solnum) {
           fprintf(stderr, "error: solenoid index not in range in line %d\n", linenum);
           exit(1);
         }
-        dest->sols[solindex][2] = strtod(valbuffer, &endptr);
+        dest->sols[solindex][IDX_MEAN] = strtod(valbuffer, &endptr);
         if (endptr == valbuffer) {
           fprintf(stderr, "error: Invalid value in line %d\n", linenum);
           exit(1);
         }
       }
       // standard deviation
-      else if (sscanf(keybuffer, "sol%dstandard_deviation", &solindex) == 1) {
+      else if (sscanf(keybuffer, "standard_deviation%d", &solindex) == 1) {
         if (solindex < 0 && solindex >= dest->solnum) {
           fprintf(stderr, "error: solenoid index not in range in line %d\n", linenum);
           exit(1);
         }
-        dest->sols[solindex][3] = strtod(valbuffer, &endptr);
+        dest->sols[solindex][IDX_STD_DEVIATION] = strtod(valbuffer, &endptr);
         if (endptr == valbuffer) {
           fprintf(stderr, "error: Invalid value in line %d\n", linenum);
           exit(1);

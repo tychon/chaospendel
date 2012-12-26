@@ -2,6 +2,12 @@
 #ifndef _PROJECTREADER_H
 #define _PROJECTREADER_H
 
+#define IDX_RADIUS 0
+#define IDX_ANGLE 1
+#define IDX_MEAN 2
+#define IDX_STD_DEVIATION 3
+#define IDX_NORM_FACTOR 4
+
 struct projectdata {
   // use 'readPendulumData' for these values
   // lengths of pendulum
