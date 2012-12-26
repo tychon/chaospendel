@@ -100,7 +100,7 @@ int main(int argc, char *argv[]) {
   
   if (samplerate <= 0 && ! quiet) printf("Sending samples as fast as we can ...\n");
   else if ( ! quiet) printf("Sending at a rate of %d samples per second ...\n", samplerate);
-  int sleepmillis = (int) (1.0/ ((double)samplerate) * 1000.0);
+  int sleepmicros = (int) (1.0/ ((double)samplerate) * 1000.0 * 1000.0);
   
   long long *parsedLLs = assert_malloc(sizeof(long long int) * pd->solnum);
   uint16_t *parsedShorts = assert_malloc(sizeof(uint16_t) * pd->solnum);
@@ -125,7 +125,7 @@ int main(int argc, char *argv[]) {
     
     if ( ! quiet) { printf(">"); fflush(stdout); }
     // sleep
-    if (samplerate > 0) usleep(sleepmillis*1000);
+    if (samplerate > 0) usleep(sleepmicros);
     
     // extract timestamp (if it should exist)
     int lli = 0; // index iterating through parsedLLs
