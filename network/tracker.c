@@ -65,6 +65,7 @@ int main(int argc, char *argv[]) {
       continue;
     }
     
+    int inversion = 0;
     for (int i = 0; i < pd->solnum; i++) {
       // normalize input value
       normval = (double)packet->values[i];
@@ -77,8 +78,7 @@ int main(int argc, char *argv[]) {
       d2 = derivative1[i] - d1;
       
       // find inversion
-      //if ((derivative2[i] > 5 || d2 > 5) && derivative2[i] >= d2) printf("x");
-      //else printf("-");
+      if ((derivative1[i] > 0.006) && derivative1[i] >= d2) inversion = i+1;
       
       // store the values
       derivative1[i] = d1;
@@ -93,9 +93,9 @@ int main(int argc, char *argv[]) {
       }
       for (int i = 0; i < pd->solnum; i++)
         printf(",%f", derivative1[i]);
-      for (int i = 0; i < pd->solnum; i++)
-        printf(",%f", derivative2[i]);
-      printf("\n");
+      //for (int i = 0; i < pd->solnum; i++)
+      //  printf(",%f", derivative2[i]);
+      printf(",%d\n", inversion);
       fflush(stdout);
     }
     
