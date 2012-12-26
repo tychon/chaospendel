@@ -16,12 +16,14 @@ int main(int argc, char *argv[]) {
   char *socketpath = NULL, *outsockpath = NULL;
   char *pendulumdatapath = NULL;
   char *normalisationdatapath = NULL;
+  int printtempdata = 0;
   
   for (int i = 1; i < argc; i++) {
     if (argcmpass("--pendulum|-p", argc, argv, &i, &pendulumdatapath)) ;
     else if (argcmpass("--normalisation|-n", argc, argv, &i, &normalisationdatapath)) ;
     else if (argcmpass("--inputsocket|-i", argc, argv, &i, &socketpath)) ;
     else if (argcmpass("--outputsocket|-o", argc, argv, &i, &outsockpath)) ;
+    else if (ARGCMP("--printtemp", i)) printtempdata = 1;
     else {
       fprintf(stderr, "Unknown argument ignored: \"%s\"\n", argv[i]);
     }
@@ -68,24 +70,34 @@ int main(int argc, char *argv[]) {
       normval = (double)packet->values[i];
       normval -= pd->sols[i][IDX_MEAN];
       normval /= pd->sols[i][IDX_STD_DEVIATION];
+      normval /= pd->sols[i][IDX_COILS];
       // first derivative
       d1 = normval - lastnormvalue[i];
       // second derivative
       d2 = derivative1[i] - d1;
       
       // find inversion
-      if ((derivative2[i] > 10 || d2 > 10) && derivative2[i] > d2) printf("x");
-      else printf("-");
-      //printf("%f,", derivative2[i]);
+      //if ((derivative2[i] > 5 || d2 > 5) && derivative2[i] >= d2) printf("x");
+      //else printf("-");
       
       // store the values
       derivative1[i] = d1;
       derivative2[i] = d2;
       lastnormvalue[i] = normval;
     }
-    printf("\n");
     
-    fflush(stdout);
+    if (printtempdata) {
+      for (int i = 0; i < pd->solnum; i++) {
+        if (i == 0) printf("%f", lastnormvalue[i]);
+        else printf(",%f", lastnormvalue[i]);
+      }
+      for (int i = 0; i < pd->solnum; i++)
+        printf(",%f", derivative1[i]);
+      for (int i = 0; i < pd->solnum; i++)
+        printf(",%f", derivative2[i]);
+      printf("\n");
+      fflush(stdout);
+    }
     
     // TODO find pendulum
     // TODO calculate angles

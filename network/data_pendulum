@@ -16,16 +16,23 @@ solnum = 6
 # radiuses in meters
 # and angles in degrees
 # !!! guessed !!! TODO
-solr0 = 0.47
-sola0 = -67.5
-solr1 = 0.47
-sola1 = -40.5
-solr2 = 0.47
-sola2 = -13.5
-solr3 = 0.47
-sola3 = 13.5
-solr4 = 0.47
-sola4 = 40.5
-solr5 = 0.47
-sola5 = 67.5
+# remember: spaces are ignored
+sol radius 0 = 0.47
+sol angle  0 = -67.5
+sol coils  0 = 1600
+sol radius 1 = 0.47
+sol angle  1 = -40.5
+sol coils  1 = 1600
+sol radius 2 = 0.47
+sol angle  2 = -13.5
+sol coils  2 = 20000
+sol radius 3 = 0.47
+sol angle  3 = 13.5
+sol coils  3 = 20000
+sol radius 4 = 0.47
+sol angle  4 = 40.5
+sol coils  4 = 1600
+sol radius 5 = 0.47
+sol angle  5 = 67.5
+sol coils  5 = 1600
 
