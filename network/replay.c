@@ -22,7 +22,7 @@
  * @returns the number of long long integers read.
  *  or -1 if the end of the file was reached (last dataset gets lost)
  */
-int readCSVLine(FILE *f, long long *dest, char delimiter) {
+int readCSVLine(FILE *f, long long *dest) {
   static char *buffer;
   if (! buffer) buffer = assert_malloc(BUFFERSIZES);
   size_t size = BUFFERSIZES;
@@ -42,7 +42,12 @@ int readCSVLine(FILE *f, long long *dest, char delimiter) {
       // no more valid digits found
       return destpos;
     }
+    if (*endptr == '\0') {
+      // end of line
+      return destpos;
+    }
     dest[destpos++] = num;
+    (*endptr) = ' ';
     tmp = endptr;
   }
 }
@@ -68,7 +73,7 @@ int main(int argc, char *argv[]) {
     else if (ARGCMP("-f", i)) deleteOldSocket = 1;
     else if (ARGCMP("-d", i)) deleteSocketAfterUse = 1;
     else if (ARGCMP("-q", i) || ARGCMP("--quiet", i)) quiet = 1;
-    else if (ARGCMP("--notimestamp", i) || ARGCMP("-t", i)) readtimestamp = 0;
+    else if (ARGCMP("--notimestamp", i) || ARGCMP("-nt", i)) readtimestamp = 0;
     else fprintf(stderr, "Ignoring unknown argument: \"%s\"\n", argv[i]);
   }
   
@@ -105,14 +110,16 @@ int main(int argc, char *argv[]) {
   // enless loop til end of csv file
   for (;;) {
     // parse data
-    numcount = readCSVLine(csvf, parsedLLs, ' ');
+    numcount = readCSVLine(csvf, parsedLLs);
     if (numcount == -1) {
       if ( ! quiet) printf(" end of data\n");
       break;
     }
-    if (   (readtimestamp && numcount-1 != pd->solnum)
-        || (!readtimestamp && numcount != pd->solnum) ) {
-      fprintf(stderr, "skipping invalid csv line, not exactly %d values found (plus possible timestamp).\n", pd->solnum);
+    if (readtimestamp && numcount-1 != pd->solnum) {
+      fprintf(stderr, "skipping invalid csv line, not exactly %d data values + 1 timestamp value found.\n", pd->solnum);
+      continue;
+    } else if (!readtimestamp && numcount != pd->solnum) {
+      fprintf(stderr, "skipping invalid csv line, not exactly %d values found.\n", pd->solnum);
       continue;
     }
     
