@@ -58,18 +58,9 @@ int main(int argc, char *argv[]) {
   int samplerate = -1; // default value: send as fast as we can
   
   for (int i = 1; i < argc; i++) {
-    if (ARGCMP("-i", i) || ARGCMP("--inputfile", i)) {
-      i ++;
-      csvpath = argv[i];
-    }
-    else if (ARGCMP("-p", i) || ARGCMP("--pendulum", i)) {
-      i ++;
-      pendulumdatapath = argv[i];
-    }
-    else if (ARGCMP("-o", i) || ARGCMP("--outputsocket", i)) {
-      i ++;
-      socketpath = argv[i];
-    }
+    if (argcmpass("--inputfile|-i", argc, argv, &i, &csvpath)) ;
+    else if (argcmpass("--pendulum|-p", argc, argv, &i, &pendulumdatapath)) ;
+    else if (argcmpass("--outputsocket|-o", argc, argv, &i, &socketpath)) ;
     else if (ARGCMP("-r", i) || ARGCMP("--samplerate", i)) {
       i ++;
       samplerate = atoi(argv[i]);

@@ -20,7 +20,7 @@ int main(int argc, char *argv[]) {
     else if (argcmpass("--normalisation|-n", argc, argv, &i, &normalisationdatapath)) ;
     else if (argcmpass("--inputsocket|-i", argc, argv, &i, &socketpath)) ;
     else {
-      fprintf(stderr, "Argument ignored: \"%s\"\n", argv[i]);
+      fprintf(stderr, "Unknown argument ignored: \"%s\"\n", argv[i]);
     }
   }
   
