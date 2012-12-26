@@ -168,7 +168,7 @@ projectdata *readData(projectdata *dest, const char *filepath, const int mode) {
       else {
         int solindex;
         // radiuses
-        if (sscanf(keybuffer, "solr%d", &solindex) == 1) {
+        if (sscanf(keybuffer, "solradius%d", &solindex) == 1) {
           if (solindex < 0 && solindex >= dest->solnum) {
             fprintf(stderr, "error: solenoid index not in range in line %d\n", linenum);
             exit(1);
@@ -181,7 +181,7 @@ projectdata *readData(projectdata *dest, const char *filepath, const int mode) {
           }
         }
         // angles
-        else if (sscanf(keybuffer, "sola%d", &solindex) == 1) {
+        else if (sscanf(keybuffer, "solangle%d", &solindex) == 1) {
           if (solindex < 0 && solindex >= dest->solnum) {
             fprintf(stderr, "error: solenoid index not in range in line %d\n", linenum);
             exit(1);
@@ -190,6 +190,18 @@ projectdata *readData(projectdata *dest, const char *filepath, const int mode) {
           dest->sols[solindex][IDX_ANGLE] = strtod(valbuffer, &endptr);
           if (endptr == valbuffer) {
             fprintf(stderr, "error: Invalid angle in line %d\n", linenum);
+            exit(1);
+          }
+        }
+        // normalisation factor
+        else if (sscanf(keybuffer, "solcoils%d", &solindex) == 1) {
+          if (solindex < 0 && solindex >= dest->solnum) {
+            fprintf(stderr, "error: solenoid index not in range in line %d\n", linenum);
+            exit(1);
+          }
+          dest->sols[solindex][IDX_COILS] = strtol(valbuffer, &endptr, 10);
+          if (endptr == valbuffer) {
+            fprintf(stderr, "error: Invalid value in line %d\n", linenum);
             exit(1);
           }
         }
