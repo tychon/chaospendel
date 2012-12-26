@@ -162,7 +162,7 @@ projectdata *readData(projectdata *dest, const char *filepath, const int mode) {
         }
         dest->sols = assert_malloc(sizeof(double) * dest->solnum);
         for (int i = 0; i < dest->solnum; i++)
-          dest->sols[i] = assert_malloc(sizeof(double)*4);
+          dest->sols[i] = assert_malloc(sizeof(double)*5);
       }
       // try to read solenoid radiuses and angles
       else {
@@ -181,7 +181,7 @@ projectdata *readData(projectdata *dest, const char *filepath, const int mode) {
           }
         }
         // angles
-        if (sscanf(keybuffer, "sola%d", &solindex) == 1) {
+        else if (sscanf(keybuffer, "sola%d", &solindex) == 1) {
           if (solindex < 0 && solindex >= dest->solnum) {
             fprintf(stderr, "error: solenoid index not in range in line %d\n", linenum);
             exit(1);
@@ -202,7 +202,33 @@ projectdata *readData(projectdata *dest, const char *filepath, const int mode) {
       else if CMPREAD("k4", dest->k4)
       else if CMPREAD("k5", dest->k5)
     }
-    //TODO read normalisation data
+    else if (mode == NORMALISATION_DATA) {
+      int solindex;
+      // average
+      if (sscanf(keybuffer, "sol%darithmetic_mean", &solindex) == 1) {
+        if (solindex < 0 && solindex >= dest->solnum) {
+          fprintf(stderr, "error: solenoid index not in range in line %d\n", linenum);
+          exit(1);
+        }
+        dest->sols[solindex][2] = strtod(valbuffer, &endptr);
+        if (endptr == valbuffer) {
+          fprintf(stderr, "error: Invalid value in line %d\n", linenum);
+          exit(1);
+        }
+      }
+      // standard deviation
+      else if (sscanf(keybuffer, "sol%dstandard_deviation", &solindex) == 1) {
+        if (solindex < 0 && solindex >= dest->solnum) {
+          fprintf(stderr, "error: solenoid index not in range in line %d\n", linenum);
+          exit(1);
+        }
+        dest->sols[solindex][3] = strtod(valbuffer, &endptr);
+        if (endptr == valbuffer) {
+          fprintf(stderr, "error: Invalid value in line %d\n", linenum);
+          exit(1);
+        }
+      }
+    }
     
     #undef CMPREAD
     

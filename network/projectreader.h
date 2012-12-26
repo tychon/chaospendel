@@ -18,8 +18,9 @@ struct projectdata {
   // array of solenoids (with length 'solnum'), where the second array index is:
   // 0: radius (read by 'readPendulumData')
   // 1: angle in radians (read by 'readPendulumData')
-  // 3: zero level (read by 'readNormalisationData')
-  // 4: normalization factor (read by 'readNormalisationData')
+  // 2: zero level (read by 'readNormalisationData')
+  // 3: standard deviation (read by 'readNormalisationData')
+  // 4: normalization factor (??? TODO)
   double **sols;
 };
 typedef struct projectdata projectdata;
