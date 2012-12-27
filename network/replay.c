@@ -120,7 +120,7 @@ int main(int argc, char *argv[]) {
       continue;
     }
     
-    if ( ! quiet) { printf(">"); fflush(stdout); }
+    if ( ! quiet) { putchar('>'); fflush(stdout); }
     // sleep
     if (samplerate > 0) usleep(sleepmicros);
     
