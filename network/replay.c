@@ -75,7 +75,7 @@ int main(int argc, char *argv[]) {
   }
   
   if (! socketpath || ! csvpath || ! pendulumdatapath) {
-    fprintf(stderr, "usage [-f] [-d] [--quiet|-q] [--notimestamp|-t] [--samplerate|-r SAMPLERATE] --inputfile|-i CSVFILEPATH --pendulum|-p PENDULUMDATAPATH --outputsocket|-o SOCKETPATH\n");
+    fprintf(stderr, "usage: %s [-f] [-d] [--quiet|-q] [--notimestamp|-nt] [--samplerate|-r SAMPLERATE] --inputfile|-i CSVFILEPATH --pendulum|-p PENDULUMDATAPATH --outputsocket|-o SOCKETPATH\n", argv[0]);
     exit(1);
   }
   

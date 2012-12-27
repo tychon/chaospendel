@@ -11,12 +11,58 @@ tracker.x
 fourier.x
 
 === testreader
-usage: ./testreader.x [--format|-f bin|binary|dec|decimal|hex|hexadecimal|asc|ascii|half2|half4|half8] [--timestampted|-t] [--nvalues|-v INT] --inputsocket|-i SOCKETPATH
 
+usage: ./testreader.x [--format|-f bin|binary|dec|decimal|hex|hexadecimal|asc|as
+cii|half2|half4|half8] [--timestampted|-t] --nvalues|-v INT --inputsocket|-i S
+OCKETPATH
 
+Read data from unix domain socket and print it in some different formats on
+the screen. The --nvalues option defines the count of numbers in the half2,
+half4 or half8 formats. The --timestamped option defines, if there is a
+timestamp present in the received data for the halfX formats.
 
 === replay
+
+usage: ./replay.x [-f] [-d] [--quiet|-q] [--notimestamp|-nt] [--samplerate|-r SAM
+PLERATE] --inputfile|-i CSVFILEPATH --pendulum|-p PENDULUMDATAPATH --outputsocke
+t|-o SOCKETPATH
+
+Read data from CSV file and write it in half2 format to the output socket.
+The minimum number of columns in the CSV file is read from the PENDULUMDATAPATH
+as the value of the key 'solnum'. The CSV file may contain a timestamp as
+first column too (see the --notimestamp option).
+
+The sample rate option defines how many samples should be send per second.
+If this option is not given, the samples are send as fast as the replayer can
+read them from the input file.
+
+TODO: try to match the sending speed with timestamps in the csv file.
+
+-f: Delete exisiting server socket
+-d: Delete socket after use
+--quiet: Suppress the output of '>'-characters on sending.
+--notimestamp: There is no timestamp as first column in the CSV file.
+
 === normalisation
+
+usage: ./normalisation.x [--samplenum|-n INT] --pendulumdata|-p PATH --inputsock
+et|-i PATH
+
+Reads data from input socket and calculates the arithmetic mean, the variance
+and the standard deviation for every column.
+
+The data from the input socket must be formatted in half2 format with a
+timestamp. The minimum number of columns in the input data is read from the
+pendulum data file. (The timestamp in the data is ignored.)
+
+The number of samples defaults to 1000 and may be changed with the --samplenum
+option. The calculation fails, if the data stream ends before all samples were
+collected.
+
+The results of the calculations are printed to stdout and may be redirected into
+a file later used as normalisation data in the tracker.
+All the infos are written to stderr.
+
 === tracker
 === fourier
 
