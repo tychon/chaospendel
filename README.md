@@ -3,6 +3,12 @@ see
 
 http://piratepad.net/lExBotVYBM
 
+Network
+=======
+
+See the big README in the network folder and some graphics in the german
+documentation.
+
 Dependencies
 ============
 
