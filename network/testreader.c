@@ -56,7 +56,7 @@ int main(int argc, char *argv[]) {
         exit(1);
       }
     }
-    else if (argcmpassint("--nvalues|-v", argc, argv, &i, (long*)&nvalues)) ;
+    else if (argcmpassint("--nvalues|-v", argc, argv, &i, &nvalues)) ;
     else if (argcmpass("--inputsocket|-i", argc, argv, &i, &sockpath)) ;
     else fprintf(stderr, "warning: Unknown argument ignored: \"%s\"\n", argv[i]);
   }

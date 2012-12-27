@@ -38,7 +38,7 @@ int argcmpass(char *options, const int argc, char *argv[], int *argindex, char *
   else
     return 0;
 }
-int argcmpassint(char *options, const int argc, char *argv[], int *argindex, long *dest) {
+int argcmpassint(char *options, const int argc, char *argv[], int *argindex, int *dest) {
   char *opt = argv[*argindex];
   char *opts = assert_malloc(strlen(options));
   strcpy(opts, options);
@@ -52,14 +52,17 @@ int argcmpassint(char *options, const int argc, char *argv[], int *argindex, lon
     
     char *endptr, *value = argv[*argindex];
     long parsed = strtol(value, &endptr, 0);
-    if (parsed == LONG_MIN) {
-      fprintf(stderr, "warning: value of option \"%s\" is too small, replaced by %ld\n", opt, parsed);
+    if (parsed < INT_MIN) {
+      fprintf(stderr, "error: Value of option \"%s\" is too small.\n", opt);
+      exit(1);
     } else if (parsed == LONG_MAX) {
-      fprintf(stderr, "warning: value of option \"%s\" is too big, replaced by %ld\n", opt, parsed);
+      fprintf(stderr, "error: Value of option \"%s\" is too big.\n", opt);
+      exit(1);
     } else if (value == endptr) {
       fprintf(stderr, "error: Invalid number in option \"%s\".\n", opt);
       exit(1);
-    }
+    } else
+      *dest = (int)parsed;
     
     return 1;
   }

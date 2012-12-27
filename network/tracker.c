@@ -25,9 +25,7 @@ int main(int argc, char *argv[]) {
     else if (argcmpass("--inputsocket|-i", argc, argv, &i, &socketpath)) ;
     else if (argcmpass("--outputsocket|-o", argc, argv, &i, &outsockpath)) ;
     else if (ARGCMP("--printtemp", i)) printtempdata = 1;
-    else {
-      fprintf(stderr, "Unknown argument ignored: \"%s\"\n", argv[i]);
-    }
+    else fprintf(stderr, "warning: Unknown argument ignored: \"%s\"\n", argv[i]);
   }
   
   if (! socketpath || ! pendulumdatapath || ! normalisationdatapath || ! outsockpath) {

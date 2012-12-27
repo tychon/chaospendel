@@ -13,7 +13,7 @@ int argcmpass(char *options
             , char **dest);
 int argcmpassint(char *options
                , const int argc, char *argv[], int *argindex
-               , long *dest);
+               , int *dest);
 
 #endif // _COMMON_H
 

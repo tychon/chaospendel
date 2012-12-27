@@ -16,7 +16,7 @@ int main(int argc, char *argv[]) {
   int samplenum = 1000;
   
   for (int i = 1; i < argc; i++) {
-    if (argcmpassint("--samplenum|-n", argc, argv, &i, (long*)&samplenum)) ;
+    if (argcmpassint("--samplenum|-n", argc, argv, &i, &samplenum)) ;
     else if (argcmpass("--pendulumdata|-p", argc, argv, &i, &pendulumdatapath)) ;
     else if (argcmpass("--inputsocket|-i", argc, argv, &i, &socketpath)) ;
     else fprintf(stderr, "warning: Unknown Argument ignored: \"%s\"\n", argv[i]);
