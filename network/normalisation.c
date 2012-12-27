@@ -23,7 +23,7 @@ int main(int argc, char *argv[]) {
   }
   
   if (!socketpath || !pendulumdatapath) {
-    printf("usage: %s [--samplenum INT] --pendulumdata|-p PATH --inputsocket|-i PATH\n", argv[0]);
+    printf("usage: %s [--samplenum|-n INT] --pendulumdata|-p PATH --inputsocket|-i PATH\n", argv[0]);
     exit(1);
   }
   
