@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <math.h>
 
 #include "common.h"
 #include "projectreader.h"
@@ -70,7 +71,7 @@ int main(int argc, char *argv[]) {
       // normalize input value
       normval = (double)packet->values[i];
       normval -= pd->sols[i][IDX_MEAN];
-      normval /= pd->sols[i][IDX_STD_DEVIATION];
+      //normval /= pd->sols[i][IDX_STD_DEVIATION];
       normval /= pd->sols[i][IDX_COILS];
       // first derivative
       d1 = normval - lastnormvalue[i];
@@ -78,7 +79,7 @@ int main(int argc, char *argv[]) {
       d2 = derivative1[i] - d1;
       
       // find inversion
-      if ((derivative1[i] > 0.006) && derivative1[i] >= d2) inversion = i+1;
+      if ((derivative1[i] > pow(pd->sols[i][IDX_STD_DEVIATION],3)/pd->sols[i][IDX_COILS]) && derivative1[i] >= d1) inversion = i+1;
       
       // store the values
       derivative1[i] = d1;
