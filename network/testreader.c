@@ -61,7 +61,7 @@ int main(int argc, char *argv[]) {
     else fprintf(stderr, "warning: Unknown argument ignored: \"%s\"\n", argv[i]);
   }
   if (! sockpath) {
-    fprintf(stderr, "usage: %s [-c | -b] <pathname>", argv[0]);
+    fprintf(stderr, "usage: %s [--format|-f bin|binary|dec|decimal|hex|hexadecimal|asc|ascii|half2|half4|half8] [--timestampted|-t] [--nvalues|-v INT] --inputsocket|-i SOCKETPATH\n", argv[0]);
     exit(1);
   }
   
