@@ -38,6 +38,10 @@ read them from the input file.
 
 TODO: try to match the sending speed with timestamps in the csv file.
 
+The data in the CSV file needs not to be separated by commas, but can be
+delimited by any character not beeing part of any base 10 number. That are
+commas, spaces, colons, ...
+
 -f: Delete exisiting server socket
 -d: Delete socket after use
 --quiet: Suppress the output of '>'-characters on sending.
