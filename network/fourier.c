@@ -69,11 +69,11 @@ int main(int argc, char** argv) {
   
   unsigned char readingbuffer[GLOBALSEQPACKETSIZE];
   int readingbufferlength;
-  struct packet2byte *packet = allocate2bytePacket(column+1);
+  struct packet8byte *packet = allocate8bytePacket(column+1);
   
   fprintf(stderr, "start reading data ...\n");
   while ( (readingbufferlength = uds_read(udscs, readingbuffer, GLOBALSEQPACKETSIZE)) > 0) {
-    if (parse2bytePacket(readingbuffer, readingbufferlength, packet, 1, column+1) != column+1) {
+    if (parse8bytePacket(readingbuffer, readingbufferlength, packet, 1, column+1) != column+1) {
       fprintf(stderr, "Received invalid packet.\n");
       continue;
     }
