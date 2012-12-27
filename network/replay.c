@@ -66,10 +66,7 @@ int main(int argc, char *argv[]) {
     if (argcmpass("--inputfile|-i", argc, argv, &i, &csvpath)) ;
     else if (argcmpass("--pendulum|-p", argc, argv, &i, &pendulumdatapath)) ;
     else if (argcmpass("--outputsocket|-o", argc, argv, &i, &socketpath)) ;
-    else if (ARGCMP("-r", i) || ARGCMP("--samplerate", i)) {
-      i ++;
-      samplerate = atoi(argv[i]);
-    }
+    else if (argcmpassint("--samplerate|-r", argc, argv, &i, (long*)&samplerate)) ;
     else if (ARGCMP("-f", i)) deleteOldSocket = 1;
     else if (ARGCMP("-d", i)) deleteSocketAfterUse = 1;
     else if (ARGCMP("-q", i) || ARGCMP("--quiet", i)) quiet = 1;

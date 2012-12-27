@@ -56,12 +56,9 @@ int main(int argc, char *argv[]) {
         exit(1);
       }
     }
-    else if (ARGCMP("--nvalues", i) || ARGCMP("-v", i)) {
-      i ++;
-      nvalues = atoi(argv[i]);
-    }
-    else if (! sockpath) sockpath = argv[i];
-    else fprintf(stderr, "Argument ignored: %s\n", argv[i]);
+    else if (argcmpassint("--nvalues|-v", argc, argv, &i, (long*)&nvalues)) ;
+    else if (argcmpass("--inputsocket|-i", argc, argv, &i, &sockpath)) ;
+    else fprintf(stderr, "warning: Unknown argument ignored: \"%s\"\n", argv[i]);
   }
   if (! sockpath) {
     fprintf(stderr, "usage: %s [-c | -b] <pathname>", argv[0]);

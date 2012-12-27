@@ -16,18 +16,10 @@ int main(int argc, char *argv[]) {
   int samplenum = 1000;
   
   for (int i = 1; i < argc; i++) {
-    if (ARGCMP("--samplenum", i)) {
-      i ++;
-      samplenum = atoi(argv[i]);
-    }
-    else if (ARGCMP("--pendulumdata", i) || ARGCMP("-p", i)) {
-      i++;
-      pendulumdatapath = argv[i];
-    }
-    else if (ARGCMP("--inputsocket", i) || ARGCMP("-i", i)) {
-      i ++;
-      socketpath = argv[i];
-    }
+    if (argcmpassint("--samplenum|-n", argc, argv, &i, (long*)&samplenum)) ;
+    else if (argcmpass("--pendulumdata|-p", argc, argv, &i, &pendulumdatapath)) ;
+    else if (argcmpass("--inputsocket|-i", argc, argv, &i, &socketpath)) ;
+    else fprintf(stderr, "warning: Unknown Argument ignored: \"%s\"\n", argv[i]);
   }
   
   if (!socketpath || !pendulumdatapath) {

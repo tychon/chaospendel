@@ -4,6 +4,8 @@
 
 #define _POSIX_SOURCE // for 'strtok_r' in stdio
 
+#include <stdlib.h>
+#include <limits.h> // for LONG_MIN und LONG_MAX
 #include <stdio.h>
 #include <string.h>
 
@@ -25,11 +27,39 @@ int argcmpass(char *options, const int argc, char *argv[], int *argindex, char *
   strcpy(opts, options);
   if (argcmpTestOptions(argv[*argindex], opts)) {
     if (*argindex >= argc-1) {
-      fprintf(stderr, "Invalid argument, expected value after option \"%s\"\n", options);
+      fprintf(stderr, "error: Invalid argument, expected value after option \"%s\"\n", options);
       exit(1);
     }
     (*argindex) ++;
     *dest = argv[*argindex];
+    
+    return 1;
+  }
+  else
+    return 0;
+}
+int argcmpassint(char *options, const int argc, char *argv[], int *argindex, long *dest) {
+  char *opt = argv[*argindex];
+  char *opts = assert_malloc(strlen(options));
+  strcpy(opts, options);
+  if (argcmpTestOptions(opt, opts)) {
+    if (*argindex >= argc-1) {
+      fprintf(stderr, "error: Invalid argument, expected value after option \"%s\"\n", options);
+      exit(1);
+    }
+    
+    (*argindex) ++;
+    
+    char *endptr, *value = argv[*argindex];
+    long parsed = strtol(value, &endptr, 0);
+    if (parsed == LONG_MIN) {
+      fprintf(stderr, "warning: value of option \"%s\" is too small, replaced by %ld\n", opt, parsed);
+    } else if (parsed == LONG_MAX) {
+      fprintf(stderr, "warning: value of option \"%s\" is too big, replaced by %ld\n", opt, parsed);
+    } else if (value == endptr) {
+      fprintf(stderr, "error: Invalid number in option \"%s\".\n", opt);
+      exit(1);
+    }
     
     return 1;
   }
