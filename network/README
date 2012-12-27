@@ -1,0 +1,69 @@
+
+Network
+#######
+
+Executables
+===========
+testreader.x
+replay.x
+normalisation.x
+tracker.x
+fourier.x
+
+=== testreader
+usage: ./testreader.x [--format|-f bin|binary|dec|decimal|hex|hexadecimal|asc|ascii|half2|half4|half8] [--timestampted|-t] [--nvalues|-v INT] --inputsocket|-i SOCKETPATH
+
+
+
+=== replay
+=== normalisation
+=== tracker
+=== fourier
+
+================================================================================
+
+Non-main objects
+################
+
+memory_wrappers.o
+common.o
+uds_server.o
+uds_client.o
+protocol.o
+projectreader.o
+
+=== memory_wrappers
+
+Provides functions for crashing the program, if allocating memory fails. :-)
+
+=== common
+
+Includes memory_wrappers.
+Defines the global packet size to use for sending data over sockets.
+Provides functions for parsing command line options of a program.
+
+=== uds_server
+
+Starts a unix domain socket server in a new thread and accept connections.
+You can send data to all clients simultaneously. It will be written to all
+sockets that are not full.
+The socket has the type SOCK_SEQPACKET, so data is send all at once and not
+only parts of it.
+
+=== uds_client
+
+Connect to a uds_server and read data packets.
+
+=== protocol
+
+Provides functions for formatting numbers in buffers so you can send them to
+someone. There is a option to include timestamps.
+
+=== projectreader
+
+Read configuration files.
+There are three types: PENDULUM_DATA, CALIBRATION_DATA, NORMALISATON_DATA
+You have to read the pendulum data before you can read the normalisation data,
+because the pendulum data contains the number of solenoids needed for
+initializing the array in the 'projectdata' structure.
+
