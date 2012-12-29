@@ -25,7 +25,7 @@ if [ "$1" == "tracking" ]; then
     
     sleep 0.000000001
     echo -e "\nstarting tracker ...\n\n"
-    ./tracker.x -p data_pendulum -n data_normalisation -i socket_raw -o socket_angles --printtemp > data_tracking_temporary.csv
+    ./tracker.x -p data_pendulum -n data_normalisation -i socket_raw -o socket_angles --showoverflows --printtempdata > data_tracking_temporary.csv
     
     # killing of replayer not necessary, because the tracker runs
     # til end of data from replayer

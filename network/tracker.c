@@ -17,19 +17,20 @@ int main(int argc, char *argv[]) {
   char *socketpath = NULL, *outsockpath = NULL;
   char *pendulumdatapath = NULL;
   char *normalisationdatapath = NULL;
-  int printtempdata = 0;
+  int printtempdata = 0, showoverflows = 0;
   
   for (int i = 1; i < argc; i++) {
     if (argcmpass("--pendulum|-p", argc, argv, &i, &pendulumdatapath)) ;
     else if (argcmpass("--normalisation|-n", argc, argv, &i, &normalisationdatapath)) ;
     else if (argcmpass("--inputsocket|-i", argc, argv, &i, &socketpath)) ;
     else if (argcmpass("--outputsocket|-o", argc, argv, &i, &outsockpath)) ;
-    else if (ARGCMP("--printtemp", i)) printtempdata = 1;
+    else if (ARGCMP("--printtempdata", i)) printtempdata = 1;
+    else if (ARGCMP("--showoverflows", i)) showoverflows = 1;
     else fprintf(stderr, "warning: Unknown argument ignored: \"%s\"\n", argv[i]);
   }
   
   if (! socketpath || ! pendulumdatapath || ! normalisationdatapath || ! outsockpath) {
-    printf("usage: %s --pendulum|-p PATH --normalisation|-n PATH --inputsocket|-i PATH --outputsocket|-o PATH\n", argv[0]);
+    printf("usage: %s [--showoverflows] [--printtempdata] --pendulum|-p PATH --normalisation|-n PATH --inputsocket|-i PATH --outputsocket|-o PATH\n", argv[0]);
     exit(1);
   }
   
@@ -49,9 +50,9 @@ int main(int argc, char *argv[]) {
   //uds_start_server(udsss);
   
   double *lastnormvalue = assert_calloc(pd->solnum, sizeof(double));
-  double *derivative1 = assert_malloc(sizeof(double) * pd->solnum);
-  double *derivative2 = assert_malloc(sizeof(double) * pd->solnum);
-  double normval, d1, d2;
+  double *integral = assert_malloc(sizeof(double) * pd->solnum);
+  double *derivative = assert_malloc(sizeof(double) * pd->solnum);
+  double normval, d1, thres;
   
   unsigned char buffer[GLOBALSEQPACKETSIZE];
   int bufferlength;
@@ -64,6 +65,19 @@ int main(int argc, char *argv[]) {
       continue;
     }
     
+    int invalid = 0;
+    for (int i = 0; i < pd->solnum; i++) {
+      normval = (double)packet->values[i];
+      if (normval <= 0 || normval >= 1023) invalid = 1;
+    }
+    if (invalid) {
+      if (showoverflows) {
+        fputc('!',stderr);
+        fflush(stderr);
+      }
+      continue;
+    }
+    
     int inversion = 0;
     for (int i = 0; i < pd->solnum; i++) {
       // normalize input value
@@ -71,19 +85,29 @@ int main(int argc, char *argv[]) {
       normval -= pd->sols[i][IDX_MEAN];
       //normval /= pd->sols[i][IDX_STD_DEVIATION];
       normval /= pd->sols[i][IDX_COILS];
+      
+      // calc integral
+      integral[i] += normval;
+      // make it go to zero
+      //integral[i] += -integral[i]*pd->sols[i][IDX_STD_DEVIATION]/50;
       // first derivative
       d1 = normval - lastnormvalue[i];
-      // second derivative
-      d2 = derivative1[i] - d1;
+      
       
       // find inversion
-      if ((derivative1[i] > pow(pd->sols[i][IDX_STD_DEVIATION],3)/pd->sols[i][IDX_COILS]) && derivative1[i] >= d1) inversion = i+1;
+      thres = 0.006; // pow(pd->sols[i][IDX_STD_DEVIATION],2)/pd->sols[i][IDX_COILS];
+      if (derivative[i] < thres && d1 > thres) {
+        if (! printtempdata) putchar('X');
+        if (inversion > 0 && derivative[inversion-1] > d1) {
+          // let there be the old value
+        } else inversion = i+1;
+      } else if (! printtempdata) putchar('-');
       
       // store the values
-      derivative1[i] = d1;
-      derivative2[i] = d2;
+      derivative[i] = d1;
       lastnormvalue[i] = normval;
     }
+      
     
     if (printtempdata) {
       for (int i = 0; i < pd->solnum; i++) {
@@ -91,12 +115,13 @@ int main(int argc, char *argv[]) {
         else printf(",%f", lastnormvalue[i]);
       }
       for (int i = 0; i < pd->solnum; i++)
-        printf(",%f", derivative1[i]);
-      //for (int i = 0; i < pd->solnum; i++)
-      //  printf(",%f", derivative2[i]);
+        printf(",%f", integral[i]);
+      for (int i = 0; i < pd->solnum; i++)
+        printf(",%f", derivative[i]);
       printf(",%d\n", inversion);
       fflush(stdout);
-    }
+    } else putchar('\n');
+    
     
     // TODO find pendulum
     // TODO calculate angles
