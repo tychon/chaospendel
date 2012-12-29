@@ -43,6 +43,7 @@ int main(int argc, char *argv[]) {
   
   double *average = assert_calloc(pd->solnum, sizeof(double)); // the mean value E(X)
   double *average_powered = assert_calloc(pd->solnum, sizeof(double)); // this is E(X^2)
+  double val;
   
   fprintf(stderr, "Waiting for %d samples ...\n", samplenum);
   while ( (length = uds_read(udscs, buffer, GLOBALSEQPACKETSIZE)) > 0) {
@@ -55,8 +56,9 @@ int main(int argc, char *argv[]) {
     fflush(stderr);
     
     for (int i = 0; i < pd->solnum; i++) {
-      average[i] += (double)parsedinput->values[i] / (double)samplenum;
-      average_powered[i] += (double)parsedinput->values[i] * (double)parsedinput->values[i] / (double)samplenum;
+      val = (double)parsedinput->values[i];// / pd->sols[i][IDX_COILS];
+      average[i] += val / (double)samplenum;
+      average_powered[i] += val * val / (double)samplenum;
     }
     
     samplecount ++;
