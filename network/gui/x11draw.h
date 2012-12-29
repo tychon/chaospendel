@@ -16,9 +16,13 @@ typedef struct shmsurface shmsurface;
 shmsurface *createSHMSurface(int xpos, int ypos, int width, int height);
 void flushSHMSurface(shmsurface *surface);
 
-void shmsurfshift(shmsurface *surface, int xshift);
+void shmsurface_memshift(shmsurface *surface, int xshift);
+void shmsurface_fill(shmsurface *surface, int color);
 
-int drawBresenhamLine(shmsurface *surface, int x0, int y0, int x1, int y1, int color);
+void drawDot(shmsurface *surface, int x, int y, int color);
+void drawBresenhamLine(shmsurface *surface, int x0, int y0, int x1, int y1, int color);
+void drawRect(shmsurface *surface, int xpos, int ypos, int width, int height, int color);
+void fillRect(shmsurface *surface, int xpos, int ypos, int width, int height, int color);
 
 #endif // _X11DRAW_H
 

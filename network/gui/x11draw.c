@@ -11,6 +11,10 @@
 
 #include "x11draw.h"
 
+/**
+ * Initialize all the X11 stuff.
+ * The function puts some infos about the window on stderr.
+ */
 shmsurface *createSHMSurface(int xpos, int ypos, int width, int height) {
   Display *dpy = XOpenDisplay(NULL);
   if (dpy == NULL) {
@@ -74,6 +78,10 @@ shmsurface *createSHMSurface(int xpos, int ypos, int width, int height) {
   return surf;
 }
 
+/**
+ * Flush, flush, flush! the image.
+ * -> make it visible on the screen.
+ */
 void flushSHMSurface(shmsurface *surface) {
   XShmPutImage(surface->display
              , surface->window
@@ -86,18 +94,50 @@ void flushSHMSurface(shmsurface *surface) {
   XFlush(surface->display);
 }
 
-void shmsurfshift(shmsurface *surface, int xshift) {
-  memmove(surface->image->data
-        , surface->image->data+xshift
-        , surface->image->bytes_per_line * surface->image->height - xshift);
+/**
+ * Shift all the data in the image. A positive xshift makes the data go to the
+ * right, a negative xshift makes the data go to the left.
+ * Be aware: If the xshift is negative, pixels disappearing on the left, appear
+ * one row higher on the right. And if the xshift is positive, pixels
+ * disappearing on the right appear one row lower on the left!
+ */
+void shmsurface_memshift(shmsurface *surface, int xshift) {
+  if (xshift < 0) { // move to the left
+    memmove(surface->image->data
+          , surface->image->data - xshift*sizeof(int)
+          , surface->image->bytes_per_line * surface->image->height + xshift*sizeof(int));
+  } else if (xshift > 0) { // move to the right
+    memmove(surface->image->data + xshift*sizeof(int)
+          , surface->image->data
+          , surface->image->bytes_per_line * surface->image->height - xshift*sizeof(int));
+  }
+}
+/**
+ * Set all the pixels in the surface to one and only one 'color'.
+ */
+void shmsurface_fill(shmsurface *surface, int color) {
+  memset(surface->image->data
+       , color
+       , surface->image->bytes_per_line * surface->image->height);
 }
 
 #define SWAPINTS(a, b) { int swapints_temp = a; a = b; b = swapints_temp; }
 #define STDPLOT(surface, x, y, color) { *(((int*)surface->image->data)+x+y*surface->width) = color; }
 
-/// This is an implementation of Bresenham's line algorithm.
-/// code found on the english Wikipedia
-int drawBresenhamLine(shmsurface *surface, int x0, int y0, int x1, int y1, int color) {
+/**
+ * Draw a simple dot, to put it in other words: color one pixel.
+ */
+void drawDot(shmsurface *surface, int x, int y, int color) {
+  STDPLOT(surface, x, y, color)
+}
+
+/**
+ * Draw a line from point (x0, y0) to (x1, y1).
+ * 
+ * This is an implementation of Bresenham's line algorithm.
+ * code found on the english Wikipedia
+ */
+void drawBresenhamLine(shmsurface *surface, int x0, int y0, int x1, int y1, int color) {
   int steep = abs(y1-y0) > abs(x1-x0);
   if (steep) {
     SWAPINTS(x0, y0)
@@ -123,11 +163,39 @@ int drawBresenhamLine(shmsurface *surface, int x0, int y0, int x1, int y1, int c
       error += deltax;
     }
   }
-  
-  return 0;
 }
 
 // how about Xiaolin Wu's line algorithm?
+// You could draw anti-aliased lines!
+
+/**
+ * Draw the borders of the given rect.
+ */
+void drawRect(shmsurface *surface, int xpos, int ypos, int width, int height, int color) {
+  int tmp = ypos + height - 1;
+  for (int x = xpos; x < xpos + width; x++) {
+    STDPLOT(surface, x, ypos, color)
+    STDPLOT(surface, x, tmp, color)
+  }
+  tmp = xpos+width-1;
+  for (int y = ypos; y < ypos + height; y++) {
+    STDPLOT(surface, xpos, y, color)
+    STDPLOT(surface, tmp, y, color)
+  }
+}
+
+/**
+ * Fills a given area with the given color.
+ * For filling the whole surface use the more efficient
+ * function 'shmsurface_fill'.
+ */
+void fillRect(shmsurface *surface, int xpos, int ypos, int width, int height, int color) {
+  for (int x = xpos; x < xpos+width; x++) {
+    for (int y = ypos; y < ypos+height; y++) {
+      STDPLOT(surface, x, y, color)
+    }
+  }
+}
 
 #undef SWAPINTS
 #undef STDPLOT
