@@ -2,11 +2,14 @@
 #ifndef _PROJECTREADER_H
 #define _PROJECTREADER_H
 
+#define PROJECTDATASOLS_LENGTH 7
 #define IDX_RADIUS 0
 #define IDX_ANGLE 1
 #define IDX_COILS 2
-#define IDX_MEAN 3
-#define IDX_STD_DEVIATION 4
+#define IDX_SELF_RESISTANCE 3
+#define IDX_SERIES_RESISTANCE 4
+#define IDX_MEAN 5
+#define IDX_STD_DEVIATION 6
 
 struct projectdata {
   // use 'readPendulumData' for these values
@@ -22,11 +25,15 @@ struct projectdata {
   // solenoids
   int solnum; // number of solenoids
   // array of solenoids (with length 'solnum'), where the second array index is:
-  // 0: radius (read by 'readPendulumData')
-  // 1: angle in radians (read by 'readPendulumData')
-  // 2: number of turns (read by 'readPendulumData')
-  // 3: zero level (read by 'readNormalisationData')
-  // 4: standard deviation (read by 'readNormalisationData')
+  // read by 'readPendulumData':
+  // 0: radius in meters
+  // 1: angle in radians
+  // 2: number of turns
+  // 3: self resistance of the solenoid in ohm
+  // 5: series resistance in ohm
+  // read by 'readNormalisationData':
+  // 3: zero level
+  // 4: standard deviation
   double **sols;
 };
 typedef struct projectdata projectdata;

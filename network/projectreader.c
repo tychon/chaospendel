@@ -143,6 +143,18 @@ projectdata *readData(projectdata *dest, const char *filepath, const int mode) {
             exit(1);                 \
           } \
         }
+    #define SCANREAD(format, solindexptr, destvar)           \
+        if (sscanf(keybuffer, format, solindexptr) == 1) {      \
+          if (*solindexptr < 0 || *solindexptr >= dest->solnum) { \
+            fprintf(stderr, "error: solenoid index not in range in line %d\n", linenum); \
+            exit(1); \
+          }          \
+          destvar = strtod(valbuffer, &endptr); \
+          if (endptr == valbuffer) {            \
+            fprintf(stderr, "error: Invalid value in line %d\n", linenum); \
+            exit(1); \
+          }          \
+        }
     
     if (mode == PENDULUM_DATA) {
       // parse lengths of pendulum in doubles
@@ -162,49 +174,16 @@ projectdata *readData(projectdata *dest, const char *filepath, const int mode) {
         }
         dest->sols = assert_malloc(sizeof(double) * dest->solnum);
         for (int i = 0; i < dest->solnum; i++)
-          dest->sols[i] = assert_malloc(sizeof(double)*5);
+          dest->sols[i] = assert_malloc(sizeof(double)*PROJECTDATASOLS_LENGTH);
       }
       // try to read solenoid radiuses and angles
       else {
         int solindex;
-        // radiuses
-        if (sscanf(keybuffer, "solradius%d", &solindex) == 1) {
-          if (solindex < 0 && solindex >= dest->solnum) {
-            fprintf(stderr, "error: solenoid index not in range in line %d\n", linenum);
-            exit(1);
-          }
-          // parse double
-          dest->sols[solindex][IDX_RADIUS] = strtod(valbuffer, &endptr);
-          if (endptr == valbuffer) {
-            fprintf(stderr, "error: Invalid radius in line %d\n", linenum);
-            exit(1);
-          }
-        }
-        // angles
-        else if (sscanf(keybuffer, "solangle%d", &solindex) == 1) {
-          if (solindex < 0 && solindex >= dest->solnum) {
-            fprintf(stderr, "error: solenoid index not in range in line %d\n", linenum);
-            exit(1);
-          }
-          // parse double
-          dest->sols[solindex][IDX_ANGLE] = strtod(valbuffer, &endptr);
-          if (endptr == valbuffer) {
-            fprintf(stderr, "error: Invalid angle in line %d\n", linenum);
-            exit(1);
-          }
-        }
-        // normalisation factor
-        else if (sscanf(keybuffer, "solcoils%d", &solindex) == 1) {
-          if (solindex < 0 && solindex >= dest->solnum) {
-            fprintf(stderr, "error: solenoid index not in range in line %d\n", linenum);
-            exit(1);
-          }
-          dest->sols[solindex][IDX_COILS] = strtol(valbuffer, &endptr, 10);
-          if (endptr == valbuffer) {
-            fprintf(stderr, "error: Invalid value in line %d\n", linenum);
-            exit(1);
-          }
-        }
+        SCANREAD("solradius%d", &solindex, dest->sols[solindex][IDX_RADIUS])
+        else SCANREAD("solangle%d", &solindex, dest->sols[solindex][IDX_ANGLE])
+        else SCANREAD("solcoils%d", &solindex, dest->sols[solindex][IDX_COILS])
+        else SCANREAD("solselfresistance%d", &solindex, dest->sols[solindex][IDX_SELF_RESISTANCE])
+        else SCANREAD("solseriesresistance%d", &solindex, dest->sols[solindex][IDX_SERIES_RESISTANCE])
       }
     }
     else if (mode == CALIBRATION_DATA) {
@@ -216,30 +195,8 @@ projectdata *readData(projectdata *dest, const char *filepath, const int mode) {
     }
     else if (mode == NORMALISATION_DATA) {
       int solindex;
-      // average
-      if (sscanf(keybuffer, "arithmetic_mean%d", &solindex) == 1) {
-        if (solindex < 0 && solindex >= dest->solnum) {
-          fprintf(stderr, "error: solenoid index not in range in line %d\n", linenum);
-          exit(1);
-        }
-        dest->sols[solindex][IDX_MEAN] = strtod(valbuffer, &endptr);
-        if (endptr == valbuffer) {
-          fprintf(stderr, "error: Invalid value in line %d\n", linenum);
-          exit(1);
-        }
-      }
-      // standard deviation
-      else if (sscanf(keybuffer, "standard_deviation%d", &solindex) == 1) {
-        if (solindex < 0 && solindex >= dest->solnum) {
-          fprintf(stderr, "error: solenoid index not in range in line %d\n", linenum);
-          exit(1);
-        }
-        dest->sols[solindex][IDX_STD_DEVIATION] = strtod(valbuffer, &endptr);
-        if (endptr == valbuffer) {
-          fprintf(stderr, "error: Invalid value in line %d\n", linenum);
-          exit(1);
-        }
-      }
+      SCANREAD("arithmetic_mean%d", &solindex, dest->sols[solindex][IDX_MEAN])
+      else SCANREAD("standard_deviation%d", &solindex, dest->sols[solindex][IDX_STD_DEVIATION])
     }
     
     #undef CMPREAD
@@ -261,9 +218,8 @@ projectdata *readData(projectdata *dest, const char *filepath, const int mode) {
 
 /**
  * Parses the keys l1a, l1b, l1, l2a, l2b, l1m, l2m and the number of solenoids
- * in solnum. Additionaly it parses the radiuses of the solenoids with the keys
- * solrX and the angle of the solenoids with the keys solaX where X is the
- * index of the solenoid going from 0 to solnum (excluded).
+ * in solnum. Additionaly it parses some values for the 'sols' array in
+ * 'projectdata'.
  * NOTE: the solnum key must always occur before the radiuses and angles!
  * 2. NOTE: A new array is initialized for 'sols' in 'dest', every time the
  *   key-value-pair 'solnum' was parsed. Old content is not freed!
