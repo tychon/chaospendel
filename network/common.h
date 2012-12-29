@@ -8,5 +8,12 @@
 
 #define ARGCMP(str, index) (strcmp(str, argv[index]) == 0)
 
+int argcmpass(char *options
+            , const int argc, char *argv[], int *argindex
+            , char **dest);
+int argcmpassint(char *options
+               , const int argc, char *argv[], int *argindex
+               , int *dest);
+
 #endif // _COMMON_H
 

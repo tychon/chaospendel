@@ -1,0 +1,119 @@
+
+Network
+#######
+
+Executables
+===========
+testreader.x
+replay.x
+normalisation.x
+tracker.x
+fourier.x
+
+=== testreader
+
+usage: ./testreader.x [--format|-f bin|binary|dec|decimal|hex|hexadecimal|asc|as
+cii|half2|half4|half8] [--timestampted|-t] --nvalues|-v INT --inputsocket|-i S
+OCKETPATH
+
+Read data from unix domain socket and print it in some different formats on
+the screen. The --nvalues option defines the count of numbers in the half2,
+half4 or half8 formats. The --timestamped option defines, if there is a
+timestamp present in the received data for the halfX formats.
+
+=== replay
+
+usage: ./replay.x [-f] [-d] [--quiet|-q] [--notimestamp|-nt] [--samplerate|-r SAM
+PLERATE] --inputfile|-i CSVFILEPATH --pendulum|-p PENDULUMDATAPATH --outputsocke
+t|-o SOCKETPATH
+
+Read data from CSV file and write it in half2 format to the output socket.
+The minimum number of columns in the CSV file is read from the PENDULUMDATAPATH
+as the value of the key 'solnum'. The CSV file may contain a timestamp as
+first column too (see the --notimestamp option).
+
+The sample rate option defines how many samples should be send per second.
+If this option is not given, the samples are send as fast as the replayer can
+read them from the input file.
+
+TODO: try to match the sending speed with timestamps in the csv file.
+
+The data in the CSV file needs not to be separated by commas, but can be
+delimited by any character not beeing part of any base 10 number. That are
+commas, spaces, colons, ...
+
+-f: Delete exisiting server socket
+-d: Delete socket after use
+--quiet: Suppress the output of '>'-characters on sending.
+--notimestamp: There is no timestamp as first column in the CSV file.
+
+=== normalisation
+
+usage: ./normalisation.x [--samplenum|-n INT] --pendulumdata|-p PATH --inputsock
+et|-i PATH
+
+Reads data from input socket and calculates the arithmetic mean, the variance
+and the standard deviation for every column.
+
+The data from the input socket must be formatted in half2 format with a
+timestamp. The minimum number of columns in the input data is read from the
+pendulum data file. (The timestamp in the data is ignored.)
+
+The number of samples defaults to 1000 and may be changed with the --samplenum
+option. The calculation fails, if the data stream ends before all samples were
+collected.
+
+The results of the calculations are printed to stdout and may be redirected into
+a file later used as normalisation data in the tracker.
+All the infos are written to stderr.
+
+=== tracker
+=== fourier
+
+================================================================================
+
+Non-main objects
+################
+
+memory_wrappers.o
+common.o
+uds_server.o
+uds_client.o
+protocol.o
+projectreader.o
+
+=== memory_wrappers
+
+Provides functions for crashing the program, if allocating memory fails. :-)
+
+=== common
+
+Includes memory_wrappers.
+Defines the global packet size to use for sending data over sockets.
+Provides functions for parsing command line options of a program.
+
+=== uds_server
+
+Starts a unix domain socket server in a new thread and accept connections.
+You can send data to all clients simultaneously. It will be written to all
+sockets that are not full.
+The socket has the type SOCK_SEQPACKET, so data is send all at once and not
+only parts of it.
+
+=== uds_client
+
+Connect to a uds_server and read data packets.
+
+=== protocol
+
+Provides functions for formatting numbers in buffers so you can send them to
+someone. There is a option to include timestamps.
+
+=== projectreader
+
+Read configuration files.
+There are three types: PENDULUM_DATA, CALIBRATION_DATA, NORMALISATON_DATA
+You have to read the pendulum data before you can read the normalisation data,
+because the pendulum data contains the number of solenoids needed for
+initializing the array in the 'projectdata' structure.
+

@@ -56,15 +56,12 @@ int main(int argc, char *argv[]) {
         exit(1);
       }
     }
-    else if (ARGCMP("--nvalues", i) || ARGCMP("-v", i)) {
-      i ++;
-      nvalues = atoi(argv[i]);
-    }
-    else if (! sockpath) sockpath = argv[i];
-    else fprintf(stderr, "Argument ignored: %s\n", argv[i]);
+    else if (argcmpassint("--nvalues|-v", argc, argv, &i, &nvalues)) ;
+    else if (argcmpass("--inputsocket|-i", argc, argv, &i, &sockpath)) ;
+    else fprintf(stderr, "warning: Unknown argument ignored: \"%s\"\n", argv[i]);
   }
   if (! sockpath) {
-    fprintf(stderr, "usage: %s [-c | -b] <pathname>", argv[0]);
+    fprintf(stderr, "usage: %s [--format|-f bin|binary|dec|decimal|hex|hexadecimal|asc|ascii|half2|half4|half8] [--timestampted|-t] [--nvalues|-v INT] --inputsocket|-i SOCKETPATH\n", argv[0]);
     exit(1);
   }
   
@@ -102,8 +99,7 @@ int main(int argc, char *argv[]) {
     void *parsed = NULL;
     switch (format) {
       case FORMATHALFBYTE2: {
-        parsed = assert_malloc(sizeof(struct packet2byte));
-        ((struct packet2byte*)parsed)->values = assert_malloc(sizeof(uint16_t)*nvalues);
+        parsed = allocate2bytePacket(nvalues);
       } break;
       // TODO other halfbyte formats
     }
@@ -120,7 +116,7 @@ int main(int argc, char *argv[]) {
           if ( (retv2 = parse2bytePacket(buffer, retv
                                  , (struct packet2byte*)parsed, timestamped
                                  , nvalues)) < 0) {
-            fprintf(stderr, "parsing failed with (%d), buffer: ", retv2);
+            fprintf(stderr, "parsing failed with code (%d), buffer: ", retv2);
             for (int i = 0; i < retv; i++) fprintf(stderr, " %02x", buffer[i]);
             fprintf(stderr, "\n");
           } else {

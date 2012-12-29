@@ -1,0 +1,38 @@
+
+# lengths of pendulum
+# (units in meters)
+# The axis is at zero.
+l1a=0.1
+l1b=0.3
+l1=0.285 # Distance of the axes
+l2a=0.11
+l2b=0.19
+# positions of magnets (guessed)
+l1m=0.27
+l2m=0.28
+
+# solenoids
+solnum = 6
+# radiuses in meters
+# and angles in degrees
+# !!! guessed !!! TODO
+# remember: spaces are ignored
+sol radius 0 = 0.47
+sol angle  0 = -67.5
+sol coils  0 = 1600
+sol radius 1 = 0.47
+sol angle  1 = -40.5
+sol coils  1 = 1600
+sol radius 2 = 0.47
+sol angle  2 = -13.5
+sol coils  2 = 20000
+sol radius 3 = 0.47
+sol angle  3 = 13.5
+sol coils  3 = 20000
+sol radius 4 = 0.47
+sol angle  4 = 40.5
+sol coils  4 = 1600
+sol radius 5 = 0.47
+sol angle  5 = 67.5
+sol coils  5 = 1600
+

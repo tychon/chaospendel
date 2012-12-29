@@ -1,12 +1,13 @@
 
-CFLAGS := -std=gnu99 -Wall -Werror
-LIBS := -lc -lpthread
+CFLAGS := -g -std=gnu99 -Wall -Werror
+LIBS := -g -lc -lpthread -lm -lfftw3
 
-NONMAINOBJS := uds_server.o uds_client.o protocol.o memory_wrappers.o projectreader.o
-HEADERFILES := $(NONMAINOBJS:.o=.h) common.h
-MAINOBJS := replay.x testreader.x tracker.x protocol_test.x test_endianness.x
+NONMAINOBJS := memory_wrappers.o common.o uds_server.o uds_client.o protocol.o projectreader.o
+HEADERFILES := $(NONMAINOBJS:.o=.h)
 
-all: $(MAINOBJS)
+EXECUTABLES := testreader.x replay.x normalisation.x tracker.x fourier.x
+
+all: $(EXECUTABLES)
 
 # make executables
 %.x: %.o $(NONMAINOBJS)
