@@ -14,7 +14,7 @@ int main(void) {
   config.c_cflag |= CS8;
   config.c_cc[VMIN]  = 1;
   config.c_cc[VTIME] = 0;
-  if(cfsetispeed(&config, B57600) < 0 || cfsetospeed(&config, B57600) < 0) exit(1);
+  if(cfsetispeed(&config, B500000) < 0 || cfsetospeed(&config, B500000) < 0) exit(1);
   if(tcsetattr(serial_fd, TCSAFLUSH, &config) < 0) exit(1);
   FILE *serial = fdopen(serial_fd, "r");
 

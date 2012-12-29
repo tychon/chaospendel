@@ -1,7 +1,8 @@
 #include <avr/io.h>
 #include <stdint.h>
 
-#define USART_BAUDRATE 57600
+//#define USART_BAUDRATE 57600
+#define USART_BAUDRATE 500000
 #define BAUD_PRESCALE (((F_CPU / (USART_BAUDRATE * 16UL))) - 1)
 
 // set up the analog->digital converter chip
