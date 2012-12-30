@@ -122,7 +122,7 @@ void shmsurface_fill(shmsurface *surface, int color) {
 }
 
 #define SWAPINTS(a, b) { int swapints_temp = a; a = b; b = swapints_temp; }
-#define STDPLOT(surface, x, y, color) { *(((int*)surface->image->data)+x+y*surface->width) = color; }
+#define STDPLOT(surface, x, y, color) { *(((int*)surface->image->data)+(x)+(y)*surface->width) = color; }
 
 /**
  * Draw a simple dot, to put it in other words: color one pixel.
@@ -194,6 +194,80 @@ void fillRect(shmsurface *surface, int xpos, int ypos, int width, int height, in
     for (int y = ypos; y < ypos+height; y++) {
       STDPLOT(surface, x, y, color)
     }
+  }
+}
+
+/**
+ * Draws the borders of a circle with its center at (xpos, ypos).
+ * This is an implementation of the midpoint circle algorithm.
+ * code fount on the english Wikipedia
+ */
+void drawCircle(shmsurface *surface, int xpos, int ypos, int radius, int color) {
+  int f = 1 - radius;
+  int ddF_x = 1;
+  int ddF_y = -2 * radius;
+  int x = 0;
+  int y = radius;
+  
+  STDPLOT(surface, xpos, ypos+radius, color)
+  STDPLOT(surface, xpos, ypos-radius, color)
+  STDPLOT(surface, xpos+radius, ypos, color)
+  STDPLOT(surface, xpos-radius, ypos, color)
+  
+  while (x < y) {
+    if (f >= 0) {
+      y --;
+      ddF_y += 2;
+      f += ddF_y;
+    }
+    
+    x ++;
+    ddF_x += 2;
+    f += ddF_x;
+    
+    STDPLOT(surface, xpos+x, ypos+y, color)
+    STDPLOT(surface, xpos-x, ypos+y, color)
+    STDPLOT(surface, xpos+x, ypos-y, color)
+    STDPLOT(surface, xpos-x, ypos-y, color)
+    
+    STDPLOT(surface, xpos+y, ypos+x, color)
+    STDPLOT(surface, xpos-y, ypos+x, color)
+    STDPLOT(surface, xpos+y, ypos-x, color)
+    STDPLOT(surface, xpos-y, ypos-x, color)
+  }
+}
+
+/**
+ * Fills all pixels within a given radius around (xpos, ypos) with the
+ * given color.
+ * This is a slightly modified version of the midpoint circle algorithm.
+ */
+void fillCircle(shmsurface *surface, int xpos, int ypos, int radius, int color) {
+  int f = 1 - radius;
+  int ddF_x = 1;
+  int ddF_y = -2 * radius;
+  int x = 0;
+  int y = radius;
+  
+  int tmp;
+  for (tmp = xpos-radius; tmp <= xpos+radius; tmp ++) STDPLOT(surface, tmp, ypos, color)
+  
+  while (x < y) {
+    if (f >= 0) {
+      y --;
+      ddF_y += 2;
+      f += ddF_y;
+    }
+    
+    x ++;
+    ddF_x += 2;
+    f += ddF_x;
+    
+    for (tmp = xpos-x; tmp <= xpos+x; tmp ++) STDPLOT(surface, tmp, ypos+y, color)
+    for (tmp = xpos-x; tmp <= xpos+x; tmp ++) STDPLOT(surface, tmp, ypos-y, color)
+    
+    for (tmp = xpos-y; tmp <= xpos+y; tmp ++) STDPLOT(surface, tmp, ypos+x, color)
+    for (tmp = xpos-y; tmp <= xpos+y; tmp ++) STDPLOT(surface, tmp, ypos-x, color)
   }
 }
 

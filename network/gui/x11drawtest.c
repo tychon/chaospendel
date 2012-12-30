@@ -33,5 +33,15 @@ int main(int argc, char *argv[]) {
   fillRect(surface, 50, 50, 100, 100, 0xff00ff00);
   flushSHMSurface(surface);
   sleep(1);
+  
+  shmsurface_fill(surface, 0xff000000);
+  drawCircle(surface, 100, 75, 50, 0xff00ffff);
+  flushSHMSurface(surface);
+  sleep(2);
+  
+  shmsurface_fill(surface, 0xff000000);
+  fillCircle(surface, 100, 75, 50, 0xffff0000);
+  flushSHMSurface(surface);
+  sleep(2);
 }
 
