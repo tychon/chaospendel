@@ -7,6 +7,7 @@ HEADERFILES := $(NONMAINOBJS:.o=.h)
 
 EXECUTABLES := testreader.x replay.x normalisation.x tracker.x fourier.x x11drawtest.x reader.x
 
+.PHONY: all clean
 
 all: $(EXECUTABLES)
 
@@ -18,3 +19,5 @@ all: $(EXECUTABLES)
 %.o: %.c $(HEADERFILES)
 	gcc $(CFLAGS) -c $*.c -o $*.o
 
+clean:
+	rm -f *.x *.o
