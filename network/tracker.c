@@ -15,7 +15,7 @@
 #include "protocol.h"
 #include "x11draw.h"
 
-#define DEGTORAD(deg) (deg / 360.0 * M_PI)
+#define DEGTORAD(deg) (deg / 360.0 * 2*M_PI)
 
 void drawPendulum(shmsurface *sf, projectdata *pd, double absrangemax, double *normval) {
   double maxpendlength = (double)(pd->l1 + (pd->l2a > pd->l2b ? pd->l2a : pd->l2b));
@@ -23,7 +23,7 @@ void drawPendulum(shmsurface *sf, projectdata *pd, double absrangemax, double *n
   double scale = (double)(sf->width < sf->height ? sf->width : sf->height) / 2.0 * (4.0/5.0) / maxpendlength;
   
   double val;
-  int color;
+  int xpos, ypos, color;
   for (int i = 0; i < pd->solnum; i++) {
     color = 0xff000000;
     val = (double)(normval[i]) / absrangemax * M_E;
@@ -33,10 +33,10 @@ void drawPendulum(shmsurface *sf, projectdata *pd, double absrangemax, double *n
       color |= htobe32((int)lround(log1p(val))*255.0) >> 16;
     }
     
-    fillCircle(sf
-             , sin(DEGTORAD((double)pd->sols[i][IDX_ANGLE])) * scale * (double)pd->sols[i][IDX_RADIUS] + sf->width/2
-             , cos(DEGTORAD((double)pd->sols[i][IDX_ANGLE])) * scale * (double)pd->sols[i][IDX_RADIUS] + sf->height/2
-             , 5, color);
+    xpos = sin(DEGTORAD((double)pd->sols[i][IDX_ANGLE])) * scale * (double)pd->sols[i][IDX_RADIUS] + sf->width/2;
+    ypos = cos(DEGTORAD((double)pd->sols[i][IDX_ANGLE])) * scale * (double)pd->sols[i][IDX_RADIUS] + sf->height/2;
+    drawCircle(sf, xpos, ypos, 6, 0xff0000ff);
+    fillCircle(sf, xpos, ypos, 5, color);
   }
 }
 
