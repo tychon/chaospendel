@@ -3,6 +3,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <unistd.h>
+#include "common.h"
+#include "protocol.h"
+
+#define SOCKNAME "arduino.socket"
 
 int main(void) {
   int serial_fd = open("/dev/ttyACM0", O_RDONLY | O_NOCTTY);
@@ -25,6 +30,14 @@ int main(void) {
   int adc_was_blocking = -1;
 
   int wantport = 0;
+  
+  
+  unsigned char outbuffer[GLOBALSEQPACKETSIZE];
+  uint16_t values[16];
+  
+  unlink(SOCKNAME);
+  udsserversocket *udsserver = uds_create_server(SOCKNAME);
+  uds_start_server(udsserver);
 
   while (1) {
     char b;
@@ -46,9 +59,16 @@ int main(void) {
       fprintf(stderr, "want port %i, but got data about port %i\n", wantport, port);
       continue;
     }
+    
+    values[port] = val;
+    
     wantport++;
-    if (wantport == 16) wantport = 0;
-    fprintf(stdout, "%i %i\n", port, val);
+    if (wantport == 16) {
+      wantport = 0;
+      int size = format2bytePacket(outbuffer, GLOBALSEQPACKETSIZE, getUnixMillis(), values, 16);
+      uds_send_toall(udsserver, outbuffer, size);
+    }
+    
 
     if (adc_blocked != adc_was_blocking) {
       adc_was_blocking = adc_blocked;
@@ -64,5 +84,9 @@ int main(void) {
 badval:
     fprintf(stderr, "invalid data!\n");
   }
+  
+  uds_stop_server(udsserver);
+  unlink(SOCKNAME);
+  
   return 42;
 }
