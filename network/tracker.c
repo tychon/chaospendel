@@ -6,31 +6,62 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <math.h>
+#include <endian.h>
 
 #include "common.h"
 #include "projectreader.h"
 #include "uds_server.h"
 #include "uds_client.h"
 #include "protocol.h"
+#include "x11draw.h"
+
+#define DEGTORAD(deg) (deg / 360.0 * M_PI)
+
+void drawPendulum(shmsurface *sf, projectdata *pd, double absrangemax, double *normval) {
+  double maxpendlength = (double)(pd->l1 + (pd->l2a > pd->l2b ? pd->l2a : pd->l2b));
+  // this scale is in pixels per meter
+  double scale = (double)(sf->width < sf->height ? sf->width : sf->height) / 2.0 * (4.0/5.0) / maxpendlength;
+  
+  double val;
+  int color;
+  for (int i = 0; i < pd->solnum; i++) {
+    color = 0xff000000;
+    val = (double)(normval[i]) / absrangemax * M_E;
+    if (val < 0) {
+      color |= htobe32((int)lround(log1p(-val)*255.0)) >> 8;
+    } else if (val > 0) {
+      color |= htobe32((int)lround(log1p(val))*255.0) >> 16;
+    }
+    
+    fillCircle(sf
+             , sin(DEGTORAD((double)pd->sols[i][IDX_ANGLE])) * scale * (double)pd->sols[i][IDX_RADIUS] + sf->width/2
+             , cos(DEGTORAD((double)pd->sols[i][IDX_ANGLE])) * scale * (double)pd->sols[i][IDX_RADIUS] + sf->height/2
+             , 5, color);
+  }
+}
 
 int main(int argc, char *argv[]) {
   char *socketpath = NULL, *outsockpath = NULL;
   char *pendulumdatapath = NULL;
   char *normalisationdatapath = NULL;
   int printtempdata = 0, showoverflows = 0;
+  int showx11gui = 0;
+  int maxframerate = 80;
   
   for (int i = 1; i < argc; i++) {
     if (argcmpass("--pendulum|-p", argc, argv, &i, &pendulumdatapath)) ;
     else if (argcmpass("--normalisation|-n", argc, argv, &i, &normalisationdatapath)) ;
     else if (argcmpass("--inputsocket|-i", argc, argv, &i, &socketpath)) ;
     else if (argcmpass("--outputsocket|-o", argc, argv, &i, &outsockpath)) ;
+    else if (argcmpassint("--maxframerate|-f", argc, argv, &i, &maxframerate)) ;
     else if (ARGCMP("--printtempdata", i)) printtempdata = 1;
     else if (ARGCMP("--showoverflows", i)) showoverflows = 1;
+    else if (ARGCMP("--showx11gui", i)) showx11gui = 1;
     else fprintf(stderr, "warning: Unknown argument ignored: \"%s\"\n", argv[i]);
   }
   
   if (! socketpath || ! pendulumdatapath || ! normalisationdatapath || ! outsockpath) {
-    printf("usage: %s [--showoverflows] [--printtempdata] --pendulum|-p PATH --normalisation|-n PATH --inputsocket|-i PATH --outputsocket|-o PATH\n", argv[0]);
+    printf("usage: %s [--showoverflows] [--printtempdata] [--showx11gui] [--maxframerate|-f INT] --pendulum|-p PATH --normalisation|-n PATH --inputsocket|-i PATH --outputsocket|-o PATH\n", argv[0]);
     exit(1);
   }
   
@@ -49,10 +80,23 @@ int main(int argc, char *argv[]) {
   //udsserversocket *udsss = uds_create_server(outsockpath);
   //uds_start_server(udsss);
   
+  // x11 things
+  shmsurface *surface = NULL;
+  if (showx11gui) {
+    surface = createSHMSurface(20, 20, 300, 300);
+  }
+  
   double *lastnormvalue = assert_calloc(pd->solnum, sizeof(double));
   double *integral = assert_malloc(sizeof(double) * pd->solnum);
   double *derivative = assert_malloc(sizeof(double) * pd->solnum);
   double normval, d1, thres;
+  
+  // This is the number of milliseconds to sleep before flushing
+  // the SHM surface again.
+  const double minframewait = 1000 / (double)maxframerate;
+  // 'millis' is for saving current time,
+  // 'lastframemillis' is for saving the time of the last frame flushed
+  int millis, lastframemillis = getUnixMillis();
   
   unsigned char buffer[GLOBALSEQPACKETSIZE];
   int bufferlength;
@@ -107,7 +151,15 @@ int main(int argc, char *argv[]) {
       derivative[i] = d1;
       lastnormvalue[i] = normval;
     }
-      
+    
+    if (showx11gui) {
+      millis = getUnixMillis();
+      if (millis-lastframemillis > minframewait) {
+        drawPendulum(surface, pd, 0.03, lastnormvalue); //TODO this is hardcoded :-(
+        flushSHMSurface(surface);
+        lastframemillis = millis;
+      }
+    }
     
     if (printtempdata) {
       for (int i = 0; i < pd->solnum; i++) {
