@@ -112,7 +112,7 @@ int main(int argc, char *argv[]) {
     int invalid = 0;
     for (int i = 0; i < pd->solnum; i++) {
       normval = (double)packet->values[i];
-      if (normval <= 0 || normval >= 1023) invalid = 1;
+      if (normval < 0 || normval > 1023) invalid = 1;
     }
     if (invalid) {
       if (showoverflows) {
