@@ -1,5 +1,6 @@
 
 #include <unistd.h>
+#include <math.h>
 
 #include "x11draw.h"
 
@@ -7,15 +8,39 @@ int main(int argc, char *argv[]) {
   shmsurface *surface = createSHMSurface(20, 20, 200, 200);
   sleep(1);
   
-  drawCircle(surface, 80, 100, 5, 0xffffffff);
-  drawCircle(surface, 120, 100, 5, 0xffffffff);
-  drawHyperbola(surface, 100, 100, 1.0, 20.0, 1, 0xff00ff00);
-  drawHyperbola(surface, 100, 100, -5.0, 20.0, 1, 0xff00ffff);
-  drawHyperbola(surface, 100, 100, 10.0, 20.0, 1, 0xffffff00);
-  drawHyperbola(surface, 100, 100, 15.0, 20.0, 1, 0xffffffff);
-  drawHyperbola(surface, 100, 100, 18.0, 20.0, 1, 0xffff00ff);
-  flushSHMSurface(surface);
-  sleep(10);
+  const double dist = 50;
+  for (double angle = 0; angle < 2*M_PI; angle += 2*M_PI/100) {
+    shmsurface_fill(surface, 0xff000000);
+    drawCircle(surface, 100, 100, 5, 0xffffffff);
+    drawCircle(surface, (int)(cos(angle) * dist)+100, (int)(sin(angle) * dist)+100, 5, 0xffffffff);
+    drawHyperbola(surface
+                 , 100, 100
+                 , (int)(cos(angle) * dist)+100, (int)(sin(angle) * dist)+100
+                 , 3
+                 , 0xffffffff);
+    flushSHMSurface(surface);
+    usleep(1000*100);
+  }
+  sleep(1);
+  
+  shmsurface_fill(surface, 0xff000000);
+  drawCircle(surface, 100, 100, 5, 0xffffffff);
+  drawCircle(surface, 100+dist, 100, 5, 0xffffffff);
+  for (double ratio = 1.1; ratio < 10.0; ratio += 0.5) {
+    drawHyperbola(surface
+                 , 100, 100
+                 , dist+100, 100
+                 , ratio
+                 , 0xffffffff);
+    drawHyperbola(surface
+                 , 100, 100
+                 , dist+100, 100
+                 , 1/ratio
+                 , 0xffffffff);
+    flushSHMSurface(surface);
+    usleep(1000*500);
+  }
+  sleep(1);
   
   
   shmsurface_fill(surface, 0xff808080);

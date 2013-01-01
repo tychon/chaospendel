@@ -25,7 +25,12 @@ void drawRect(shmsurface *surface, int xpos, int ypos, int width, int height, in
 void fillRect(shmsurface *surface, int xpos, int ypos, int width, int height, int color);
 void drawCircle(shmsurface *surface, int xpos, int ypos, int radius, int color);
 void fillCircle(shmsurface *surface, int xpos, int ypos, int radius, int color);
-void drawHyperbola(shmsurface *surface, int xpos, int ypos, double a, double e, double yscale, int color);
+
+int drawHyperbola(shmsurface *surface
+                 , double ax, double ay
+                 , double fx, double fy
+                 , double ratio
+                 , int color);
 
 #endif // _X11DRAW_H
 
