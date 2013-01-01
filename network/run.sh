@@ -21,7 +21,7 @@ if [ "$1" == "tracking" ]; then
   if [ "$2" == "replay" ]; then
     # start replayer in background
     echo -e "\nstarting replayer ...\n\n"
-    ./replay.x -f -d -nt -i data_values.csv -p data_pendulum -o socket_replay -r 100000 > /dev/null &
+    ./replay.x -f -d -t -i data_values_lastreplay.csv -p data_pendulum -o socket_replay -r 100000 > /dev/null &
     
     sleep 0.000000001
     echo -e "\nstarting tracker ...\n\n"

@@ -22,6 +22,7 @@ int main(int argc, char *argv[]) {
     else if (argcmpass("--outputsocketpath|-o", argc, argv, &i, &outputsocketpath)) ;
     else if (argcmpass("--pendulum|-p", argc, argv, &i, &pendulumdatapath)) ;
     else if (argcmpass("--savereplay|-r", argc, argv, &i, &replaypath)) ;
+    else if (ARGCMP("--noreplay", i)) replaypath = NULL;
     else fprintf(stderr, "warning: Ignored unknown argument \"%s\"\n", argv[i]);
   }
   
@@ -53,10 +54,21 @@ int main(int argc, char *argv[]) {
   unsigned char outbuffer[GLOBALSEQPACKETSIZE];
   uint16_t values[pd->solnum];
   
+  long long millis;
+  
   fprintf(stderr, "Starting unix domain server on \"%s\" ...\n", outputsocketpath);
   unlink(outputsocketpath);
   udsserversocket *udsserver = uds_create_server(outputsocketpath);
   uds_start_server(udsserver);
+  
+  FILE *replayf = NULL;
+  if (replaypath) {
+    fprintf(stderr, "Opening replay file \"%s\" ...\n", replaypath);
+    if (! (replayf = fopen(replaypath, "w+"))) {
+      perror("opening replay file");
+      exit(1);
+    }
+  }
 
   while (1) {
     char b;
@@ -83,9 +95,22 @@ int main(int argc, char *argv[]) {
     
     wantport++;
     if (wantport == pd->solnum) {
+      // collected one data set
       wantport = 0;
-      int size = format2bytePacket(outbuffer, GLOBALSEQPACKETSIZE, getUnixMillis(), values, pd->solnum);
+      
+      millis = getUnixMillis();
+      
+      // send it over the socket
+      int size = format2bytePacket(outbuffer, GLOBALSEQPACKETSIZE, millis, values, pd->solnum);
       uds_send_toall(udsserver, outbuffer, size);
+      
+      // write to replay
+      if (replaypath) {
+        fprintf(replayf, "%lld", millis);
+        for (int i = 0; i < pd->solnum; i++)
+          fprintf(replayf, ", %d", values[i]);
+        fputc('\n', replayf);
+      }
     }
     
 
@@ -102,6 +127,11 @@ int main(int argc, char *argv[]) {
 
 badval:
     fprintf(stderr, "invalid data!\n");
+  }
+  
+  if (replaypath) {
+    fprintf(stderr, "Closing replay file ...\n");
+    fclose(replayf);
   }
   
   fprintf(stderr, "Stopping unix domain server ...\n");
