@@ -3,7 +3,6 @@
 #define _PROTOCOL_H
 
 #include <stdint.h>
-#include "uds_server.h"
 
 struct packet2byte {
   long long timestamp;

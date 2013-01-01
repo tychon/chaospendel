@@ -1,16 +1,36 @@
+
 #include <termios.h>
 #include <fcntl.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
 #include <unistd.h>
+
 #include "common.h"
+#include "projectreader.h"
+#include "uds_server.h"
 #include "protocol.h"
 
-#define SOCKNAME "arduino.socket"
-
-int main(void) {
-  int serial_fd = open("/dev/ttyACM0", O_RDONLY | O_NOCTTY);
+int main(int argc, char *argv[]) {
+  char *serialdevicepath = "/dev/ttyACM0";
+  char *outputsocketpath = "socket_arduino";
+  char *pendulumdatapath = "data_pendulum";
+  char *replaypath = "data_values_lastreplay.csv";
+  
+  for (int i = 1; i < argc; i++) {
+    if (argcmpass("--serialdevice|-i", argc, argv, &i, &serialdevicepath)) ;
+    else if (argcmpass("--outputsocketpath|-o", argc, argv, &i, &outputsocketpath)) ;
+    else if (argcmpass("--pendulum|-p", argc, argv, &i, &pendulumdatapath)) ;
+    else if (argcmpass("--savereplay|-r", argc, argv, &i, &replaypath)) ;
+    else fprintf(stderr, "warning: Ignored unknown argument \"%s\"\n", argv[i]);
+  }
+  
+  fprintf(stderr, "Reading pendulum data ...\n");
+  projectdata *pd = assert_malloc(sizeof(projectdata));
+  readPendulumData(pd, pendulumdatapath);
+  
+  fprintf(stderr, "Connecting to serial device ...\n");
+  int serial_fd = open(serialdevicepath, O_RDONLY | O_NOCTTY);
   struct termios config;
   if(tcgetattr(serial_fd, &config) < 0) exit(1);
   config.c_iflag &= ~(IGNBRK | BRKINT | ICRNL | INLCR | PARMRK | INPCK | ISTRIP | IXON);
@@ -22,21 +42,20 @@ int main(void) {
   if(cfsetispeed(&config, B500000) < 0 || cfsetospeed(&config, B500000) < 0) exit(1);
   if(tcsetattr(serial_fd, TCSAFLUSH, &config) < 0) exit(1);
   FILE *serial = fdopen(serial_fd, "r");
-
+  
   setbuf(stdout, NULL);
   setbuf(stderr, NULL);
   setbuf(serial, NULL);
-
+  
   int adc_was_blocking = -1;
-
   int wantport = 0;
   
-  
   unsigned char outbuffer[GLOBALSEQPACKETSIZE];
-  uint16_t values[16];
+  uint16_t values[pd->solnum];
   
-  unlink(SOCKNAME);
-  udsserversocket *udsserver = uds_create_server(SOCKNAME);
+  fprintf(stderr, "Starting unix domain server on \"%s\" ...\n", outputsocketpath);
+  unlink(outputsocketpath);
+  udsserversocket *udsserver = uds_create_server(outputsocketpath);
   uds_start_server(udsserver);
 
   while (1) {
@@ -45,7 +64,7 @@ int main(void) {
       // ignore bad head
       fprintf(stderr, "bad byte 0x%x - waiting for valid head\n", b);
     };
-
+    
     int adc_blocked = (b&0x10) ? true : false;
     int port = (b&0x0f);
     int hpart = fgetc(serial);
@@ -63,9 +82,9 @@ int main(void) {
     values[port] = val;
     
     wantport++;
-    if (wantport == 16) {
+    if (wantport == pd->solnum) {
       wantport = 0;
-      int size = format2bytePacket(outbuffer, GLOBALSEQPACKETSIZE, getUnixMillis(), values, 16);
+      int size = format2bytePacket(outbuffer, GLOBALSEQPACKETSIZE, getUnixMillis(), values, pd->solnum);
       uds_send_toall(udsserver, outbuffer, size);
     }
     
@@ -85,8 +104,9 @@ badval:
     fprintf(stderr, "invalid data!\n");
   }
   
+  fprintf(stderr, "Stopping unix domain server ...\n");
   uds_stop_server(udsserver);
-  unlink(SOCKNAME);
+  unlink(outputsocketpath);
   
   return 42;
 }
