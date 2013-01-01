@@ -302,6 +302,10 @@ int drawHyperbola(shmsurface *surface
   double xreal, xreal2, yreal, yreal2;
   double lastx1, lasty1, lastx2, lasty2;
   
+  // these are correct
+  //printf("%lf, %lf\n", dist, angle);
+  //printf("%lf, %lf, %lf\n", e, a, b);
+  
   x = a;
   for (;;) {
     y = b * sqrt(x*x - a*a) / a;
@@ -317,7 +321,7 @@ int drawHyperbola(shmsurface *surface
         || yreal < 0 || yreal >= surface->height
         || yreal2 < 0 || yreal2 >= surface->height) break;
         
-    printf("%lf, %lf, %lf, %lf, %lf; %lf %lf\n", e, a, angle, b, y, xreal, yreal);
+    printf("%lf, %lf, %lf\n", y, xreal, yreal);
     
     if (x == a) {
       STDPLOT(surface, (int)lround(xreal), (int)lround(yreal), color);
@@ -331,7 +335,7 @@ int drawHyperbola(shmsurface *surface
     lastx2 = xreal2;
     lasty2 = yreal2;
     
-    x += 0.1;
+    x += 1;
   }
   
   return 0;
