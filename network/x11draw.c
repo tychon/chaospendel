@@ -8,6 +8,7 @@
 #include <X11/Xutil.h>
 #include <sys/shm.h>
 #include <X11/extensions/XShm.h>
+#include <math.h>
 
 #include "x11draw.h"
 
@@ -268,6 +269,31 @@ void fillCircle(shmsurface *surface, int xpos, int ypos, int radius, int color) 
     
     for (tmp = xpos-y; tmp <= xpos+y; tmp ++) STDPLOT(surface, tmp, ypos+x, color)
     for (tmp = xpos-y; tmp <= xpos+y; tmp ++) STDPLOT(surface, tmp, ypos-x, color)
+  }
+}
+
+/**
+ * 
+ */
+void drawHyperbola(shmsurface *surface, int xpos, int ypos, double a, double e, double yscale, int color) {
+  double b = sqrt(e * e - a * a);
+  double y;
+  int lastx, lasty1, lasty2;
+  for (double x = a; ; x += 1) {
+    if (x+xpos >= surface->width) break;
+    y = b * sqrt(x*x - a*a) / a;
+    printf("%lf, %lf, %lf\n", x, b, y);
+    if ((y*yscale)+ypos >= surface->height || ypos-(y*yscale) < 0) break;
+    if (x == a) {
+      STDPLOT(surface, (int)x+xpos, (int)(y*yscale)+ypos, color);
+      STDPLOT(surface, (int)x+xpos, ypos-(int)(y*yscale), color);
+    } else {
+      drawBresenhamLine(surface, lastx, lasty1, (int)x+xpos, (int)(y*yscale)+ypos, color);
+      drawBresenhamLine(surface, lastx, lasty2, (int)x+xpos, ypos-(int)(y*yscale), color);
+    }
+    lastx = (int)x+xpos;
+    lasty1 = (int)(y*yscale)+ypos;
+    lasty2 = ypos-(int)(y*yscale);
   }
 }
 
