@@ -83,9 +83,9 @@ int main(int argc, char *argv[]) {
     variance = average_powered[i] - average[i] * average[i];
     stddeviation = sqrt(variance);
     
-    printf("arithmetic_mean%d = %f\n", i, average[i]);
+    printf("arithmetic_mean%d = %lf\n", i, average[i]);
     printf("variance%d = %lf\n", i, variance);
-    printf("standard_deviation%d = %f\n", i, stddeviation);
+    printf("standard_deviation%d = %lf\n", i, stddeviation);
   }
   printf("\n");
   

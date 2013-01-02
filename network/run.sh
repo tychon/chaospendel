@@ -14,6 +14,11 @@ if [ "$1" == "normalisation" ]; then
     
     echo -e "\nkilling replayer ... \n\n"
     kill $!
+  else
+    xterm -e ./reader.x -p data_pendulum -o socket_arduino &
+    sleep 1
+    ./normalisation.x -p data_pendulum -i socket_arduino --samplenum 10000 > data_normalisation
+    kill $!
   fi
 fi
 
