@@ -14,6 +14,11 @@
 #include "uds_client.h"
 #include "protocol.h"
 #include "x11draw.h"
+#include "integral.h"
+
+#define INTEGWINDOWSIZE  10000
+#define INTEGTHRESHOLD  0.0004
+#define INTEGRESETSAMPLES 100
 
 #define DEGTORAD(deg) (deg / 360.0 * 2*M_PI)
 
@@ -100,7 +105,8 @@ int main(int argc, char *argv[]) {
   }
   
   double *lastnormvalue = assert_calloc(pd->solnum, sizeof(double));
-  double *integral = assert_malloc(sizeof(double) * pd->solnum);
+  integral **integrals = assert_malloc(sizeof(integral*) * pd->solnum);
+  for (int i = 0; i < pd->solnum; i++) integrals[i] = integral_allocate(INTEGWINDOWSIZE, INTEGTHRESHOLD, INTEGRESETSAMPLES);
   double *derivative = assert_malloc(sizeof(double) * pd->solnum);
   double normval, d1, thres;
   
@@ -148,9 +154,12 @@ int main(int argc, char *argv[]) {
       normval /= pd->sols[i][IDX_COILS];
       
       // calc integral
+      /*
       integral[i] += normval;
       // make it go to zero
       integral[i] += -integral[i]*pd->sols[i][IDX_STD_DEVIATION]/50;
+      */
+      integral_push(integrals[i], normval);
       // first derivative
       d1 = normval - lastnormvalue[i];
       
@@ -202,13 +211,13 @@ int main(int argc, char *argv[]) {
     
     if (printtempdata) {
       for (int i = 0; i < pd->solnum; i++) {
-        if (i == 0) printf("%f", lastnormvalue[i]);
-        else printf(",%f", lastnormvalue[i]);
+        if (i == 0) printf("%lf", lastnormvalue[i]);
+        else printf(",%lf", lastnormvalue[i]);
       }
       for (int i = 0; i < pd->solnum; i++)
-        printf(",%f", integral[i]);
+        printf(",%lf", integral_getsum(integrals[i]));
       for (int i = 0; i < pd->solnum; i++)
-        printf(",%f", derivative[i]);
+        printf(",%lf", derivative[i]);
       printf(",%d\n", inversion);
       fflush(stdout);
     } else putchar('\n');
