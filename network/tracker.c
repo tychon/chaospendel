@@ -26,6 +26,10 @@ void toCartesian(double radius, double angle, double *x, double *y) {
   *x = cos(angle) * radius;
   *y = sin(angle) * radius;
 }
+void toPendulumCartesian(double radius, double angle, double *x, double *y) {
+  *x = sin(angle) * radius;
+  *y = cos(angle) * radius;
+}
 //void toPolar(double x, double y, double *radius, double *angle)
 
 void drawPendulum(shmsurface *sf, projectdata *pd, double absrangemax, double *normval, int intindex1, int intindex2, double intratio) {
@@ -50,10 +54,23 @@ void drawPendulum(shmsurface *sf, projectdata *pd, double absrangemax, double *n
       color |= htobe32((int)lround(log1p(val))*255.0) >> 16;
     }
     
-    xpos = sin(DEGTORAD((double)pd->sols[i][IDX_ANGLE])) * scale * (double)pd->sols[i][IDX_RADIUS] + sf->width/2;
-    ypos = cos(DEGTORAD((double)pd->sols[i][IDX_ANGLE])) * scale * (double)pd->sols[i][IDX_RADIUS] + sf->height/2;
+    xpos = sin(pd->sols[i][IDX_ANGLE]) * scale * (double)pd->sols[i][IDX_RADIUS] + sf->width/2;
+    ypos = cos(pd->sols[i][IDX_ANGLE]) * scale * (double)pd->sols[i][IDX_RADIUS] + sf->height/2;
     drawCircle(sf, xpos, ypos, 6, 0xff0000ff);
     fillCircle(sf, xpos, ypos, 5, color);
+  }
+  
+  if (intratio > 0) {
+    double ax, ay, bx, by;
+    toPendulumCartesian(pd->sols[intindex1][IDX_RADIUS]*scale, pd->sols[intindex1][IDX_ANGLE], &ax, &ay);
+    ax += sf->width/2;
+    ay += sf->height/2;
+    toPendulumCartesian(pd->sols[intindex2][IDX_RADIUS]*scale, pd->sols[intindex2][IDX_ANGLE], &bx, &by);
+    bx += sf->width/2;
+    by += sf->height/2;
+    //fprintf(stderr, "%d, %d\n", intindex1, intindex2);
+    //fprintf(stderr, "%lf, %lf, %lf, %lf\n", ax, ay, bx, by);
+    drawHyperbola(sf, ax, ay, bx, by, intratio, 0xffffffff);
   }
 }
 
@@ -111,7 +128,7 @@ int main(int argc, char *argv[]) {
     integrals[i] = integral_allocate(INTEGWINDOWSIZE, INTEGTHRESHOLD, INTEGRESETSAMPLES);
   
   // some temporary variables used in loop
-  double normval, integ, d1, thres;
+  double normval, integ, d1;
   
   // saves values and indices of two maximum integral values
   double absval1, absval2;
@@ -190,14 +207,14 @@ int main(int argc, char *argv[]) {
     double yres = y1 + (y2-y1) * ratio;
     */
     
-    if (absval2 < 0.0001) {
+    if (absval2 < 0.005) {
       ratio = -1.0;
     }
     
     if (showx11gui) {
       millis = getUnixMillis();
       if (millis-lastframemillis > minframewait) {
-        drawPendulum(surface, pd, 0.1, lastnormvalue, superindex1, superindex2, ratio); //TODO this is hardcoded :-(
+        drawPendulum(surface, pd, 0.1, lastnormvalue, superindex1, superindex2, 1/ratio); //TODO this is hardcoded :-(
         flushSHMSurface(surface);
         lastframemillis = millis;
       }
