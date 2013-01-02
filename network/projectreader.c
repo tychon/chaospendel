@@ -1,11 +1,13 @@
 
 #define _ISOC99_SOURCE // for 'isblank' in ctype
 #define _POSIX_C_SOURCE 200809L // for 'getline' in stdio
+#define _BSD_SOURCE // for 'M_PI' in math
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
+#include <math.h>
 
 #include "common.h"
 
@@ -180,7 +182,7 @@ projectdata *readData(projectdata *dest, const char *filepath, const int mode) {
       else {
         int solindex;
         SCANREAD("solradius%d", &solindex, dest->sols[solindex][IDX_RADIUS])
-        else SCANREAD("solangle%d", &solindex, dest->sols[solindex][IDX_ANGLE])
+        else SCANREAD("solangle%d", &solindex, dest->sols[solindex][IDX_ANGLE]) // this is converted to radians later
         else SCANREAD("solcoils%d", &solindex, dest->sols[solindex][IDX_COILS])
         else SCANREAD("solselfresistance%d", &solindex, dest->sols[solindex][IDX_SELF_RESISTANCE])
         else SCANREAD("solseriesresistance%d", &solindex, dest->sols[solindex][IDX_SERIES_RESISTANCE])
@@ -207,6 +209,13 @@ projectdata *readData(projectdata *dest, const char *filepath, const int mode) {
   if ( ! feof(f) ) {
     perror("reading file");
     exit(1);
+  }
+  
+  // convert angles from degree to radians
+  if (mode == PENDULUM_DATA) {
+    for (int i = 0; i < dest->solnum; i++) {
+      dest->sols[i][IDX_ANGLE] = dest->sols[i][IDX_ANGLE] / 360.0 * 2 * M_PI;
+    }
   }
   
   return dest;
