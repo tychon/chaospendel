@@ -17,6 +17,8 @@ typedef struct {
 } integral;
 
 integral *integral_allocate(size_t windowsize, double reset_threshold, size_t reset_samples);
+double integral_push(integral *integ, double val);
+double integral_getsum(integral *integ);
 
 #endif // _INTEGRAL_H
 
