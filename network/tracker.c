@@ -17,10 +17,22 @@
 
 #define DEGTORAD(deg) (deg / 360.0 * 2*M_PI)
 
-void drawPendulum(shmsurface *sf, projectdata *pd, double absrangemax, double *normval) {
+void toCartesian(double radius, double angle, double *x, double *y) {
+  *x = cos(angle) * radius;
+  *y = sin(angle) * radius;
+}
+//void toPolar(double x, double y, double *radius, double *angle)
+
+void drawPendulum(shmsurface *sf, projectdata *pd, double absrangemax, double *normval, int inversionindex, double xres, double yres) {
+  shmsurface_fill(sf, 0xff000000);
+  
   double maxpendlength = (double)(pd->l1 + (pd->l2a > pd->l2b ? pd->l2a : pd->l2b));
   // this scale is in pixels per meter
   double scale = (double)(sf->width < sf->height ? sf->width : sf->height) / 2.0 * (4.0/5.0) / maxpendlength;
+  
+  drawDot(sf, sf->width/2, sf->height/2, 0xffff0000);
+  drawBresenhamLine(sf, xres * scale + sf->width/2, 0, xres * scale + sf->width/2, sf->height-1, 0xff0000ff);
+  drawBresenhamLine(sf, 0, yres * scale + sf->height/2, sf->width-1, yres * scale + sf->height/2, 0xff0000ff);
   
   double val;
   int xpos, ypos, color;
@@ -35,6 +47,7 @@ void drawPendulum(shmsurface *sf, projectdata *pd, double absrangemax, double *n
     
     xpos = sin(DEGTORAD((double)pd->sols[i][IDX_ANGLE])) * scale * (double)pd->sols[i][IDX_RADIUS] + sf->width/2;
     ypos = cos(DEGTORAD((double)pd->sols[i][IDX_ANGLE])) * scale * (double)pd->sols[i][IDX_RADIUS] + sf->height/2;
+    if (inversionindex > 0 && i+1 == inversionindex) fillCircle(sf, xpos, ypos, 20, 0xff0000ff);
     drawCircle(sf, xpos, ypos, 6, 0xff0000ff);
     fillCircle(sf, xpos, ypos, 5, color);
   }
@@ -83,13 +96,16 @@ int main(int argc, char *argv[]) {
   // x11 things
   shmsurface *surface = NULL;
   if (showx11gui) {
-    surface = createSHMSurface(20, 20, 300, 300);
+    surface = createSHMSurface(100, 100, 500, 500);
   }
   
   double *lastnormvalue = assert_calloc(pd->solnum, sizeof(double));
   double *integral = assert_malloc(sizeof(double) * pd->solnum);
   double *derivative = assert_malloc(sizeof(double) * pd->solnum);
   double normval, d1, thres;
+  
+  double absval1, absval2;
+  int superindex1, superindex2;
   
   // This is the number of milliseconds to sleep before flushing
   // the SHM surface again.
@@ -109,6 +125,7 @@ int main(int argc, char *argv[]) {
       continue;
     }
     
+    absval1 = absval2 = -1;
     int invalid = 0;
     for (int i = 0; i < pd->solnum; i++) {
       normval = (double)packet->values[i];
@@ -133,14 +150,14 @@ int main(int argc, char *argv[]) {
       // calc integral
       integral[i] += normval;
       // make it go to zero
-      //integral[i] += -integral[i]*pd->sols[i][IDX_STD_DEVIATION]/50;
+      integral[i] += -integral[i]*pd->sols[i][IDX_STD_DEVIATION]/50;
       // first derivative
       d1 = normval - lastnormvalue[i];
       
       
       // find inversion
       thres = 0.006; // pow(pd->sols[i][IDX_STD_DEVIATION],2)/pd->sols[i][IDX_COILS];
-      if (derivative[i] < thres && d1 > thres) {
+      if (derivative[i] > thres && d1 < thres) {
         if (! printtempdata) putchar('X');
         if (inversion > 0 && derivative[inversion-1] > d1) {
           // let there be the old value
@@ -150,12 +167,34 @@ int main(int argc, char *argv[]) {
       // store the values
       derivative[i] = d1;
       lastnormvalue[i] = normval;
+      
+      // comment?
+      if (fabs(normval) > absval1) {
+        absval2 = absval1;
+        superindex2 = superindex1;
+        absval1 = fabs(normval);
+        superindex1 = i;
+      } else if (fabs(normval) > absval2) {
+        absval2 = fabs(normval);
+        superindex2 = i;
+      }
+    }
+    
+    double ratio = sqrt(absval1) / sqrt(absval2);
+    double x1, y1, x2, y2;
+    toCartesian(pd->sols[superindex1][IDX_RADIUS], pd->sols[superindex1][IDX_ANGLE], &x1, &y1);
+    toCartesian(pd->sols[superindex2][IDX_RADIUS], pd->sols[superindex2][IDX_ANGLE], &x2, &y2);
+    double xres = x1 + (x2-x1) * ratio;
+    double yres = y1 + (y2-y1) * ratio;
+    
+    if (absval2 < 0.0001) {
+      xres = yres = 0;
     }
     
     if (showx11gui) {
       millis = getUnixMillis();
       if (millis-lastframemillis > minframewait) {
-        drawPendulum(surface, pd, 0.03, lastnormvalue); //TODO this is hardcoded :-(
+        //drawPendulum(surface, pd, 0.1, lastnormvalue, inversion, xres, yres); //TODO this is hardcoded :-(
         flushSHMSurface(surface);
         lastframemillis = millis;
       }

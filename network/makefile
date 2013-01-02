@@ -1,5 +1,5 @@
 
-CFLAGS := -g -std=gnu99 -Wall -Werror
+CFLAGS := -g -std=gnu99 -Wall
 LIBS := -g -lc -lpthread -lm -lfftw3 -lX11 -lXext
 
 NONMAINOBJS := memory_wrappers.o common.o uds_server.o uds_client.o protocol.o projectreader.o x11draw.o
