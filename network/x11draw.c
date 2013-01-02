@@ -8,6 +8,7 @@
 #include <X11/Xutil.h>
 #include <sys/shm.h>
 #include <X11/extensions/XShm.h>
+#include <math.h>
 
 #include "x11draw.h"
 
@@ -122,6 +123,7 @@ void shmsurface_fill(shmsurface *surface, int color) {
 }
 
 #define SWAPINTS(a, b) { int swapints_temp = a; a = b; b = swapints_temp; }
+#define SWAPDOUBLES(a, b) { double swapd_temp = a; a = b; b = swapd_temp; }
 #define STDPLOT(surface, x, y, color) { *(((int*)surface->image->data)+(x)+(y)*surface->width) = color; }
 
 /**
@@ -271,6 +273,75 @@ void fillCircle(shmsurface *surface, int xpos, int ypos, int radius, int color) 
   }
 }
 
+/**
+ * This is veery inefficient and not even accurate.
+ */
+int drawHyperbola(shmsurface *surface
+                 , double ax, double ay
+                 , double fx, double fy
+                 , double ratio
+                 , int color) {
+  if (ratio <= 0 || ratio == 1) return -1;
+  if (ratio < 1) {
+    SWAPDOUBLES(ax, fx)
+    SWAPDOUBLES(ay, fy)
+    ratio = 1 / ratio;
+  }
+  
+  double xdiff = fx - ax;
+  double ydiff = fy - ay;
+  double midx = ax + xdiff/2;
+  double midy = ay + ydiff/2;
+  double angle = atan2(ydiff, xdiff);
+  double dist = sqrt(xdiff * xdiff + ydiff * ydiff);
+  double e = dist / 2.0; // focal distance
+  double a = dist * ratio / (1.0 + ratio) - e; // angular point
+  double b = sqrt(e * e - a * a);
+  
+  double x, y, angleadd;
+  double xreal, xreal2, yreal, yreal2;
+  double lastx1, lasty1, lastx2, lasty2;
+  
+  // these are correct
+  //printf("%lf, %lf\n", dist, angle);
+  //printf("%lf, %lf, %lf\n", e, a, b);
+  
+  x = a;
+  for (;;) {
+    y = b * sqrt(x*x - a*a) / a;
+    
+    angleadd = atan2(y, x);
+    xreal = cos(angle + angleadd) * x + midx;
+    xreal2 = cos(angle - angleadd) * x + midx;
+    yreal = sin(angle + angleadd) * y + midy;
+    yreal2 = sin(angle - angleadd) * y + midy;
+    
+    if (xreal < 0 || xreal >= surface->width
+        || xreal2 < 0 || xreal2 >= surface->width
+        || yreal < 0 || yreal >= surface->height
+        || yreal2 < 0 || yreal2 >= surface->height) break;
+        
+    printf("%lf, %lf, %lf\n", y, xreal, yreal);
+    
+    if (x == a) {
+      STDPLOT(surface, (int)lround(xreal), (int)lround(yreal), color);
+      STDPLOT(surface, (int)lround(xreal2), (int)lround(yreal2), color);
+    } else {
+      drawBresenhamLine(surface, lastx1, lasty1, (int)lround(xreal), (int)lround(yreal), color);
+      drawBresenhamLine(surface, lastx2, lasty2, (int)lround(xreal2), (int)lround(yreal2), color);
+    }
+    lastx1 = xreal;
+    lasty1 = yreal;
+    lastx2 = xreal2;
+    lasty2 = yreal2;
+    
+    x += 1;
+  }
+  
+  return 0;
+}
+
+#undef SWAPDOUBLES
 #undef SWAPINTS
 #undef STDPLOT
 
