@@ -234,6 +234,7 @@ int main(int argc, char *argv[]) {
       for (int i = 0; i < pd->solnum; i++)
         printf(",%lf", derivative[i]);
       
+      fputc('\n', stdout);
       fflush(stdout);
     }
     
