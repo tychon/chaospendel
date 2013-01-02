@@ -19,6 +19,7 @@ ringbuffer *ringbuffer_allocate(size_t nmemb, ssize_t membsize) {
 
 int ringbuffer_push(ringbuffer *rb, void *val) {
   int nextpos = (rb->firstvalid + rb->validsize) % rb->buflength;
+  
   memcpy(rb->buffer + nextpos, val, rb->membsize);
   if (rb->validsize == rb->buflength) {
     rb->firstvalid += rb->membsize;

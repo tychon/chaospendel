@@ -13,6 +13,7 @@ typedef struct {
 ringbuffer *ringbuffer_allocate(size_t nmemb, ssize_t membsize);
 int ringbuffer_push(ringbuffer *rb, void *val);
 void *ringbuffer_getval(ringbuffer *rb, int index);
+int ringbuffer_getlength(ringbuffer *rb);
 void ringbuffer_clear(ringbuffer *rb);
 
 #endif // _RINGBUFFER_H
