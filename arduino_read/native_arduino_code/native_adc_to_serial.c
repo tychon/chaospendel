@@ -37,8 +37,19 @@ static void adc_init(void) {
 // The result can later be read using adc_read_result. This call
 // won't wait for the conversion to finish.
 static void adc_measure(uint8_t ch) {
+  // our input is in the range 0..15, but we have to convert that
+  // according to the datasheet
+  // (section 26.8.2 - ADC Control and Status Register B)
+  if (ch >= 0x08) {
+    ch -= 0x08;
+    ch += 0x20;
+  }
+  
   // update the channel field (lower 5 bits) of ADMUX
   ADMUX = (ADMUX & ~(0x1F)) | (ch & 0x1F);
+  
+  // update the high bit (sixth) of the channel which is in ADCSRB
+  ADCSRB = (ADCSRB & ~(1<<MUX5)) | ((ch&0x20)?(1<<MUX5):0);
 
   // request a single conversion
   ADCSRA |= (1<<ADSC);
