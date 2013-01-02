@@ -1,14 +1,17 @@
-typedef struct {
-  size_t size;
-  double min_signi_val;
-  int values_under_min;
-  
-  off_t first_valid;
-  double values_sum;
-  double values[];
-} sliding_window_data;
 
-void swin_add(sliding_window_data *sw, double value) {
-  
+#include "memory_wrappers.h"
+
+#include "integral.h"
+
+integral *integral_allocate(size_t windowsize, double reset_threshold, size_t reset_samples) {
+  integral *integ = assert_malloc(sizeof(integral));
+  integ->max_reset_threshold = reset_threshold;
+  integ->min_reset_samples = reset_samples;
+  integ->sum = 0.0;
+  integ->buffer = ringbuffer_allocate(windowsize, sizeof(double));
+  integ->reset_samples = 1;
+  return integ;
 }
+
+
 
