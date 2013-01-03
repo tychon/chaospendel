@@ -1,49 +1,112 @@
-arithmetic_mean0 = 693.429100
-variance0 = 1.665773
-standard_deviation0 = 1.290648
-arithmetic_mean1 = 693.681200
-variance1 = 1.770967
-standard_deviation1 = 1.330777
-arithmetic_mean2 = 693.723700
-variance2 = 1.754758
-standard_deviation2 = 1.324673
-arithmetic_mean3 = 693.995100
-variance3 = 3.106876
-standard_deviation3 = 1.762633
-arithmetic_mean4 = 693.798200
-variance4 = 1.987877
-standard_deviation4 = 1.409921
-arithmetic_mean5 = 693.294400
-variance5 = 1.895529
-standard_deviation5 = 1.376782
-arithmetic_mean6 = 693.649000
-variance6 = 1.865199
-standard_deviation6 = 1.365723
-arithmetic_mean7 = 693.647600
-variance7 = 1.965014
-standard_deviation7 = 1.401790
-arithmetic_mean8 = 693.529800
-variance8 = 2.898512
-standard_deviation8 = 1.702502
-arithmetic_mean9 = 693.928600
-variance9 = 2.581302
-standard_deviation9 = 1.606643
-arithmetic_mean10 = 694.050500
-variance10 = 2.828750
-standard_deviation10 = 1.681889
-arithmetic_mean11 = 693.492200
-variance11 = 1.403339
-standard_deviation11 = 1.184626
-arithmetic_mean12 = 693.543400
-variance12 = 1.631317
-standard_deviation12 = 1.277230
-arithmetic_mean13 = 693.402800
-variance13 = 1.745152
-standard_deviation13 = 1.321042
-arithmetic_mean14 = 693.671700
-variance14 = 1.719519
-standard_deviation14 = 1.311304
-arithmetic_mean15 = 694.028900
-variance15 = 3.119465
-standard_deviation15 = 1.766201
+## 0 ##
+arithmetic mean 0    = 693.586900
+variance 0           = 1.669049
+standard deviation 0 = 1.291917
+noise minimum 0      = 688
+noise maximum 0      = 700
+
+## 1 ##
+arithmetic mean 1    = 693.800900
+variance 1           = 1.796059
+standard deviation 1 = 1.340171
+noise minimum 1      = 688
+noise maximum 1      = 700
+
+## 2 ##
+arithmetic mean 2    = 693.837300
+variance 2           = 1.756429
+standard deviation 2 = 1.325303
+noise minimum 2      = 689
+noise maximum 2      = 700
+
+## 3 ##
+arithmetic mean 3    = 694.163900
+variance 3           = 3.203837
+standard deviation 3 = 1.789926
+noise minimum 3      = 688
+noise maximum 3      = 703
+
+## 4 ##
+arithmetic mean 4    = 693.980300
+variance 4           = 2.067712
+standard deviation 4 = 1.437954
+noise minimum 4      = 688
+noise maximum 4      = 701
+
+## 5 ##
+arithmetic mean 5    = 693.423900
+variance 5           = 1.960409
+standard deviation 5 = 1.400146
+noise minimum 5      = 688
+noise maximum 5      = 700
+
+## 6 ##
+arithmetic mean 6    = 693.753400
+variance 6           = 1.960789
+standard deviation 6 = 1.400282
+noise minimum 6      = 688
+noise maximum 6      = 699
+
+## 7 ##
+arithmetic mean 7    = 693.733200
+variance 7           = 1.988618
+standard deviation 7 = 1.410184
+noise minimum 7      = 688
+noise maximum 7      = 701
+
+## 8 ##
+arithmetic mean 8    = 693.691200
+variance 8           = 2.978643
+standard deviation 8 = 1.725874
+noise minimum 8      = 688
+noise maximum 8      = 700
+
+## 9 ##
+arithmetic mean 9    = 694.045700
+variance 9           = 2.835812
+standard deviation 9 = 1.683987
+noise minimum 9      = 689
+noise maximum 9      = 701
+
+## 10 ##
+arithmetic mean 10    = 694.149500
+variance 10           = 3.032350
+standard deviation 10 = 1.741364
+noise minimum 10      = 688
+noise maximum 10      = 700
+
+## 11 ##
+arithmetic mean 11    = 693.626500
+variance 11           = 1.537998
+standard deviation 11 = 1.240160
+noise minimum 11      = 689
+noise maximum 11      = 699
+
+## 12 ##
+arithmetic mean 12    = 693.702200
+variance 12           = 1.709715
+standard deviation 12 = 1.307561
+noise minimum 12      = 688
+noise maximum 12      = 699
+
+## 13 ##
+arithmetic mean 13    = 693.497500
+variance 13           = 1.791794
+standard deviation 13 = 1.338579
+noise minimum 13      = 688
+noise maximum 13      = 700
+
+## 14 ##
+arithmetic mean 14    = 693.792900
+variance 14           = 1.701210
+standard deviation 14 = 1.304304
+noise minimum 14      = 689
+noise maximum 14      = 699
+
+## 15 ##
+arithmetic mean 15    = 694.143500
+variance 15           = 3.225508
+standard deviation 15 = 1.795970
+noise minimum 15      = 688
+noise maximum 15      = 702
 

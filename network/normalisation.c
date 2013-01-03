@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include <limits.h>
 
 #include "common.h"
 #include "uds_client.h"
@@ -43,7 +44,15 @@ int main(int argc, char *argv[]) {
   
   double *average = assert_calloc(pd->solnum, sizeof(double)); // the mean value E(X)
   double *average_powered = assert_calloc(pd->solnum, sizeof(double)); // this is E(X^2)
-  double val;
+  // this contains the lowest value recorded for every solenoid
+  int *noisemin = assert_malloc(pd->solnum * sizeof(int));
+  for (int i = 0; i < pd->solnum; i++) noisemin[i] = INT_MAX;
+  // this contains the highest value recorded for every solenoid
+  int *noisemax = assert_calloc(pd->solnum, sizeof(int));
+  
+  // variable used in loop
+  int val;
+  double fval;
   
   fprintf(stderr, "Waiting for %d samples ...\n", samplenum);
   while ( (length = uds_read(udscs, buffer, GLOBALSEQPACKETSIZE)) > 0) {
@@ -56,9 +65,12 @@ int main(int argc, char *argv[]) {
     fflush(stderr);
     
     for (int i = 0; i < pd->solnum; i++) {
-      val = (double)parsedinput->values[i];// / pd->sols[i][IDX_COILS];
-      average[i] += val / (double)samplenum;
-      average_powered[i] += val * val / (double)samplenum;
+      val = parsedinput->values[i];
+      if (val < noisemin[i]) noisemin[i] = val;
+      if (val > noisemax[i]) noisemax[i] = val;
+      fval = (double)val;
+      average[i] += fval / (double)samplenum;
+      average_powered[i] += fval * fval / (double)samplenum;
     }
     
     samplecount ++;
@@ -68,7 +80,7 @@ int main(int argc, char *argv[]) {
     }
   }
   if (samplecount != samplenum) {
-    fprintf(stderr, ESCAPE_CLEARLINE"\nERROR: collected %d samples instead of %d samples.\n", samplecount, samplenum);
+    fprintf(stderr, "\nERROR: collected %d samples instead of %d samples.\n", samplecount, samplenum);
     exit(1);
   }
   
@@ -83,11 +95,14 @@ int main(int argc, char *argv[]) {
     variance = average_powered[i] - average[i] * average[i];
     stddeviation = sqrt(variance);
     
-    printf("arithmetic_mean%d = %lf\n", i, average[i]);
-    printf("variance%d = %lf\n", i, variance);
-    printf("standard_deviation%d = %lf\n", i, stddeviation);
+    printf("## %d ##\n", i);
+    printf("arithmetic mean %d    = %lf\n", i, average[i]);
+    printf("variance %d           = %lf\n", i, variance);
+    printf("standard deviation %d = %lf\n", i, stddeviation);
+    printf("noise minimum %d      = %d\n", i, noisemin[i]);
+    printf("noise maximum %d      = %d\n", i, noisemax[i]);
+    printf("\n");
   }
-  printf("\n");
   
   fflush(stdout);
   // end!

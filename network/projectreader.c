@@ -197,8 +197,10 @@ projectdata *readData(projectdata *dest, const char *filepath, const int mode) {
     }
     else if (mode == NORMALISATION_DATA) {
       int solindex;
-      SCANREAD("arithmetic_mean%d", &solindex, dest->sols[solindex][IDX_MEAN])
-      else SCANREAD("standard_deviation%d", &solindex, dest->sols[solindex][IDX_STD_DEVIATION])
+      SCANREAD("arithmeticmean%d", &solindex, dest->sols[solindex][IDX_MEAN])
+      else SCANREAD("standarddeviation%d", &solindex, dest->sols[solindex][IDX_STD_DEVIATION])
+      else SCANREAD("noisemin%d", &solindex, dest->sols[solindex][IDX_NOISEMIN])
+      else SCANREAD("noisemax%d", &solindex, dest->sols[solindex][IDX_NOISEMAX])
     }
     
     #undef CMPREAD

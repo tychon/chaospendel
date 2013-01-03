@@ -2,7 +2,7 @@
 #ifndef _PROJECTREADER_H
 #define _PROJECTREADER_H
 
-#define PROJECTDATASOLS_LENGTH 7
+#define PROJECTDATASOLS_LENGTH 9
 #define IDX_RADIUS 0
 #define IDX_ANGLE 1
 #define IDX_COILS 2
@@ -10,6 +10,8 @@
 #define IDX_SERIES_RESISTANCE 4
 #define IDX_MEAN 5
 #define IDX_STD_DEVIATION 6
+#define IDX_NOISEMIN 7
+#define IDX_NOISEMAX 8
 
 struct projectdata {
   // use 'readPendulumData' for these values
@@ -30,10 +32,12 @@ struct projectdata {
   // 1: angle in radians
   // 2: number of turns
   // 3: self resistance of the solenoid in ohm
-  // 5: series resistance in ohm
+  // 4: series resistance in ohm
   // read by 'readNormalisationData':
-  // 3: zero level
-  // 4: standard deviation
+  // 5: zero level
+  // 6: standard deviation
+  // 7: noise minimum
+  // 8: noise maximum
   double **sols;
 };
 typedef struct projectdata projectdata;
