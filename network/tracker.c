@@ -16,11 +16,9 @@
 #include "x11draw.h"
 #include "integral.h"
 
+#define NOISEFACTOR 4
 #define INTEGWINDOWSIZE  10000
-#define INTEGTHRESHOLD  0.0004
 #define INTEGRESETSAMPLES 100
-
-#define DEGTORAD(deg) (deg / 360.0 * 2*M_PI)
 
 void toCartesian(double radius, double angle, double *x, double *y) {
   *x = cos(angle) * radius;
@@ -120,12 +118,24 @@ int main(int argc, char *argv[]) {
     surface = createSHMSurface(100, 100, 500, 500);
   }
   
+  // precompute ranges of noise
+  double *noiseabs = assert_malloc(sizeof(double) * pd->solnum);
+  double noiseminabs, noisemaxabs;
+  for (int i = 0; i < pd->solnum; i++) {
+    noiseminabs = fabs(pd->sols[i][IDX_NOISEMIN]);
+    noisemaxabs = fabs(pd->sols[i][IDX_NOISEMAX]);
+    noiseabs[i] = noiseminabs >= noisemaxabs ? noiseminabs : noisemaxabs;
+    noiseabs[i] -= pd->sols[i][IDX_MEAN];
+    noiseabs[i] /= (double)pd->sols[i][IDX_COILS];
+    noiseabs[i] *= NOISEFACTOR;
+  }
+  
+  // here are some values stored that are recomputed for every dataset
   double *lastnormvalue = assert_calloc(pd->solnum, sizeof(double));
   double *derivative = assert_malloc(sizeof(double) * pd->solnum);
-  
   integral **integrals = assert_malloc(sizeof(integral*) * pd->solnum);
   for (int i = 0; i < pd->solnum; i++)
-    integrals[i] = integral_allocate(INTEGWINDOWSIZE, INTEGTHRESHOLD, INTEGRESETSAMPLES);
+    integrals[i] = integral_allocate(INTEGWINDOWSIZE, noiseabs[i], INTEGRESETSAMPLES);
   
   // some temporary variables used in loop
   double normval, integ, d1;
