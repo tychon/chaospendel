@@ -5,22 +5,25 @@
 *.x
 
 *.csv
+*.ssv
 *.info
 *.pgm
 
 *.png
 *.avi
 
+*.svg
+*.ps
+*.dvi
+*.pdf
+*.log
+*.aux
+
+*octave-core
+
 fftw/fourier
 numerical/main
 numerical/fourier
 numerical/doc/
 wikihaskell/main
-doc-ger/*.ps
-doc-ger/*.dvi
-doc-ger/*.pdf
-doc-ger/*.log
-doc-ger/*.aux
-
-*octave-core
 
