@@ -11,12 +11,11 @@ typedef struct {
   int min_reset_samples;
   
   double sum; /// This is the actual integral
-  ringbuffer *buffer;
   /// Number of continuous samples below threshold
   int reset_samples;
 } integral;
 
-integral *integral_allocate(size_t windowsize, double reset_threshold, size_t reset_samples);
+integral *integral_allocate(double reset_threshold, size_t reset_samples);
 double integral_push(integral *integ, double val);
 double integral_getsum(integral *integ);
 
