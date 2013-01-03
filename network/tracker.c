@@ -16,9 +16,9 @@
 #include "x11draw.h"
 #include "integral.h"
 
-#define NOISEFACTOR 2
-#define INTEGRESETSAMPLES 10
-#define INTEGMINTHRES 0.03
+#define NOISEFACTOR 1.3
+#define INTEGRESETSAMPLES 60
+#define INTEGMINTHRES 0.001
 
 void toCartesian(double radius, double angle, double *x, double *y) {
   *x = cos(angle) * radius;
@@ -30,32 +30,46 @@ void toPendulumCartesian(double radius, double angle, double *x, double *y) {
 }
 //void toPolar(double x, double y, double *radius, double *angle)
 
-void drawPendulum(shmsurface *sf, projectdata *pd, double absrangemax, double *normval, int intindex1, int intindex2, double intratio) {
+void drawPendulum(shmsurface *sf, projectdata *pd
+                , double *normval, double normrangeabs
+                , integral **integ, double integrange
+                , int intindex1, int intindex2, double intratio) {
+  // clear surface
   shmsurface_fill(sf, 0xff000000);
   
+  // precompute scaling
   double maxpendlength = (double)(pd->l1 + (pd->l2a > pd->l2b ? pd->l2a : pd->l2b));
   // this scale is in pixels per meter
   double scale = (double)(sf->width < sf->height ? sf->width : sf->height) / 2.0 * (4.0/5.0) / maxpendlength;
   
+  // draw center (main axis of pendulum)
   drawDot(sf, sf->width/2, sf->height/2, 0xffff0000);
-  //drawBresenhamLine(sf, xres * scale + sf->width/2, 0, xres * scale + sf->width/2, sf->height-1, 0xff0000ff);
-  //drawBresenhamLine(sf, 0, yres * scale + sf->height/2, sf->width-1, yres * scale + sf->height/2, 0xff0000ff);
   
-  double val;
-  int xpos, ypos, color;
+  // draw norm value and integral for every solenoid
+  double val, xpos, ypos, radius;
+  int color;
   for (int i = 0; i < pd->solnum; i++) {
+    toPendulumCartesian(pd->sols[i][IDX_RADIUS] * scale, pd->sols[i][IDX_ANGLE], &xpos, &ypos);
+    xpos += sf->width/2;
+    ypos += sf->height/2;
+    
+    // make blue circle
+    drawCircle(sf, xpos, ypos, 2, 0xff0000ff);
+    
+    // make colored circle
+    
+    // this stuff is currently not used
     color = 0xff000000;
-    val = (double)(normval[i]) / absrangemax * M_E;
+    val = normval[i] / normrangeabs * M_E; // fit value into range of 0 to e
     if (val < 0) {
-      color |= htobe32((int)lround(log1p(-val)*255.0)) >> 8;
+      color |= be32toh(htobe32((int)lround(log1p(-val)*255.0)) >> 8);
     } else if (val > 0) {
-      color |= htobe32((int)lround(log1p(val))*255.0) >> 16;
+      color |= be32toh(htobe32((int)lround(log1p(val))*255.0) >> 16);
     }
     
-    xpos = sin(pd->sols[i][IDX_ANGLE]) * scale * (double)pd->sols[i][IDX_RADIUS] + sf->width/2;
-    ypos = cos(pd->sols[i][IDX_ANGLE]) * scale * (double)pd->sols[i][IDX_RADIUS] + sf->height/2;
-    drawCircle(sf, xpos, ypos, 6, 0xff0000ff);
-    fillCircle(sf, xpos, ypos, 5, color);
+    radius = integral_getsum(integ[i]) / integrange * 50;
+    if (radius > 50) radius = 50;
+    fillCircle(sf, xpos, ypos, radius, 0xff00ff00);
   }
   
   if (intratio > 0) {
@@ -162,6 +176,7 @@ int main(int argc, char *argv[]) {
       continue;
     }
     
+    /*
     // look for invalid data before calculation
     int invalid = 0;
     for (int i = 0; i < pd->solnum; i++) {
@@ -175,6 +190,7 @@ int main(int argc, char *argv[]) {
       }
       continue;
     }
+    */
     
     absval1 = absval2 = -1;
     for (int i = 0; i < pd->solnum; i++) {
@@ -205,10 +221,13 @@ int main(int argc, char *argv[]) {
           superindex2 = i;
         }
       }
+      
+      
+      
     }
     
     // calculate position of pendulum
-    double ratio = absval1 / absval2; // TODO use squareroots?
+    double ratio = absval2 / absval1; // TODO use squareroots?
     /*
     double x1, y1, x2, y2;
     toCartesian(pd->sols[superindex1][IDX_RADIUS], pd->sols[superindex1][IDX_ANGLE], &x1, &y1);
@@ -224,7 +243,11 @@ int main(int argc, char *argv[]) {
     if (showx11gui) {
       millis = getUnixMillis();
       if (millis-lastframemillis > minframewait) {
-        drawPendulum(surface, pd, 0.1, lastnormvalue, superindex1, superindex2, 1/ratio); //TODO this is hardcoded :-(
+        //TODO remove hard coded ranges
+        drawPendulum(surface, pd
+                   , lastnormvalue, 0.1
+                   , integrals, 1.0
+                   , superindex1, superindex2, ratio);
         flushSHMSurface(surface);
         lastframemillis = millis;
       }
