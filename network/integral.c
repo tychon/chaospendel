@@ -15,6 +15,7 @@ integral *integral_allocate(double reset_threshold, size_t reset_samples) {
 
 double integral_push(integral *integ, double val) {
   integ->sum += val;
+  
   if (fabs(val) <= integ->max_reset_threshold) {
     integ->reset_samples ++;
     if (integ->reset_samples >= integ->min_reset_samples) {
@@ -25,6 +26,8 @@ double integral_push(integral *integ, double val) {
     // reset reset counter :-)
     integ->reset_samples = 0;
   }
+  
+  if (integ->sum < 0.0) integ->sum = 0;
   
   return integ->sum;
 }
