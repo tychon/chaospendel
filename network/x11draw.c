@@ -363,20 +363,26 @@ int drawHyperbola(shmsurface *surface
     xreal2 = cos(angle - angleadd) * x + midx;
     yreal = sin(angle + angleadd) * y + midy;
     yreal2 = sin(angle - angleadd) * y + midy;
+
+    // these are rounded values for bounds checks and drawing
+    int rxreal = lround(xreal)
+      , rxreal2 = lround(xreal2)
+      , ryreal = lround(yreal)
+      , ryreal2 = lround(yreal2);
     
-    if (xreal < 0 || xreal >= surface->width
-        || xreal2 < 0 || xreal2 >= surface->width
-        || yreal < 0 || yreal >= surface->height
-        || yreal2 < 0 || yreal2 >= surface->height) break;
+    if (rxreal < 0 || rxreal >= surface->width
+        || rxreal2 < 0 || rxreal2 >= surface->width
+        || ryreal < 0 || ryreal >= surface->height
+        || ryreal2 < 0 || ryreal2 >= surface->height) break;
         
     printf("%lf, %lf, %lf\n", y, xreal, yreal);
     
     if (x == a) {
-      STDPLOT(surface, (int)lround(xreal), (int)lround(yreal), color);
-      STDPLOT(surface, (int)lround(xreal2), (int)lround(yreal2), color);
+      STDPLOT(surface, rxreal, ryreal, color);
+      STDPLOT(surface, rxreal2, ryreal2, color);
     } else {
-      drawBresenhamLine(surface, lastx1, lasty1, (int)lround(xreal), (int)lround(yreal), color);
-      drawBresenhamLine(surface, lastx2, lasty2, (int)lround(xreal2), (int)lround(yreal2), color);
+      drawBresenhamLine(surface, lastx1, lasty1, rxreal, ryreal, color);
+      drawBresenhamLine(surface, lastx2, lasty2, rxreal2, ryreal2, color);
     }
     lastx1 = xreal;
     lasty1 = yreal;
