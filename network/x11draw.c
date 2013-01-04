@@ -9,6 +9,7 @@
 #include <sys/shm.h>
 #include <X11/extensions/XShm.h>
 #include <math.h>
+#include <assert.h>
 
 #include "x11draw.h"
 
@@ -64,6 +65,7 @@ shmsurface *createSHMSurface(int xpos, int ypos, int width, int height) {
   }
   shminfo->shmid = shmget(IPC_PRIVATE, img->bytes_per_line*img->height, IPC_CREAT|0777);
   shminfo->shmaddr = img->data = shmat(shminfo->shmid, 0, 0);
+  fprintf(stderr, "img->data is at %p\n", img->data);
   shminfo->readOnly = False;
   XShmAttach(dpy, shminfo);
   XFlush(dpy);
@@ -122,9 +124,19 @@ void shmsurface_fill(shmsurface *surface, int color) {
        , surface->image->bytes_per_line * surface->image->height);
 }
 
+#define CHECKRANGE(surface, x, y) { \
+  assert(x >= 0); \
+  assert(y >= 0); \
+  assert(x < surface->width); \
+  assert(y < surface->height); \
+}
+
 #define SWAPINTS(a, b) { int swapints_temp = a; a = b; b = swapints_temp; }
 #define SWAPDOUBLES(a, b) { double swapd_temp = a; a = b; b = swapd_temp; }
-#define STDPLOT(surface, x, y, color) { *(((int*)surface->image->data)+(x)+(y)*surface->width) = color; }
+#define STDPLOT(surface, x, y, color) { \
+  CHECKRANGE(surface, x, y) \
+  *(((int*)surface->image->data)+(x)+(y)*surface->width) = color; \
+}
 
 /**
  * Draw a simple dot, to put it in other words: color one pixel.
@@ -140,6 +152,9 @@ void drawDot(shmsurface *surface, int x, int y, int color) {
  * code found on the english Wikipedia
  */
 void drawBresenhamLine(shmsurface *surface, int x0, int y0, int x1, int y1, int color) {
+  CHECKRANGE(surface, x0, y0)
+  CHECKRANGE(surface, x1, y1)
+
   int steep = abs(y1-y0) > abs(x1-x0);
   if (steep) {
     SWAPINTS(x0, y0)
@@ -174,6 +189,9 @@ void drawBresenhamLine(shmsurface *surface, int x0, int y0, int x1, int y1, int 
  * Draw the borders of the given rect.
  */
 void drawRect(shmsurface *surface, int xpos, int ypos, int width, int height, int color) {
+  CHECKRANGE(surface, xpos, ypos)
+  CHECKRANGE(surface, xpos+width, ypos+height)
+
   if (width < 0) {
     xpos += width;
     width *= -1;
@@ -201,6 +219,9 @@ void drawRect(shmsurface *surface, int xpos, int ypos, int width, int height, in
  * function 'shmsurface_fill'.
  */
 void fillRect(shmsurface *surface, int xpos, int ypos, int width, int height, int color) {
+  CHECKRANGE(surface, xpos, ypos)
+  CHECKRANGE(surface, xpos+width, ypos+height)
+
   if (width < 0) {
     xpos += width;
     width *= -1;
@@ -223,6 +244,9 @@ void fillRect(shmsurface *surface, int xpos, int ypos, int width, int height, in
  * code fount on the english Wikipedia
  */
 void drawCircle(shmsurface *surface, int xpos, int ypos, int radius, int color) {
+  CHECKRANGE(surface, xpos-radius, ypos-radius)
+  CHECKRANGE(surface, xpos+radius, ypos+radius)
+
   int f = 1 - radius;
   int ddF_x = 1;
   int ddF_y = -2 * radius;
@@ -263,6 +287,9 @@ void drawCircle(shmsurface *surface, int xpos, int ypos, int radius, int color) 
  * This is a slightly modified version of the midpoint circle algorithm.
  */
 void fillCircle(shmsurface *surface, int xpos, int ypos, int radius, int color) {
+  CHECKRANGE(surface, xpos-radius, ypos-radius)
+  CHECKRANGE(surface, xpos+radius, ypos+radius)
+
   int f = 1 - radius;
   int ddF_x = 1;
   int ddF_y = -2 * radius;
@@ -299,6 +326,9 @@ int drawHyperbola(shmsurface *surface
                  , double fx, double fy
                  , double ratio
                  , int color) {
+  CHECKRANGE(surface, ax, ay)
+  CHECKRANGE(surface, fx, fy)
+
   if (ratio <= 0 || ratio == 1) return -1;
   if (ratio < 1) {
     SWAPDOUBLES(ax, fx)
