@@ -20,6 +20,9 @@ struct projectdata {
   // positions of magnets
   double l1m, l2m;
   
+  // range of unnormalized input values
+  double inputrangemin, inputrangemax;
+  
   // constants of differentials
   // these are read with 'readCalibrationData'
   double k1, k2, k3, k4, k5;

@@ -11,6 +11,9 @@ l2b=0.19
 l1m=0.27
 l2m=0.28
 
+inputrange minimum = 0
+inputrange maximum = 1023
+
 # solenoids
 solnum = 16
 # radiuses in meters

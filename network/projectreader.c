@@ -167,6 +167,8 @@ projectdata *readData(projectdata *dest, const char *filepath, const int mode) {
       else if CMPREAD("l2b", dest->l2b)
       else if CMPREAD("l1m", dest->l1m)
       else if CMPREAD("l2m", dest->l2m)
+      else if CMPREAD("inputrangeminimum", dest->inputrangemin)
+      else if CMPREAD("inputrangemaximum", dest->inputrangemax)
       // parse number of solenoids as integer
       else if (strcmp("solnum", keybuffer) == 0) {
         dest->solnum = atoi(valbuffer);
