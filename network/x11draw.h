@@ -4,6 +4,15 @@
 
 #include <X11/Xlib.h>
 
+#define COLOR_BLACK ((int)0xff000000)
+#define COLOR_WHITE ((int)0xffffffff)
+#define COLOR_RED ((int)0xffff0000)
+#define COLOR_GREEN ((int)0xff00ff00)
+#define COLOR_BLUE ((int)0xff0000ff)
+#define COLOR_CYAN ((int)0xff00ffff)
+#define COLOR_MAGENTA ((int)0xff00ff)
+#define COLOR_YELlOW ((int)0xffffff00)
+
 struct shmsurface {
   int width, height;
   Display *display;
