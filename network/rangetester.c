@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <math.h>
-#include <endian.h>
+#include <limits.h>
 
 #include "common.h"
 #include "projectreader.h"
@@ -15,7 +15,7 @@
 #include "protocol.h"
 #include "x11draw.h"
 
-#define BARHEIGHT 200
+#define BARHEIGHT 1024
 #define BARWIDTH 30
 
 int main(int argc, char *argv[]) {
@@ -49,25 +49,28 @@ int main(int argc, char *argv[]) {
   udsclientsocket *udscs = uds_create_client(socketpath);
   
   // the x11 thing
-  shmsurface *surface = createSHMSurface(100, 100, BARWIDTH*pd->solnum, BARHEIGHT);
+  shmsurface *surface = createSHMSurface(100, 10, BARWIDTH*pd->solnum, BARHEIGHT);
   
   // precompute some values
-  const double scale = 1; //TODO
+  const double scale = ((double)BARHEIGHT-1.0) / (pd->inputrangemax - pd->inputrangemin);
   
-  // precompute ranges of noise
-  double *noiseabs = assert_malloc(sizeof(double) * pd->solnum);
-  double noiseminabs, noisemaxabs;
+  // precompute positions of mean and noise
+  double *meanypos = assert_malloc(sizeof(double) * pd->solnum);
+  double *noiseypos = assert_malloc(sizeof(double) * pd->solnum);
+  double *noiseyheight = assert_malloc(sizeof(double) * pd->solnum);
   for (int i = 0; i < pd->solnum; i++) {
-    noiseminabs = fabs(pd->sols[i][IDX_NOISEMIN]);
-    noisemaxabs = fabs(pd->sols[i][IDX_NOISEMAX]);
-    noiseabs[i] = noiseminabs >= noisemaxabs ? noiseminabs : noisemaxabs;
+    meanypos[i] = BARHEIGHT - (pd->sols[i][IDX_MEAN] - pd->inputrangemin) * scale - 1;
+    noiseypos[i] = BARHEIGHT - (pd->sols[i][IDX_NOISEMAX] - pd->inputrangemin) * scale - 1;
+    noiseyheight[i] = (pd->sols[i][IDX_NOISEMAX] - pd->sols[i][IDX_NOISEMIN] - pd->inputrangemin) * scale;
   }
   
-  double *fallingmax = malloc(sizeof(double) * pd->solnum);
   double *fallingmin = malloc(sizeof(double) * pd->solnum);
+  for (int i = 0; i < pd->solnum; i++) fallingmin[i] = pd->inputrangemax;
+  double *fallingmax = malloc(sizeof(double) * pd->solnum);
+  for (int i = 0; i < pd->solnum; i++) fallingmax[i] = pd->inputrangemin;
   
-  // some temporary variables used in loop
-  double normval;
+  // some temporary variable used in loop
+  double value, y, yheight;
   
   // This is the number of milliseconds to sleep before flushing
   // the SHM surface again.
@@ -88,16 +91,41 @@ int main(int argc, char *argv[]) {
     }
     
     for (int i = 0; i < pd->solnum; i++) {
-      // normalize input value
-      normval = (double)packet->values[i];
-      normval /= pd->sols[i][IDX_COILS];
+      value = (double) packet->values[i];
+      if (value > fallingmax[i]) fallingmax[i] = value;
+      if (value < fallingmin[i]) fallingmin[i] = value;
     }
     
     millis = getUnixMillis();
     if (millis-lastframemillis > minframewait) {
-      // draw pendulum
+      shmsurface_fill(surface, COLOR_BLACK);
       
-      drawBresenhamLine(surface, 0, 0, BARWIDTH, BARHEIGHT-1, 0xff00ff00);
+      // draw bars
+      for (int i = 0; i < pd->solnum; i++) {
+        value = (double) packet->values[i];
+        
+        // draw blue rect for noise range
+        fillRect(surface, BARWIDTH*i, noiseypos[i], BARWIDTH-1, noiseyheight[i], COLOR_BLUE);
+        
+        // draw rect for current position
+        y = BARHEIGHT - ((value - pd->inputrangemin) * scale);
+        yheight = y - meanypos[i];
+        yheight -= yheight > 0 ? 1 : -1;
+        fillRect(surface, BARWIDTH*i, meanypos[i], BARWIDTH-1, yheight, COLOR_GREEN);
+        
+        // draw minimum
+        y = BARHEIGHT - (fallingmin[i] - pd->inputrangemin) * scale - 1;
+        drawBresenhamLine(surface, BARWIDTH*i, y, BARWIDTH*(i+1)-1, y, COLOR_RED);
+        fallingmin[i] += 1/scale;
+        
+        // draw maximum
+        y = BARHEIGHT - (fallingmax[i] - pd->inputrangemin) * scale - 1;
+        drawBresenhamLine(surface, BARWIDTH*i, y, BARWIDTH*(i+1)-1, y, COLOR_RED);
+        fallingmax[i] -= 1/scale;
+        
+        // draw grey separator
+        drawBresenhamLine(surface, BARWIDTH*(i+1)-1, 0, BARWIDTH*(i+1)-1, BARHEIGHT-1, 0xff505050);
+      }
       
       // show the drawing
       flushSHMSurface(surface);
