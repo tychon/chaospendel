@@ -2,6 +2,13 @@
 
 make
 
+if [ "$1" == "rangetest" ]; then
+  # start arduino reader
+  xterm -e ./reader.x -p data_pendulum -o socket_arduino &
+  sleep 1
+  ./rangetester.x -p data_pendulum -n data_normalisation -i socket_arduino > data_rangetest.csv
+fi
+
 if [ "$1" == "normalisation" ]; then
   if [ "$2" == "replay" ]; then
     # start replayer in background
