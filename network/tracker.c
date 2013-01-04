@@ -176,7 +176,6 @@ int main(int argc, char *argv[]) {
       continue;
     }
     
-    /*
     // look for invalid data before calculation
     int invalid = 0;
     for (int i = 0; i < pd->solnum; i++) {
@@ -190,7 +189,6 @@ int main(int argc, char *argv[]) {
       }
       continue;
     }
-    */
     
     absval1 = absval2 = -1;
     for (int i = 0; i < pd->solnum; i++) {
