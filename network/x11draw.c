@@ -174,6 +174,15 @@ void drawBresenhamLine(shmsurface *surface, int x0, int y0, int x1, int y1, int 
  * Draw the borders of the given rect.
  */
 void drawRect(shmsurface *surface, int xpos, int ypos, int width, int height, int color) {
+  if (width < 0) {
+    xpos += width;
+    width *= -1;
+  }
+  if (height < 0) {
+    ypos += height;
+    height *= -1;
+  }
+  
   int tmp = ypos + height - 1;
   for (int x = xpos; x < xpos + width; x++) {
     STDPLOT(surface, x, ypos, color)
@@ -192,6 +201,15 @@ void drawRect(shmsurface *surface, int xpos, int ypos, int width, int height, in
  * function 'shmsurface_fill'.
  */
 void fillRect(shmsurface *surface, int xpos, int ypos, int width, int height, int color) {
+  if (width < 0) {
+    xpos += width;
+    width *= -1;
+  }
+  if (height < 0) {
+    ypos += height;
+    height *= -1;
+  }
+  
   for (int x = xpos; x < xpos+width; x++) {
     for (int y = ypos; y < ypos+height; y++) {
       STDPLOT(surface, x, y, color)
