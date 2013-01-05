@@ -125,11 +125,15 @@ void shmsurface_fill(shmsurface *surface, int color) {
 }
 
 #define CHECKRANGE(surface, x, y) { \
-  assert(x >= 0); \
-  assert(y >= 0); \
-  assert(x < surface->width); \
-  assert(y < surface->height); \
+  assert((x) >= 0); \
+  assert((y) >= 0); \
+  assert((x) < surface->width); \
+  assert((y) < surface->height); \
 }
+
+#define ISRANGE(x, y) (                                                     \
+  (x) >= 0 && (y) >= 0 && (x) < (surface)->width && (y) < (surface)->height \
+)
 
 #define SWAPINTS(a, b) { int swapints_temp = a; a = b; b = swapints_temp; }
 #define SWAPDOUBLES(a, b) { double swapd_temp = a; a = b; b = swapd_temp; }
@@ -318,78 +322,73 @@ void fillCircle(shmsurface *surface, int xpos, int ypos, int radius, int color) 
   }
 }
 
-/**
- * This is veery inefficient and not even accurate.
- */
 int drawHyperbola(shmsurface *surface
                  , double ax, double ay
                  , double fx, double fy
-                 , double ratio
+                 , double f/*ratio*/
                  , int color) {
   CHECKRANGE(surface, ax, ay)
   CHECKRANGE(surface, fx, fy)
 
-  if (ratio <= 0 || ratio == 1) return -1;
-  if (ratio < 1) {
-    SWAPDOUBLES(ax, fx)
-    SWAPDOUBLES(ay, fy)
-    ratio = 1 / ratio;
-  }
-  
+  if (f <= 0 || f == 1) return -1;
+
   double xdiff = fx - ax;
   double ydiff = fy - ay;
-  double midx = ax + xdiff/2;
-  double midy = ay + ydiff/2;
-  double angle = atan2(ydiff, xdiff);
   double dist = sqrt(xdiff * xdiff + ydiff * ydiff);
   double e = dist / 2.0; // focal distance
-  double a = dist * ratio / (1.0 + ratio) - e; // angular point
-  double b = sqrt(e * e - a * a);
+  double a = dist * f / (1.0 + f) - e; // angular point
   
-  double x, y, angleadd;
-  double xreal, xreal2, yreal, yreal2;
-  double lastx1, lasty1, lastx2, lasty2;
+  int lxreal_l = -1, lxreal_r = -1
+    , lyreal_lp = -1, lyreal_ln = -1
+    , lyreal_rp = -1, lyreal_rn = -1
+  ;
   
-  // these are correct
-  //printf("%lf, %lf\n", dist, angle);
-  //printf("%lf, %lf, %lf\n", e, a, b);
-  
-  x = a;
-  for (;;) {
-    y = b * sqrt(x*x - a*a) / a;
-    
-    angleadd = atan2(y, x);
-    xreal = cos(angle + angleadd) * x + midx;
-    xreal2 = cos(angle - angleadd) * x + midx;
-    yreal = sin(angle + angleadd) * y + midy;
-    yreal2 = sin(angle - angleadd) * y + midy;
+  for (double x=0; a-x>=0 || a+x<surface->width; x++) {
+    double xreal_l = a-x;
+    double xreal_r = a+x;
+    double xadq_l = (xreal_l-fx)*(xreal_l-fx);
+    double xbdq_l = (xreal_l-ax)*(xreal_l-ax);
+    double xadq_r = (xreal_r-fx)*(xreal_r-fx);
+    double xbdq_r = (xreal_r-ax)*(xreal_r-ax);
+    double yreal_lp = (sqrt(-xadq_l*f*f*f*f+xadq_l*f*f+xbdq_l*f*f-xbdq_l+f*f*fy*fy-2*f*f*fy*ay+f*f*ay*ay)+f*f*fy-ay)/(f*f-1);
+    double yreal_ln = (-sqrt(-xadq_l*f*f*f*f+xadq_l*f*f+xbdq_l*f*f-xbdq_l+f*f*fy*fy-2*f*f*fy*ay+f*f*ay*ay)+f*f*fy-ay)/(f*f-1);
+    double yreal_rp = (sqrt(-xadq_r*f*f*f*f+xadq_r*f*f+xbdq_r*f*f-xbdq_r+f*f*fy*fy-2*f*f*fy*ay+f*f*ay*ay)+f*f*fy-ay)/(f*f-1);
+    double yreal_rn = (-sqrt(-xadq_r*f*f*f*f+xadq_r*f*f+xbdq_r*f*f-xbdq_r+f*f*fy*fy-2*f*f*fy*ay+f*f*ay*ay)+f*f*fy-ay)/(f*f-1);
 
     // these are rounded values for bounds checks and drawing
-    int rxreal = lround(xreal)
-      , rxreal2 = lround(xreal2)
-      , ryreal = lround(yreal)
-      , ryreal2 = lround(yreal2);
+    int rxreal_l = lround(xreal_l)
+      , rxreal_r = lround(xreal_r)
+      , ryreal_lp = isfinite(yreal_lp) ? lround(yreal_lp) : -1
+      , ryreal_ln = isfinite(yreal_ln) ? lround(yreal_ln) : -1
+      , ryreal_rp = isfinite(yreal_rp) ? lround(yreal_rp) : -1
+      , ryreal_rn = isfinite(yreal_rn) ? lround(yreal_rn) : -1
+    ;
     
-    if (rxreal < 0 || rxreal >= surface->width
-        || rxreal2 < 0 || rxreal2 >= surface->width
-        || ryreal < 0 || ryreal >= surface->height
-        || ryreal2 < 0 || ryreal2 >= surface->height) break;
-        
-    printf("%lf, %lf, %lf\n", y, xreal, yreal);
-    
-    if (x == a) {
-      STDPLOT(surface, rxreal, ryreal, color);
-      STDPLOT(surface, rxreal2, ryreal2, color);
-    } else {
-      drawBresenhamLine(surface, lastx1, lasty1, rxreal, ryreal, color);
-      drawBresenhamLine(surface, lastx2, lasty2, rxreal2, ryreal2, color);
+    if (x != 0) {
+      if (ISRANGE(lxreal_l, 0) && ISRANGE(xreal_l, 0)) {
+        if (ISRANGE(0, lyreal_lp) && ISRANGE(0, ryreal_lp)) {
+          drawBresenhamLine(surface, lxreal_l, lyreal_lp, rxreal_l, ryreal_lp, color);
+        }
+        if (ISRANGE(0, lyreal_ln) && ISRANGE(0, ryreal_ln)) {
+          drawBresenhamLine(surface, lxreal_l, lyreal_ln, rxreal_l, ryreal_ln, color);
+        }
+      }
+      if (ISRANGE(lxreal_r, 0) && ISRANGE(rxreal_r, 0)) {
+        if (ISRANGE(0, lyreal_rp) && ISRANGE(0, ryreal_rp)) {
+          drawBresenhamLine(surface, lxreal_r, lyreal_rp, rxreal_r, ryreal_rp, color);
+        }
+        if (ISRANGE(0, lyreal_rn) && ISRANGE(0, ryreal_rn)) {
+          drawBresenhamLine(surface, lxreal_r, lyreal_rn, rxreal_r, ryreal_rn, color);
+        }
+      }
     }
-    lastx1 = xreal;
-    lasty1 = yreal;
-    lastx2 = xreal2;
-    lasty2 = yreal2;
     
-    x += 1;
+    lxreal_l  = lround(xreal_l);
+    lxreal_r  = lround(xreal_r);
+    lyreal_lp = isfinite(yreal_lp) ? lround(yreal_lp) : -1;
+    lyreal_ln = isfinite(yreal_ln) ? lround(yreal_ln) : -1;
+    lyreal_rp = isfinite(yreal_rp) ? lround(yreal_rp) : -1;
+    lyreal_rn = isfinite(yreal_rn) ? lround(yreal_rn) : -1;
   }
   
   return 0;
