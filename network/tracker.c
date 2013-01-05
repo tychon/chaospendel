@@ -42,12 +42,36 @@ void drawPendulum(shmsurface *sf, projectdata *pd
   // this scale is in pixels per meter
   double scale = (double)(sf->width < sf->height ? sf->width : sf->height) / 2.0 * (4.0/5.0) / maxpendlength;
   
-  // draw center (main axis of pendulum)
-  drawDot(sf, sf->width/2, sf->height/2, 0xffff0000);
+  int color;
+  if (intratio > 0) {
+    // draw red color field
+    double int1x, int1y, int2x, int2y;
+    toPendulumCartesian(pd->sols[intindex1][IDX_RADIUS] * scale, pd->sols[intindex1][IDX_ANGLE], &int1x, &int1y);
+    int1x += sf->width/2;
+    int1y += sf->height/2;
+    toPendulumCartesian(pd->sols[intindex2][IDX_RADIUS] * scale, pd->sols[intindex2][IDX_ANGLE], &int2x, &int2y);
+    int2x += sf->width/2;
+    int2y += sf->height/2;
+    double dist1, dist2, absdiff;
+    int val;
+    for (int x = 0; x < sf->width; x++) {
+      for (int y = 0; y < sf->height; y ++) {
+        dist1 = sqrt((x-int1x)*(x-int1x) + (y-int1y)*(y-int1y));
+        dist2 = sqrt((x-int2x)*(x-int2x) + (y-int2y)*(y-int2y));
+        absdiff = fabs(intratio - sqrt(dist2) / sqrt(dist1));
+        val = 40.0*absdiff;
+        if (val > 255) val = 255;
+        color = 0xff000000 | (val << 16);
+        drawDot(sf, x, y, color);
+      }
+    }
+  }
+  
+  //// draw center (main axis of pendulum)
+  //drawDot(sf, sf->width/2, sf->height/2, 0xffff0000);
   
   // draw norm value and integral for every solenoid
   double val, xpos, ypos, radius;
-  int color;
   for (int i = 0; i < pd->solnum; i++) {
     toPendulumCartesian(pd->sols[i][IDX_RADIUS] * scale, pd->sols[i][IDX_ANGLE], &xpos, &ypos);
     xpos += sf->width/2;
@@ -69,20 +93,8 @@ void drawPendulum(shmsurface *sf, projectdata *pd
     
     radius = integral_getsum(integ[i]) / integrange * 50;
     if (radius > 50) radius = 50;
+    radius = 0;
     fillCircle(sf, xpos, ypos, radius, 0xff00ff00);
-  }
-  
-  if (intratio > 0) {
-    double ax, ay, bx, by;
-    toPendulumCartesian(pd->sols[intindex1][IDX_RADIUS]*scale, pd->sols[intindex1][IDX_ANGLE], &ax, &ay);
-    ax += sf->width/2;
-    ay += sf->height/2;
-    toPendulumCartesian(pd->sols[intindex2][IDX_RADIUS]*scale, pd->sols[intindex2][IDX_ANGLE], &bx, &by);
-    bx += sf->width/2;
-    by += sf->height/2;
-    //fprintf(stderr, "%d, %d\n", intindex1, intindex2);
-    //fprintf(stderr, "%lf, %lf, %lf, %lf\n", ax, ay, bx, by);
-    drawHyperbola(sf, ax, ay, bx, by, intratio, 0xffffffff);
   }
 }
 
@@ -219,20 +231,10 @@ int main(int argc, char *argv[]) {
           superindex2 = i;
         }
       }
-      
-      
-      
     }
     
     // calculate position of pendulum
-    double ratio = absval2 / absval1; // TODO use squareroots?
-    /*
-    double x1, y1, x2, y2;
-    toCartesian(pd->sols[superindex1][IDX_RADIUS], pd->sols[superindex1][IDX_ANGLE], &x1, &y1);
-    toCartesian(pd->sols[superindex2][IDX_RADIUS], pd->sols[superindex2][IDX_ANGLE], &x2, &y2);
-    double xres = x1 + (x2-x1) * ratio;
-    double yres = y1 + (y2-y1) * ratio;
-    */
+    double ratio = absval2 / absval1;
     
     if (absval2 < INTEGMINTHRES) {
       ratio = -1.0;

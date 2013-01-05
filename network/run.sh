@@ -47,7 +47,7 @@ if [ "$1" == "tracking" ]; then
     
     sleep 1
     
-    ./tracker.x -p data_pendulum -n data_normalisation -i socket_arduino -o socket_angles --showx11gui --showoverflows --printtempdata > data_tracking_lasttemporary.csv
+    ./tracker.x -p data_pendulum -n data_normalisation -i socket_arduino -o socket_angles --showx11gui --maxframerate 50 --showoverflows --printtempdata > data_tracking_lasttemporary.csv
     
   fi
 fi
