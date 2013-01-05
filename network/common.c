@@ -8,6 +8,7 @@
 #include <limits.h> // for LONG_MIN und LONG_MAX
 #include <stdio.h>
 #include <string.h>
+#include <sys/time.h>
 
 #include "common.h"
 
@@ -21,7 +22,16 @@ int argcmpTestOptions(const char *arg, char *options) {
   return 0;
 }
 
+/////////////////////
 // declared in header
+
+long long getMicroseconds() {
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  return (long long)tv.tv_sec * 1000000 + tv.tv_usec;
+}
+
+
 int argcmpass(char *options, const int argc, char *argv[], int *argindex, char **dest) {
   char *opts = assert_malloc(strlen(options));
   strcpy(opts, options);

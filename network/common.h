@@ -8,6 +8,11 @@
 
 #define ESCAPE_CLEARLINE "\x1B[80D\x1B[K"
 
+// some timing functions
+long long getMicroseconds();
+
+// some functions for parsing options
+
 #define ARGCMP(str, index) (strcmp(str, argv[index]) == 0)
 
 int argcmpass(char *options
