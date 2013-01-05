@@ -2,8 +2,6 @@
 #ifndef _INTEGRAL_H
 #define _INTEGRAL_H
 
-#include "ringbuffer.h"
-
 typedef struct {
   double max_reset_threshold;
   /// Number of samples to collect in the absolute range of max_reset_threshold

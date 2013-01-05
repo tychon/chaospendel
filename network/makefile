@@ -2,7 +2,7 @@
 CFLAGS := -g -std=gnu99 -Wall
 LIBS := -g -lc -lpthread -lm -lfftw3 -lX11 -lXext
 
-NONMAINOBJS := memory_wrappers.o ringbuffer.o integral.o x11draw.o
+NONMAINOBJS := memory_wrappers.o integral.o x11draw.o
 NONMAINOBJS += common.o uds_server.o uds_client.o protocol.o projectreader.o
 HEADERFILES := $(NONMAINOBJS:.o=.h)
 
