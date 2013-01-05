@@ -11,6 +11,9 @@
 #include "uds_server.h"
 #include "protocol.h"
 
+#define SAMPLERATEBUFFERSIZE 100
+#define SAMPLERATEREFRESHWAIT 100000 // every tenth second
+
 int main(int argc, char *argv[]) {
   char *serialdevicepath = "/dev/ttyACM0";
   char *outputsocketpath = "socket_arduino";
@@ -53,7 +56,11 @@ int main(int argc, char *argv[]) {
   
   unsigned char outbuffer[GLOBALSEQPACKETSIZE];
   uint16_t values[pd->solnum];
-  
+
+  long long lastprintmicros = getMicroseconds();  
+  long long *sampletimes = assert_calloc(SAMPLERATEBUFFERSIZE, sizeof(long long));
+  int sampletimespos = 0;
+  long long micros, firstmicros, samplerate;
   long long millis;
   
   fprintf(stderr, "Starting unix domain server on \"%s\" ...\n", outputsocketpath);
@@ -111,9 +118,19 @@ int main(int argc, char *argv[]) {
           fprintf(replayf, ", %d", values[i]);
         fputc('\n', replayf);
       }
+      
+      micros = getMicroseconds();
+      firstmicros = sampletimes[sampletimespos];
+      sampletimes[sampletimespos] = micros;
+      sampletimespos ++;
+      if (sampletimespos == SAMPLERATEBUFFERSIZE) sampletimespos = 0;
+      samplerate = (long long)((long double)SAMPLERATEBUFFERSIZE / (long double)(micros - firstmicros) * 1000000);
+      if (micros - lastprintmicros > SAMPLERATEREFRESHWAIT) {
+        printf(ESCAPE_CLEARLINE"samplerate: %lld", samplerate);
+        lastprintmicros = micros;
+      }
     }
     
-
     if (adc_blocked != adc_was_blocking) {
       adc_was_blocking = adc_blocked;
       if (adc_blocked) {
@@ -130,11 +147,11 @@ badval:
   }
   
   if (replaypath) {
-    fprintf(stderr, "Closing replay file ...\n");
+    fprintf(stderr, "\nClosing replay file ...\n");
     fclose(replayf);
   }
   
-  fprintf(stderr, "Stopping unix domain server ...\n");
+  fprintf(stderr, "\nStopping unix domain server ...\n");
   uds_stop_server(udsserver);
   unlink(outputsocketpath);
   

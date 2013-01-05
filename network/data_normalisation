@@ -1,112 +1,112 @@
 ## 0 ##
-arithmetic mean 0    = 693.586900
-variance 0           = 1.669049
-standard deviation 0 = 1.291917
+arithmetic mean 0    = 693.265000
+variance 0           = 1.780575
+standard deviation 0 = 1.334382
 noise minimum 0      = 688
-noise maximum 0      = 700
+noise maximum 0      = 699
 
 ## 1 ##
-arithmetic mean 1    = 693.800900
-variance 1           = 1.796059
-standard deviation 1 = 1.340171
+arithmetic mean 1    = 693.452700
+variance 1           = 1.793963
+standard deviation 1 = 1.339389
 noise minimum 1      = 688
-noise maximum 1      = 700
+noise maximum 1      = 698
 
 ## 2 ##
-arithmetic mean 2    = 693.837300
-variance 2           = 1.756429
-standard deviation 2 = 1.325303
-noise minimum 2      = 689
-noise maximum 2      = 700
+arithmetic mean 2    = 693.512300
+variance 2           = 1.785649
+standard deviation 2 = 1.336282
+noise minimum 2      = 688
+noise maximum 2      = 699
 
 ## 3 ##
-arithmetic mean 3    = 694.163900
-variance 3           = 3.203837
-standard deviation 3 = 1.789926
+arithmetic mean 3    = 693.801300
+variance 3           = 3.268418
+standard deviation 3 = 1.807877
 noise minimum 3      = 688
-noise maximum 3      = 703
+noise maximum 3      = 701
 
 ## 4 ##
-arithmetic mean 4    = 693.980300
-variance 4           = 2.067712
-standard deviation 4 = 1.437954
+arithmetic mean 4    = 693.658200
+variance 4           = 2.023773
+standard deviation 4 = 1.422594
 noise minimum 4      = 688
-noise maximum 4      = 701
+noise maximum 4      = 700
 
 ## 5 ##
-arithmetic mean 5    = 693.423900
-variance 5           = 1.960409
-standard deviation 5 = 1.400146
+arithmetic mean 5    = 693.126400
+variance 5           = 1.886423
+standard deviation 5 = 1.373471
 noise minimum 5      = 688
-noise maximum 5      = 700
+noise maximum 5      = 699
 
 ## 6 ##
-arithmetic mean 6    = 693.753400
-variance 6           = 1.960789
-standard deviation 6 = 1.400282
+arithmetic mean 6    = 693.413700
+variance 6           = 1.900552
+standard deviation 6 = 1.378605
 noise minimum 6      = 688
 noise maximum 6      = 699
 
 ## 7 ##
-arithmetic mean 7    = 693.733200
-variance 7           = 1.988618
-standard deviation 7 = 1.410184
+arithmetic mean 7    = 693.408200
+variance 7           = 1.916973
+standard deviation 7 = 1.384548
 noise minimum 7      = 688
-noise maximum 7      = 701
+noise maximum 7      = 700
 
 ## 8 ##
-arithmetic mean 8    = 693.691200
-variance 8           = 2.978643
-standard deviation 8 = 1.725874
-noise minimum 8      = 688
-noise maximum 8      = 700
+arithmetic mean 8    = 693.386600
+variance 8           = 3.153541
+standard deviation 8 = 1.775821
+noise minimum 8      = 687
+noise maximum 8      = 701
 
 ## 9 ##
-arithmetic mean 9    = 694.045700
-variance 9           = 2.835812
-standard deviation 9 = 1.683987
+arithmetic mean 9    = 693.745600
+variance 9           = 2.922281
+standard deviation 9 = 1.709468
 noise minimum 9      = 689
 noise maximum 9      = 701
 
 ## 10 ##
-arithmetic mean 10    = 694.149500
-variance 10           = 3.032350
-standard deviation 10 = 1.741364
-noise minimum 10      = 688
+arithmetic mean 10    = 693.807700
+variance 10           = 3.021921
+standard deviation 10 = 1.738367
+noise minimum 10      = 689
 noise maximum 10      = 700
 
 ## 11 ##
-arithmetic mean 11    = 693.626500
-variance 11           = 1.537998
-standard deviation 11 = 1.240160
+arithmetic mean 11    = 693.287800
+variance 11           = 1.509371
+standard deviation 11 = 1.228565
 noise minimum 11      = 689
-noise maximum 11      = 699
+noise maximum 11      = 698
 
 ## 12 ##
-arithmetic mean 12    = 693.702200
-variance 12           = 1.709715
-standard deviation 12 = 1.307561
+arithmetic mean 12    = 693.390600
+variance 12           = 1.735432
+standard deviation 12 = 1.317358
 noise minimum 12      = 688
-noise maximum 12      = 699
+noise maximum 12      = 698
 
 ## 13 ##
-arithmetic mean 13    = 693.497500
-variance 13           = 1.791794
-standard deviation 13 = 1.338579
+arithmetic mean 13    = 693.185700
+variance 13           = 1.754816
+standard deviation 13 = 1.324695
 noise minimum 13      = 688
-noise maximum 13      = 700
+noise maximum 13      = 699
 
 ## 14 ##
-arithmetic mean 14    = 693.792900
-variance 14           = 1.701210
-standard deviation 14 = 1.304304
-noise minimum 14      = 689
-noise maximum 14      = 699
+arithmetic mean 14    = 693.483600
+variance 14           = 1.700931
+standard deviation 14 = 1.304198
+noise minimum 14      = 688
+noise maximum 14      = 700
 
 ## 15 ##
-arithmetic mean 15    = 694.143500
-variance 15           = 3.225508
-standard deviation 15 = 1.795970
+arithmetic mean 15    = 693.950100
+variance 15           = 3.341010
+standard deviation 15 = 1.827843
 noise minimum 15      = 688
-noise maximum 15      = 702
+noise maximum 15      = 701
 
