@@ -9,8 +9,6 @@
 #include "protocol.h"
 #include "projectreader.h"
 
-#define ESCAPE_CLEARLINE "\x1B[80D\x1B[K"
-
 int main(int argc, char *argv[]) {
   char *socketpath = NULL;
   char *pendulumdatapath = NULL;

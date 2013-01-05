@@ -6,6 +6,8 @@
 
 #define GLOBALSEQPACKETSIZE 1024
 
+#define ESCAPE_CLEARLINE "\x1B[80D\x1B[K"
+
 #define ARGCMP(str, index) (strcmp(str, argv[index]) == 0)
 
 int argcmpass(char *options
