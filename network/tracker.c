@@ -16,7 +16,7 @@
 #include "x11draw.h"
 #include "integral.h"
 
-#define NOISEFACTOR 1.3
+#define NOISEFACTOR 1.1
 #define INTEGRESETSAMPLES 60
 #define INTEGMINTHRES 0.001
 
@@ -28,7 +28,6 @@ void toPendulumCartesian(double radius, double angle, double *x, double *y) {
   *x = sin(angle) * radius;
   *y = cos(angle) * radius;
 }
-//void toPolar(double x, double y, double *radius, double *angle)
 
 void drawPendulum(shmsurface *sf, projectdata *pd
                 , double *normval, double normrangeabs
@@ -98,6 +97,19 @@ void drawPendulum(shmsurface *sf, projectdata *pd
   }
 }
 
+double normalizeValue(double inputvalue, double *soldata) {
+  inputvalue -= soldata[IDX_MEAN];
+  
+  inputvalue *= 1000;
+  inputvalue /= soldata[IDX_COILS];
+  
+  inputvalue *= 1000;
+  if (soldata[IDX_PARALLEL_RESISTANCE] > 0)
+    inputvalue *= soldata[IDX_SELF_RESISTANCE] / soldata[IDX_PARALLEL_RESISTANCE];
+  
+  return inputvalue;
+}
+
 int main(int argc, char *argv[]) {
   char *socketpath = NULL, *outsockpath = NULL;
   char *pendulumdatapath = NULL;
@@ -151,9 +163,8 @@ int main(int argc, char *argv[]) {
     noiseminabs = fabs(pd->sols[i][IDX_NOISEMIN]);
     noisemaxabs = fabs(pd->sols[i][IDX_NOISEMAX]);
     noiseabs[i] = noiseminabs >= noisemaxabs ? noiseminabs : noisemaxabs;
-    noiseabs[i] -= pd->sols[i][IDX_MEAN];
-    noiseabs[i] /= (double)pd->sols[i][IDX_COILS];
     noiseabs[i] *= NOISEFACTOR;
+    noiseabs[i] = normalizeValue(noiseabs[i], pd->sols[i]);
   }
   
   // here are some values stored that are recomputed for every dataset
@@ -205,9 +216,7 @@ int main(int argc, char *argv[]) {
     absval1 = absval2 = -1;
     for (int i = 0; i < pd->solnum; i++) {
       // normalize input value
-      normval = (double)packet->values[i];
-      normval -= pd->sols[i][IDX_MEAN];
-      normval /= pd->sols[i][IDX_COILS];
+      normval = normalizeValue((double)packet->values[i], pd->sols[i]);
       
       // calc integral
       integ = integral_push(integrals[i], normval);
