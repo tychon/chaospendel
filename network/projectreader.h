@@ -7,7 +7,7 @@
 #define IDX_ANGLE 1
 #define IDX_COILS 2
 #define IDX_SELF_RESISTANCE 3
-#define IDX_SERIES_RESISTANCE 4
+#define IDX_PARALLEL_RESISTANCE 4
 #define IDX_MEAN 5
 #define IDX_STD_DEVIATION 6
 #define IDX_NOISEMIN 7
@@ -35,7 +35,7 @@ struct projectdata {
   // 1: angle in radians
   // 2: number of turns
   // 3: self resistance of the solenoid in ohm
-  // 4: series resistance in ohm
+  // 4: parallel resistance in ohm
   // read by 'readNormalisationData':
   // 5: zero level
   // 6: standard deviation

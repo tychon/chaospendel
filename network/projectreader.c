@@ -178,7 +178,7 @@ projectdata *readData(projectdata *dest, const char *filepath, const int mode) {
         }
         dest->sols = assert_malloc(sizeof(double) * dest->solnum);
         for (int i = 0; i < dest->solnum; i++)
-          dest->sols[i] = assert_malloc(sizeof(double)*PROJECTDATASOLS_LENGTH);
+          dest->sols[i] = assert_calloc(PROJECTDATASOLS_LENGTH, sizeof(double));
       }
       // try to read solenoid radiuses and angles
       else {
@@ -187,7 +187,7 @@ projectdata *readData(projectdata *dest, const char *filepath, const int mode) {
         else SCANREAD("solangle%d", &solindex, dest->sols[solindex][IDX_ANGLE]) // this is converted to radians later
         else SCANREAD("solcoils%d", &solindex, dest->sols[solindex][IDX_COILS])
         else SCANREAD("solselfresistance%d", &solindex, dest->sols[solindex][IDX_SELF_RESISTANCE])
-        else SCANREAD("solseriesresistance%d", &solindex, dest->sols[solindex][IDX_SERIES_RESISTANCE])
+        else SCANREAD("solparallelresistance%d", &solindex, dest->sols[solindex][IDX_PARALLEL_RESISTANCE])
       }
     }
     else if (mode == CALIBRATION_DATA) {
