@@ -16,9 +16,6 @@
 #include "x11draw.h"
 #include "integral.h"
 
-#define NOISEFACTOR 1.01
-#define INTEGRESETSAMPLES 60
-
 void toCartesian(double radius, double angle, double *x, double *y) {
   *x = cos(angle) * radius;
   *y = sin(angle) * radius;
@@ -29,7 +26,6 @@ void toPendulumCartesian(double radius, double angle, double *x, double *y) {
 }
 
 void drawPendulum(shmsurface *sf, projectdata *pd
-                , double *normval, double normrangeabs
                 , integral **integ, double integrange) {
   // clear surface
   shmsurface_fill(sf, 0xff000000);
@@ -39,13 +35,11 @@ void drawPendulum(shmsurface *sf, projectdata *pd
   // this scale is in pixels per meter
   double scale = (double)(sf->width < sf->height ? sf->width : sf->height) / 2.0 * (4.0/5.0) / maxpendlength;
   
-  int color;
-  
   // draw center (main axis of pendulum)
   drawDot(sf, sf->width/2, sf->height/2, 0xffff0000);
   
   // draw norm value and integral for every solenoid
-  double val, xpos, ypos, radius;
+  double xpos, ypos, radius;
   for (int i = 0; i < pd->solnum; i++) {
     toPendulumCartesian(pd->sols[i][IDX_RADIUS] * scale, pd->sols[i][IDX_ANGLE], &xpos, &ypos);
     xpos += sf->width/2;
@@ -55,15 +49,6 @@ void drawPendulum(shmsurface *sf, projectdata *pd
     drawCircle(sf, xpos, ypos, 2, 0xff0000ff);
     
     // make colored circle
-    
-    // this stuff is currently not used
-    color = 0xff000000;
-    val = normval[i] / normrangeabs * M_E; // fit value into range of 0 to e
-    if (val < 0) {
-      color |= be32toh(htobe32((int)lround(log1p(-val)*255.0)) >> 8);
-    } else if (val > 0) {
-      color |= be32toh(htobe32((int)lround(log1p(val))*255.0) >> 16);
-    }
     
     radius = integral_getsum(integ[i]) / integrange * 50.0;
     if (radius > 50) radius = 50;
@@ -137,7 +122,7 @@ int main(int argc, char *argv[]) {
     noiseminabs = fabs(pd->sols[i][IDX_NOISEMIN]);
     noisemaxabs = fabs(pd->sols[i][IDX_NOISEMAX]);
     noiseabs[i] = noiseminabs >= noisemaxabs ? noiseminabs : noisemaxabs;
-    noiseabs[i] *= NOISEFACTOR;
+    noiseabs[i] *= pd->noisefactor;
     noiseabs[i] = normalizeValue(noiseabs[i], pd->sols[i]);
   }
   
@@ -146,10 +131,10 @@ int main(int argc, char *argv[]) {
   double *derivative = assert_malloc(sizeof(double) * pd->solnum);
   integral **integrals = assert_malloc(sizeof(integral*) * pd->solnum);
   for (int i = 0; i < pd->solnum; i++)
-    integrals[i] = integral_allocate(noiseabs[i], INTEGRESETSAMPLES);
+    integrals[i] = integral_allocate(noiseabs[i], pd->integralresetsamples);
   
   // some temporary variables used in loop
-  double normval, integ, d1;
+  double normval, d1;
   
   // This is the number of milliseconds to sleep before flushing
   // the SHM surface again.
@@ -188,7 +173,7 @@ int main(int argc, char *argv[]) {
       normval = normalizeValue((double)packet->values[i], pd->sols[i]);
       
       // calc integral
-      integ = integral_push(integrals[i], normval);
+      integral_push(integrals[i], normval);
       
       // first derivative
       d1 = normval - lastnormvalue[i];
@@ -203,8 +188,7 @@ int main(int argc, char *argv[]) {
       if (millis-lastframemillis > minframewait) {
         //TODO remove hard coded ranges
         drawPendulum(surface, pd
-                   , lastnormvalue, 60000
-                   , integrals, 500000);
+                   , integrals, pd->integralmax);
         flushSHMSurface(surface);
         lastframemillis = millis;
       }

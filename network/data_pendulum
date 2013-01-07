@@ -14,6 +14,10 @@ l2m=0.28
 inputrange minimum = 0
 inputrange maximum = 1023
 
+noise factor = 1.01
+integral reset samples = 100
+integral maximum = 600000
+
 # solenoids
 solnum = 16
 # radiuses in meters

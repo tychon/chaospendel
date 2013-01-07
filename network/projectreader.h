@@ -21,7 +21,8 @@ struct projectdata {
   double l1m, l2m;
   
   // range of unnormalized input values
-  double inputrangemin, inputrangemax;
+  double inputrangemin, inputrangemax, noisefactor;
+  double integralresetsamples, integralmax;
   
   // constants of differentials
   // these are read with 'readCalibrationData'
