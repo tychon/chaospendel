@@ -30,17 +30,25 @@ if [ "$1" == "normalisation" ]; then
 fi
 
 if [ "$1" == "tracking" ]; then
-  if [ "$2" == "replay" ]; then
+  if [ "$2" == "fastreplay" ]; then
     # start replayer in background
     echo -e "\nstarting replayer ...\n\n"
-    ./replay.x -f -d -t -i data_values_lastreplay.csv -p data_pendulum -o socket_replay -r 550 > /dev/null &
+    ./replay.x -f -d -i data_values_lastreplay.csv -p data_pendulum -o socket_replay -r 100000 > /dev/null &
     
-    sleep 0.000000001
+    sleep 0.00000001
+    echo -e "\nstarting tracker ...\n\n"
+    ./tracker.x -p data_pendulum -n data_normalisation -i socket_replay -o socket_angles --showoverflows --printtempdata > data_tracking_lasttemporary.csv
+  
+  elif [ "$2" == "replay" ]; then
+    # start replayer in background
+    echo -e "\nstarting replayer ...\n\n"
+    ./replay.x -f -d -i data_values_lastreplay.csv -p data_pendulum -o socket_replay -r 550 > /dev/null &
+    
+    sleep 0.1
+    
     echo -e "\nstarting tracker ...\n\n"
     ./tracker.x -p data_pendulum -n data_normalisation -i socket_replay -o socket_angles --showx11gui --showoverflows --printtempdata > data_tracking_lasttemporary.csv
-    
-    # killing of replayer not necessary, because the tracker runs
-    # til end of data from replayer
+  
   else
     # start arduino reader
     xterm -e ./reader.x -p data_pendulum -o socket_arduino &
@@ -48,7 +56,6 @@ if [ "$1" == "tracking" ]; then
     sleep 1
     
     ./tracker.x -p data_pendulum -n data_normalisation -i socket_arduino -o socket_angles --showx11gui --maxframerate 50 --showoverflows --printtempdata > data_tracking_lasttemporary.csv
-    
   fi
 fi
 

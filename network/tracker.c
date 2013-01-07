@@ -16,9 +16,8 @@
 #include "x11draw.h"
 #include "integral.h"
 
-#define NOISEFACTOR 1.1
+#define NOISEFACTOR 1.01
 #define INTEGRESETSAMPLES 60
-#define INTEGMINTHRES 0.001
 
 void toCartesian(double radius, double angle, double *x, double *y) {
   *x = cos(angle) * radius;
@@ -31,8 +30,7 @@ void toPendulumCartesian(double radius, double angle, double *x, double *y) {
 
 void drawPendulum(shmsurface *sf, projectdata *pd
                 , double *normval, double normrangeabs
-                , integral **integ, double integrange
-                , int intindex1, int intindex2, double intratio) {
+                , integral **integ, double integrange) {
   // clear surface
   shmsurface_fill(sf, 0xff000000);
   
@@ -42,32 +40,9 @@ void drawPendulum(shmsurface *sf, projectdata *pd
   double scale = (double)(sf->width < sf->height ? sf->width : sf->height) / 2.0 * (4.0/5.0) / maxpendlength;
   
   int color;
-  if (intratio > 0) {
-    // draw red color field
-    double int1x, int1y, int2x, int2y;
-    toPendulumCartesian(pd->sols[intindex1][IDX_RADIUS] * scale, pd->sols[intindex1][IDX_ANGLE], &int1x, &int1y);
-    int1x += sf->width/2;
-    int1y += sf->height/2;
-    toPendulumCartesian(pd->sols[intindex2][IDX_RADIUS] * scale, pd->sols[intindex2][IDX_ANGLE], &int2x, &int2y);
-    int2x += sf->width/2;
-    int2y += sf->height/2;
-    double dist1, dist2, absdiff;
-    int val;
-    for (int x = 0; x < sf->width; x++) {
-      for (int y = 0; y < sf->height; y ++) {
-        dist1 = sqrt((x-int1x)*(x-int1x) + (y-int1y)*(y-int1y));
-        dist2 = sqrt((x-int2x)*(x-int2x) + (y-int2y)*(y-int2y));
-        absdiff = fabs(intratio - sqrt(dist2) / sqrt(dist1));
-        val = 40.0*absdiff;
-        if (val > 255) val = 255;
-        color = 0xff000000 | (val << 16);
-        drawDot(sf, x, y, color);
-      }
-    }
-  }
   
-  //// draw center (main axis of pendulum)
-  //drawDot(sf, sf->width/2, sf->height/2, 0xffff0000);
+  // draw center (main axis of pendulum)
+  drawDot(sf, sf->width/2, sf->height/2, 0xffff0000);
   
   // draw norm value and integral for every solenoid
   double val, xpos, ypos, radius;
@@ -90,9 +65,8 @@ void drawPendulum(shmsurface *sf, projectdata *pd
       color |= be32toh(htobe32((int)lround(log1p(val))*255.0) >> 16);
     }
     
-    radius = integral_getsum(integ[i]) / integrange * 50;
+    radius = integral_getsum(integ[i]) / integrange * 50.0;
     if (radius > 50) radius = 50;
-    radius = 0;
     fillCircle(sf, xpos, ypos, radius, 0xff00ff00);
   }
 }
@@ -177,10 +151,6 @@ int main(int argc, char *argv[]) {
   // some temporary variables used in loop
   double normval, integ, d1;
   
-  // saves values and indices of two maximum integral values
-  double absval1, absval2;
-  int superindex1, superindex2;
-  
   // This is the number of milliseconds to sleep before flushing
   // the SHM surface again.
   const double minframewait = 1000 / (double)maxframerate;
@@ -213,7 +183,6 @@ int main(int argc, char *argv[]) {
       continue;
     }
     
-    absval1 = absval2 = -1;
     for (int i = 0; i < pd->solnum; i++) {
       // normalize input value
       normval = normalizeValue((double)packet->values[i], pd->sols[i]);
@@ -227,26 +196,6 @@ int main(int argc, char *argv[]) {
       // store the values
       derivative[i] = d1;
       lastnormvalue[i] = normval;
-      
-      // comment?
-      if (integ > 0) {
-        if (fabs(integ) > absval1) {
-          absval2 = absval1;
-          superindex2 = superindex1;
-          absval1 = fabs(integ);
-          superindex1 = i;
-        } else if (fabs(integ) > absval2) {
-          absval2 = fabs(integ);
-          superindex2 = i;
-        }
-      }
-    }
-    
-    // calculate position of pendulum
-    double ratio = absval2 / absval1;
-    
-    if (absval2 < INTEGMINTHRES) {
-      ratio = -1.0;
     }
     
     if (showx11gui) {
@@ -254,9 +203,8 @@ int main(int argc, char *argv[]) {
       if (millis-lastframemillis > minframewait) {
         //TODO remove hard coded ranges
         drawPendulum(surface, pd
-                   , lastnormvalue, 0.1
-                   , integrals, 1.0
-                   , superindex1, superindex2, ratio);
+                   , lastnormvalue, 60000
+                   , integrals, 500000);
         flushSHMSurface(surface);
         lastframemillis = millis;
       }
