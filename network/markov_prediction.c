@@ -67,11 +67,12 @@ int main(int argc, char *argv[]) {
     if (argcmpass("--pendulum|-p", argc, argv, &i, &pendulumdatapath) );
     else if (argcmpass("--inputsocket|-i", argc, argv, &i, &inputsocketpath) );
     else if (argcmpassint("--maxframerate|-fps", argc, argv, &i, &maxframerate) );
+    else if (argcmpassint("--tracklength|-t", argc, argv, &i, &tracklength) );
     else fprintf(stderr, "warning: Ignoring unknown argument \"%s\"\n", argv[i]);
   }
   
   if (! inputsocketpath || ! pendulumdatapath) {
-    printf("usage %s [--maxframerate|-fps INT] --pendulum|-p PATH --inputsocket|-i PATH\n", argv[0]);
+    printf("usage %s [--tracklength|-t INT] [--maxframerate|-fps INT] --pendulum|-p PATH --inputsocket|-i PATH\n", argv[0]);
     exit(1);
   }
   
