@@ -66,7 +66,7 @@ if [ "$1" == "prediction" ]; then
   sleep 0.1
   
   echo -e "\nstarting tracker ...\n\n"
-  xterm -e ./tracker.x -p data_pendulum -n data_normalisation -i socket_arduino -o socket_angles --showx11gui --showoverflows &
+  xterm -e ./tracker.x -p data_pendulum -n data_normalisation -i socket_arduino -o socket_angles --showoverflows &
   
   sleep 0.1
   
