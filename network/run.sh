@@ -63,12 +63,13 @@ if [ "$1" == "prediction" ]; then
   echo -e "\nstarting arduino reader ...\n\n"
   xterm -e ./reader.x -p data_pendulum -o socket_arduino &
   
-  sleep 1
+  sleep 0.1
   
   echo -e "\nstarting tracker ...\n\n"
   xterm -e ./tracker.x -p data_pendulum -n data_normalisation -i socket_arduino -o socket_angles --showx11gui --showoverflows &
   
-  sleep 1
+  sleep 0.1
+  
   echo -e "\nstarting markov prediction ...\n\n"
   ./markov_prediction.x -p data_pendulum -i socket_angles
   

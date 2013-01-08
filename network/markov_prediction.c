@@ -39,5 +39,8 @@ int main(int argc, char *argv[]) {
       fflush(stdout);
     }
   }
+  
+  fprintf(stderr, "\nend of data\n");
+  uds_close_client(udscs);
 }
 
