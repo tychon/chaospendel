@@ -9,7 +9,7 @@ HEADERFILES := $(NONMAINOBJS:.o=.h)
 EXECUTABLES := testreader.x x11drawtest.x
 EXECUTABLES += reader.x replay.x
 EXECUTABLES += rangetester.x normalisation.x tracker.x
-EXECUTABLES += markov_prediction.x fourier.x
+EXECUTABLES += markov_prediction.x
 
 .PHONY: all clean
 
