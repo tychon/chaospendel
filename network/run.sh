@@ -50,7 +50,7 @@ if [ "$1" == "tracking" ]; then
     ./tracker.x -p data_pendulum -n data_normalisation -i socket_replay -o socket_angles --showx11gui --showoverflows --printtempdata > data_tracking_lasttemporary.csv
   
   else
-    # start arduino reader
+    echo -e "\nstarting arduino reader ...\n\n"
     xterm -e ./reader.x -p data_pendulum -o socket_arduino &
     
     sleep 1
@@ -58,4 +58,20 @@ if [ "$1" == "tracking" ]; then
     ./tracker.x -p data_pendulum -n data_normalisation -i socket_arduino -o socket_angles --showx11gui --maxframerate 50 --showoverflows --printtempdata > data_tracking_lasttemporary.csv
   fi
 fi
+
+if [ "$1" == "prediction" ]; then
+  echo -e "\nstarting arduino reader ...\n\n"
+  xterm -e ./reader.x -p data_pendulum -o socket_arduino &
+  
+  sleep 1
+  
+  echo -e "\nstarting tracker ...\n\n"
+  xterm -e ./tracker.x -p data_pendulum -n data_normalisation -i socket_arduino -o socket_angles --showx11gui --showoverflows &
+  
+  sleep 1
+  echo -e "\nstarting markov prediction ...\n\n"
+  ./markov_prediction.x -p data_pendulum -i socket_angles
+  
+fi
+
 
