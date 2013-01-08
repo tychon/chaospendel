@@ -20,6 +20,8 @@
 *.log
 *.aux
 *.toc
+*.bbl
+*.blg
 
 *octave-core
 
