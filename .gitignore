@@ -19,6 +19,7 @@
 *.pdf
 *.log
 *.aux
+*.toc
 
 *octave-core
 
