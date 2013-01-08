@@ -60,19 +60,33 @@ if [ "$1" == "tracking" ]; then
 fi
 
 if [ "$1" == "prediction" ]; then
-  echo -e "\nstarting arduino reader ...\n\n"
-  xterm -e ./reader.x -p data_pendulum -o socket_arduino &
-  
-  sleep 0.1
-  
-  echo -e "\nstarting tracker ...\n\n"
-  xterm -e ./tracker.x -p data_pendulum -n data_normalisation -i socket_arduino -o socket_angles --showoverflows &
-  
-  sleep 0.1
-  
-  echo -e "\nstarting markov prediction ...\n\n"
-  ./markov_prediction.x -p data_pendulum -i socket_angles
-  
+  if [ "$2" == "replay" ]; then
+    echo -e "\nstarting replayer ...\n\n"
+    ./replay.x -f -d -i data_values_lastreplay.csv -p data_pendulum -o socket_replay -r 550 > /dev/null &
+    
+    sleep 0.1
+    
+    echo -e "\nstarting tracker ...\n\n"
+    ./tracker.x -p data_pendulum -n data_normalisation -i socket_replay -o socket_angles --showoverflows &
+    
+    sleep 0.1
+    
+    echo -e "\nstarting markov prediction ...\n\n"
+    ./markov_prediction.x -p data_pendulum -i socket_angles
+  else
+    echo -e "\nstarting arduino reader ...\n\n"
+    xterm -e ./reader.x -p data_pendulum -o socket_arduino &
+    
+    sleep 0.1
+    
+    echo -e "\nstarting tracker ...\n\n"
+    xterm -e ./tracker.x -p data_pendulum -n data_normalisation -i socket_arduino -o socket_angles --showoverflows &
+    
+    sleep 0.1
+    
+    echo -e "\nstarting markov prediction ...\n\n"
+    ./markov_prediction.x -t 10 -p data_pendulum -i socket_angles
+  fi
 fi
 
 
