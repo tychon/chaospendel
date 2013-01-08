@@ -168,7 +168,8 @@ int main(int argc, char *argv[]) {
       continue;
     }
     
-    currentintegral = 0; // integrals are never smaller zero
+    //TODO make this constant variable
+    currentintegral = 10000; // integrals are never smaller zero
     currentsolindex = -1;
     // calculate integral
     for (int i = 0; i < pd->solnum; i++) {

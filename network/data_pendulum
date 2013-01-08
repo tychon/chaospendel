@@ -15,7 +15,7 @@ inputrange minimum = 0
 inputrange maximum = 1023
 
 noise factor = 1.01
-integral reset samples = 70
+integral reset samples = 50
 integral maximum = 600000
 
 # solenoids

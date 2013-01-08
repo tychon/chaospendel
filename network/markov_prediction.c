@@ -9,6 +9,15 @@
 #include "protocol.h"
 #include "markov_chain.h"
 
+double getPolarDistance(projectdata *pd, int solindex1, int solindex2) {
+  double r1 = pd->sols[solindex1][IDX_RADIUS] * pd->sols[solindex1][IDX_RADIUS];
+  double r2 = pd->sols[solindex2][IDX_RADIUS] * pd->sols[solindex2][IDX_RADIUS];
+  double phi1 = pd->sols[solindex1][IDX_RADIUS] * pd->sols[solindex1][IDX_ANGLE];
+  double phi2 = pd->sols[solindex2][IDX_RADIUS] * pd->sols[solindex2][IDX_ANGLE];
+  
+  return sqrt(r1*r1 + r2*r2 - 2*r1*r2*cos(phi1-phi2));
+}
+
 void toPendulumCartesian(projectdata *pd, shmsurface *sf
                        , double scale
                        , int solindex
@@ -84,6 +93,7 @@ int main(int argc, char *argv[]) {
   
   int *track = assert_malloc(tracklength * sizeof(int));
   for (int i = 0; i < tracklength; i++) track[i] = -1;
+  long long *tracktimes = assert_malloc(tracklength * sizeof(long long));
   
   unsigned char buffer[GLOBALSEQPACKETSIZE];
   int bufferlength;
@@ -98,7 +108,10 @@ int main(int argc, char *argv[]) {
   // 'millis' is for saving current time,
   // 'lastframemillis' is for saving the time of the last frame flushed
   int micros, lastframemicros = getMicroseconds();
+  
+  long long timediff;
   int index;
+  double dist, velocity;
   
   fprintf(stderr, "start reading data ...\n");
   while ( (bufferlength = uds_read(udscs, buffer, GLOBALSEQPACKETSIZE)) > 0) {
@@ -110,14 +123,31 @@ int main(int argc, char *argv[]) {
     
     index = packet->values[0] - 1;
     if (index >= 0 && index != track[0]) {
-      for (int i = tracklength-1; i > 0; i--) track[i] = track[i-1];
+      for (int i = tracklength-1; i > 0; i--) {
+        track[i] = track[i-1];
+        tracktimes[i] = tracktimes[i-1];
+      }
       track[0] = index;
-      // print to console
+      tracktimes[0] = packet->timestamp;
+      
+      dist = 0;
+      timediff = 0;
+      for (int i = 1; i < tracklength && track[i] >= 0; i ++) {
+        timediff = tracktimes[0] - tracktimes[i];
+        dist += getPolarDistance(pd, track[i-1], track[i]);
+      }
+      if (timediff > 0) velocity = dist / (double)((long double)timediff / 1000000.0);
+      else velocity = -1;
+      
+      // print track to console
       printf("%lld", packet->timestamp);
+      printf("\td=%lf\tv=%lf\n", dist, velocity);
+      /*
       for (int i = tracklength-1; i >= 0; i--) {
         printf("\t-> %d", track[i]);
       }
       printf("\n");
+      */
       fflush(stdout);
     }
     
