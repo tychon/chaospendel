@@ -128,13 +128,12 @@ int main(int argc, char *argv[]) {
   
   // here are some values stored that are recomputed for every dataset
   double *lastnormvalue = assert_calloc(pd->solnum, sizeof(double));
-  double *derivative = assert_malloc(sizeof(double) * pd->solnum);
   integral **integrals = assert_malloc(sizeof(integral*) * pd->solnum);
   for (int i = 0; i < pd->solnum; i++)
     integrals[i] = integral_allocate(noiseabs[i], pd->integralresetsamples);
   
-  // some temporary variables used in loop
-  double normval, d1;
+  // used in loop
+  double normval;
   
   // This is the number of milliseconds to sleep before flushing
   // the SHM surface again.
@@ -158,7 +157,7 @@ int main(int argc, char *argv[]) {
     int invalid = 0;
     for (int i = 0; i < pd->solnum; i++) {
       normval = (double)packet->values[i];
-      if (normval <= 0 || normval >= 1023) invalid = 1;
+      if (normval < pd->inputrangemin || normval > pd->inputrangemax) invalid = 1;
     }
     if (invalid) {
       if (showoverflows) {
@@ -175,18 +174,13 @@ int main(int argc, char *argv[]) {
       // calc integral
       integral_push(integrals[i], normval);
       
-      // first derivative
-      d1 = normval - lastnormvalue[i];
-      
       // store the values
-      derivative[i] = d1;
       lastnormvalue[i] = normval;
     }
     
     if (showx11gui) {
       millis = getUnixMillis();
       if (millis-lastframemillis > minframewait) {
-        //TODO remove hard coded ranges
         drawPendulum(surface, pd
                    , integrals, pd->integralmax);
         flushSHMSurface(surface);
@@ -204,16 +198,9 @@ int main(int argc, char *argv[]) {
       // integrals:
       for (int i = 0; i < pd->solnum; i++)
         printf(",%lf", integral_getsum(integrals[i]));
-      // derivatives of normalised values:
-      for (int i = 0; i < pd->solnum; i++)
-        printf(",%lf", derivative[i]);
-      
       fputc('\n', stdout);
       fflush(stdout);
     }
-    
-    // TODO find pendulum
-    // TODO calculate angles
     
     //TODO write output
     /*
