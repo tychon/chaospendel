@@ -6,7 +6,6 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <math.h>
-#include <endian.h>
 
 #include "common.h"
 #include "projectreader.h"
@@ -45,11 +44,10 @@ void drawPendulum(shmsurface *sf, projectdata *pd
     xpos += sf->width/2;
     ypos += sf->height/2;
     
-    // make blue circle
+    // make fixed size blue circle
     drawCircle(sf, xpos, ypos, 2, 0xff0000ff);
     
-    // make colored circle
-    
+    // make green circle for integral
     radius = integral_getsum(integ[i]) / integrange * 50.0;
     if (radius > 50) radius = 50;
     fillCircle(sf, xpos, ypos, radius, 0xff00ff00);
@@ -105,9 +103,10 @@ int main(int argc, char *argv[]) {
   fprintf(stderr, "opening connection to server on \"%s\"\n", socketpath);
   udsclientsocket *udscs = uds_create_client(socketpath);
   
-  //fprintf(stderr, "opening server socket with path \"%s\"\n", outsockpath);
-  //udsserversocket *udsss = uds_create_server(outsockpath);
-  //uds_start_server(udsss);
+  unlink(outsockpath);
+  fprintf(stderr, "opening server socket with path \"%s\"\n", outsockpath);
+  udsserversocket *udsss = uds_create_server(outsockpath);
+  uds_start_server(udsss);
   
   // x11 things
   shmsurface *surface = NULL;
@@ -133,7 +132,8 @@ int main(int argc, char *argv[]) {
     integrals[i] = integral_allocate(noiseabs[i], pd->integralresetsamples);
   
   // used in loop
-  double normval;
+  double normval, integ, currentintegral;
+  int currentsolindex;
   
   // This is the number of milliseconds to sleep before flushing
   // the SHM surface again.
@@ -148,6 +148,7 @@ int main(int argc, char *argv[]) {
   
   fprintf(stderr, "start reading data ...\n");
   while ( (bufferlength = uds_read(udscs, buffer, GLOBALSEQPACKETSIZE)) > 0) {
+    // parse input data
     if (parse2bytePacket(buffer, bufferlength, packet, 1, pd->solnum) != pd->solnum) {
       fprintf(stderr, "Received invalid packet.\n");
       continue;
@@ -167,15 +168,17 @@ int main(int argc, char *argv[]) {
       continue;
     }
     
+    currentintegral = 0; // integrals are never smaller zero
+    currentsolindex = -1;
+    // calculate integral
     for (int i = 0; i < pd->solnum; i++) {
-      // normalize input value
       normval = normalizeValue((double)packet->values[i], pd->sols[i]);
-      
-      // calc integral
-      integral_push(integrals[i], normval);
-      
-      // store the values
       lastnormvalue[i] = normval;
+      integ = integral_push(integrals[i], normval);
+      if (integ > currentintegral) {
+        currentintegral = integ;
+        currentsolindex = i;
+      }
     }
     
     if (showx11gui) {
@@ -188,8 +191,8 @@ int main(int argc, char *argv[]) {
       }
     }
     
+    // print results of calculations in csv format to stdout
     if (printtempdata) {
-      // print results of calculations in csv format to stdout
       // normalised values:
       for (int i = 0; i < pd->solnum; i++) {
         if (i == 0) printf("%lf", lastnormvalue[i]);
@@ -198,27 +201,29 @@ int main(int argc, char *argv[]) {
       // integrals:
       for (int i = 0; i < pd->solnum; i++)
         printf(",%lf", integral_getsum(integrals[i]));
+      
       fputc('\n', stdout);
       fflush(stdout);
     }
     
-    //TODO write output
-    /*
+    // write output:
     // format dataset
-    bufferlength = format2bytePacket(buffer, BUFFERSIZES
+    currentsolindex ++;
+    bufferlength = format4bytePacket(buffer, GLOBALSEQPACKETSIZE
                                    , packet->timestamp
-                                   , [DATA], 2);
+                                   , (unsigned int*)&currentsolindex, 1);
+    // send data
     if (bufferlength <= 0) {
       fprintf(stderr, "error while formatting packet, code: (%d)\n", bufferlength);
       break;
-    } else
+    } else {
       uds_send_toall(udsss, buffer, bufferlength);
-    */
+    }
   }
   
   fprintf(stderr, "end of data\n");
   uds_close_client(udscs);
-  //uds_stop_server(udsss);
+  uds_stop_server(udsss);
   unlink(outsockpath);
 }
 
