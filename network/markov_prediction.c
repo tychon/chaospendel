@@ -42,14 +42,14 @@ void drawPendulum(shmsurface *sf, projectdata *pd
   // draw last positions
   int color;
   double lastx, lasty;
-  for (int i = 0; i < tracklength; i++) {
+  for (int i = tracklength-1; i >= 0; i--) {
     if (track[i] < 0) break;
     
     toPendulumCartesian(pd, sf, scale, track[i], &xpos, &ypos);
     color = 0xff000000;
     color |= (255 - 250/tracklength * i) << 8;
     fillCircle(sf, xpos, ypos, 5, color);
-    if (i > 0)
+    if (i < tracklength-1)
       drawBresenhamLine(sf, lastx, lasty, xpos, ypos, color);
     
     lastx = xpos;
