@@ -103,8 +103,9 @@ int main(int argc, char *argv[]) {
   uint16_t *parsedShorts = assert_malloc(sizeof(uint16_t) * pd->solnum);
   int numcount, retv;
   unsigned char outbuffer[BUFFERSIZES]; // this buffer the protocol formatter writes to
-  long long millisecs;
-  // enless loop til end of csv file
+  long long micros;
+  
+  // endless loop til end of csv file
   for (;;) {
     // parse data
     numcount = readCSVLine(csvf, parsedLLs);
@@ -127,14 +128,14 @@ int main(int argc, char *argv[]) {
     // extract timestamp (if it should exist)
     int lli = 0; // index iterating through parsedLLs
     if (readtimestamp) {
-      millisecs = parsedLLs[lli++];
-    } else millisecs = getUnixMillis();
+      micros = parsedLLs[lli++];
+    } else micros = getMicroseconds();
     for (int i = 0; i < pd->solnum; i++) 
       parsedShorts[i] = parsedLLs[lli++];
     
     // format dataset
     retv = format2bytePacket(outbuffer, BUFFERSIZES
-                           , millisecs
+                           , micros
                            , parsedShorts, pd->solnum);
     if (retv <= 0) {
       fprintf(stderr, "error while formatting packet, code: (%d)\n", retv);

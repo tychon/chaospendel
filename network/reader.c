@@ -61,7 +61,6 @@ int main(int argc, char *argv[]) {
   long long *sampletimes = assert_calloc(SAMPLERATEBUFFERSIZE, sizeof(long long));
   int sampletimespos = 0;
   long long micros, firstmicros, samplerate;
-  long long millis;
   
   fprintf(stderr, "Starting unix domain server on \"%s\" ...\n", outputsocketpath);
   unlink(outputsocketpath);
@@ -105,21 +104,20 @@ int main(int argc, char *argv[]) {
       // collected one data set
       wantport = 0;
       
-      millis = getUnixMillis();
+      micros = getMicroseconds();
       
       // send it over the socket
-      int size = format2bytePacket(outbuffer, GLOBALSEQPACKETSIZE, millis, values, pd->solnum);
+      int size = format2bytePacket(outbuffer, GLOBALSEQPACKETSIZE, micros, values, pd->solnum);
       uds_send_toall(udsserver, outbuffer, size);
       
       // write to replay
       if (replaypath) {
-        fprintf(replayf, "%lld", millis);
+        fprintf(replayf, "%lld", micros);
         for (int i = 0; i < pd->solnum; i++)
           fprintf(replayf, ", %d", values[i]);
         fputc('\n', replayf);
       }
       
-      micros = getMicroseconds();
       firstmicros = sampletimes[sampletimespos];
       sampletimes[sampletimespos] = micros;
       sampletimespos ++;

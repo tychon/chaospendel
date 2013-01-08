@@ -9,21 +9,6 @@
 #include "common.h"
 #include "protocol.h"
 
-// I'm not so convinced, that this is efficient
-long long getUnixMillis() {
-  static struct timeb tmb;
-  ftime(&tmb);
-  static struct tm timetm;
-  timetm = *localtime(& tmb.time);
-  
-  return                              (long long)tmb.millitm
-        +                        1000*(long long)timetm.tm_sec
-        +                     60*1000*(long long)timetm.tm_min
-        +                  60*60*1000*(long long)timetm.tm_hour
-        +               24*60*60*1000*(long long)timetm.tm_yday
-        +(long long)365*24*60*60*1000*(long long)timetm.tm_year;
-}
-
 struct packet2byte *allocate2bytePacket(int valnum) {
   struct packet2byte *p2b = assert_malloc(sizeof(struct packet2byte));
   p2b->values = assert_malloc(sizeof(uint16_t) * valnum);

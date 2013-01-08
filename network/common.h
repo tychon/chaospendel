@@ -12,7 +12,6 @@
 long long getMicroseconds();
 
 // some functions for parsing options
-
 #define ARGCMP(str, index) (strcmp(str, argv[index]) == 0)
 
 int argcmpass(char *options

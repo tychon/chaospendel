@@ -137,10 +137,10 @@ int main(int argc, char *argv[]) {
   
   // This is the number of milliseconds to sleep before flushing
   // the SHM surface again.
-  const double minframewait = 1000 / (double)maxframerate;
+  const double minframewait = 1000000 / (double)maxframerate;
   // 'millis' is for saving current time,
   // 'lastframemillis' is for saving the time of the last frame flushed
-  int millis, lastframemillis = getUnixMillis();
+  int micros, lastframemicros = getMicroseconds();
   
   unsigned char buffer[GLOBALSEQPACKETSIZE];
   int bufferlength;
@@ -182,12 +182,12 @@ int main(int argc, char *argv[]) {
     }
     
     if (showx11gui) {
-      millis = getUnixMillis();
-      if (millis-lastframemillis > minframewait) {
+      micros = getMicroseconds();
+      if (micros-lastframemicros > minframewait) {
         drawPendulum(surface, pd
                    , integrals, pd->integralmax);
         flushSHMSurface(surface);
-        lastframemillis = millis;
+        lastframemicros = micros;
       }
     }
     
