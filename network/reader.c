@@ -35,7 +35,7 @@ int main(int argc, char *argv[]) {
   readPendulumData(pd, pendulumdatapath);
   
   fprintf(stderr, "Connecting to serial device ...\n");
-  int serial_fd = open(serialdevicepath, O_RDONLY | O_NOCTTY);
+  int serial_fd = open(serialdevicepath, O_RDWR | O_NOCTTY);
   struct termios config;
   if(tcgetattr(serial_fd, &config) < 0) exit(1);
   config.c_iflag &= ~(IGNBRK | BRKINT | ICRNL | INLCR | PARMRK | INPCK | ISTRIP | IXON);
