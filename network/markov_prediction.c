@@ -10,7 +10,7 @@
 #include "markov_chain.h"
 
 #define VELOCITYMAX 2.5
-#define VELOCITYNUM 3
+#define VELOCITYNUM 10
 
 double getPolarDistance(projectdata *pd, int solindex1, int solindex2) {
   double r1 = pd->sols[solindex1][IDX_RADIUS] * pd->sols[solindex1][IDX_RADIUS];
@@ -32,7 +32,8 @@ void toPendulumCartesian(projectdata *pd, shmsurface *sf
 }
 
 void drawPendulum(shmsurface *sf, projectdata *pd
-                , int tracklength, int *track) {
+                , int tracklength, int *track
+                , int nextindex, double nextprob) {
   // clear surface
   shmsurface_fill(sf, 0xff000000);
   
@@ -67,13 +68,19 @@ void drawPendulum(shmsurface *sf, projectdata *pd
     lastx = xpos;
     lasty = ypos;
   }
+  if (nextindex >= 0) {
+    toPendulumCartesian(pd, sf, scale, nextindex, &xpos, &ypos);
+    double radius = nextprob * 20;
+    fillCircle(sf, xpos, ypos, radius, COLOR_BLUE);
+    drawBresenhamLine(sf, lastx, lasty, xpos, ypos, COLOR_BLUE);
+  }
 }
 
 int encodeVelocityRangeIndex(projectdata *pd, double velocity) {
   for (int i = 1; i <= VELOCITYNUM; i++) {
     if (velocity < VELOCITYMAX/VELOCITYNUM*i) return i-1;
   }
-  fprintf(stderr, " velocity out of range!\n");
+  fprintf(stderr, "!WARNING!: velocity out of range!\n");
   return VELOCITYNUM-1;
 }
 
@@ -129,10 +136,7 @@ long encodeIndex(int range, int indicesnum, int *indices, int velocity) {
     //printf("(%2d) enc += %d * %ld\t: %ld\n", i, indices[i], basemult, enc);
     basemult *= range;
   }
-  
-  basemult *= range;
   enc += (long)velocity * basemult;
-  
   return enc;
 }
 
@@ -184,9 +188,6 @@ int main(int argc, char *argv[]) {
   int bufferlength;
   struct packet4byte *packet = allocate4bytePacket(1);
   
-  fprintf(stderr, "opening connection to server on \"%s\"\n", inputsocketpath);
-  udsclientsocket *udscs = uds_create_client(inputsocketpath);
-  
   // This is the number of milliseconds to sleep before flushing
   // the SHM surface again.
   const double minframewait = 1000000 / (double)maxframerate;
@@ -194,12 +195,19 @@ int main(int argc, char *argv[]) {
   // 'lastframemillis' is for saving the time of the last frame flushed
   int micros, lastframemicros = getMicroseconds();
   
+  int realtracklength = 0;
   long long timediff;
-  long stateindex;
-  int index, velocityrangeindex;
+  long laststateindex = -1, stateindex = -1; // they do not need to be longs
+  int index, velocityrangeindex, nextstateindex = -1;
   double dist, velocity;
   
-  int realtracklength = 0;
+  markovchainmatrix *mcm = allocateMarkovChain(pow(pd->solnum, tracklength) * VELOCITYNUM);
+  int *nexttrack = assert_malloc(tracklength * sizeof(int));
+  int nextvelocityrange, nextsolindex = -1;
+  double probability;
+  
+  fprintf(stderr, "opening connection to server on \"%s\"\n", inputsocketpath);
+  udsclientsocket *udscs = uds_create_client(inputsocketpath);
   
   fprintf(stderr, "start reading data ...\n");
   while ( (bufferlength = uds_read(udscs, buffer, GLOBALSEQPACKETSIZE)) > 0) {
@@ -229,12 +237,30 @@ int main(int argc, char *argv[]) {
         if (timediff > 0) velocity = dist / (double)((long double)timediff / 1000000.0);
         else velocity = -1;
         
-        stateindex = encodeIndex(pd->solnum, tracklength, track, 0);
         velocityrangeindex = encodeVelocityRangeIndex(pd, velocity);
+        stateindex = encodeIndex(pd->solnum, tracklength, track, velocityrangeindex);
         
-        // print some info to console
-        printf("%lld\tstate=%ld\td=%lf\tv=%lf\t(range: %d)\n", packet->timestamp, stateindex, dist, velocity, velocityrangeindex);
+        if (laststateindex >= 0) {
+          markovchain_addsample(mcm, laststateindex, stateindex);
+        }
+        laststateindex = stateindex;
+        
+        printf("%lld\tstate=%ld\td=%lf\tv=%lf\t(range: %d)", packet->timestamp, stateindex, dist, velocity, velocityrangeindex);
+        fflush(stdout);
+        
+        nextstateindex = markovchain_getMostProbableNextState(mcm, stateindex);
+        if (nextstateindex >= 0) {
+          probability = markovchain_getprob(mcm, stateindex, nextstateindex);
+          decodeIndex(nextstateindex, pd->solnum, tracklength, nexttrack, &nextvelocityrange);
+          nextsolindex = nexttrack[0];
+          printf("\tnextstate=%d\tnextrange=%d\t(%2.1lf%%, %d)\n", nextstateindex, nextvelocityrange, probability, markovchain_getSamplesAt(mcm, stateindex));
+        } else {
+          printf("\n");
+          nextsolindex = -1;
+        }
+        
         /*
+        // print some info to console
         printf("%lld", packet->timestamp);
         printf("\td=%lf\tv=%lf\n", dist, velocity);
         
@@ -249,7 +275,7 @@ int main(int argc, char *argv[]) {
     micros = getMicroseconds();
     if (micros-lastframemicros > minframewait) {
       drawPendulum(surface, pd
-                 , tracklength, track);
+                 , tracklength, track, nextsolindex, probability);
       flushSHMSurface(surface);
       lastframemicros = micros;
     }
