@@ -71,15 +71,15 @@ static uint16_t adc_read_result(void) {
 }
 
 static void serial_init(void) {
-  // turn on the transmission and reception circuitry
-  UCSR0B |= (1 << RXEN0) | (1 << TXEN0);
-  // 8data,1stopbit
-  UCSR0C |= (0 << UMSEL00) | (1 << UCSZ00) | (1 << UCSZ01);
-
   // load upper 8 bits of the baud rate into the high byte of the UBRR register
   UBRR0H = (BAUD_PRESCALE >> 8);
   // load lower 8 bits of the baud rate into the low byte of the UBRR register
   UBRR0L = BAUD_PRESCALE;
+
+  // 8data,1stopbit
+  UCSR0C |= (0 << UMSEL00) | (1 << UCSZ00) | (1 << UCSZ01);
+  // turn on the transmission and reception circuitry
+  UCSR0B |= (1 << RXEN0) | (1 << TXEN0);
 }
 
 static void sendbyte(uint8_t b) {
