@@ -15,6 +15,6 @@ int main(void) {
   markovchain_addsample(m, 4, 5);
   markovchain_addsample(m, 4, 5);
   
-  markovchain_printToFile(m, "markovtestgraph.dot");
+  markovchain_printDOTLanguageToFile(m, "markovtestgraph.dot");
 }
 

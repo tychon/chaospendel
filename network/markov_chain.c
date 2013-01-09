@@ -52,7 +52,7 @@ int markovchain_getSamplesAt(markovchainmatrix *matrix
   return matrix->samplesperstate[stateindex_from];
 };
 
-void markovchain_printToFile(markovchainmatrix *matrix, char *filepath) {
+void markovchain_printDOTLanguageToFile(markovchainmatrix *matrix, char *filepath) {
   FILE *f = fopen(filepath , "w+");
   if (! f) {
     perror("opening dot file");
