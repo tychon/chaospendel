@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <unistd.h>
+#include <assert.h>
 
 #include "common.h"
 #include "projectreader.h"
@@ -47,6 +48,8 @@ int main(int argc, char *argv[]) {
   if(tcsetattr(serial_fd, TCSAFLUSH, &config) < 0) exit(1);
   FILE *serial = fdopen(serial_fd, "r");
   
+  setbuf(stdin, NULL);
+  fcntl(0/*stdin*/, F_SETFL, O_NONBLOCK);
   setbuf(stdout, NULL);
   setbuf(stderr, NULL);
   setbuf(serial, NULL);
@@ -77,6 +80,16 @@ int main(int argc, char *argv[]) {
   }
 
   while (1) {
+    {
+      char c;
+      while (read(0, &c, 1) == 1) {
+        if (c != '+' && c != '-') continue;
+        uint8_t val = (c == '+') ? 42 : 41;
+        if (write(serial_fd, &val, 1) != 1) {
+          assert(0);
+        }
+      }
+    }
     char b;
     while (((b=fgetc(serial))&0xe0) != 0xa0) {
       // ignore bad head

@@ -5,6 +5,8 @@
 #define USART_BAUDRATE 500000
 #define BAUD_PRESCALE (((F_CPU / (USART_BAUDRATE * 16UL))) - 1)
 
+// arduino digital pin 13 (LED) is at port B, bit 7 (high bit)
+
 // set up the analog->digital converter chip
 static void adc_init(void) {
   // increment instead of setting at the bottom of the method to
@@ -72,7 +74,7 @@ static void serial_init(void) {
   // turn on the transmission and reception circuitry
   UCSR0B |= (1 << RXEN0) | (1 << TXEN0);
   // 8data,1stopbit
-  UCSR0C |= (2 << UMSEL00) | (1 << UCSZ00) | (1 << UCSZ01);
+  UCSR0C |= (0 << UMSEL00) | (1 << UCSZ00) | (1 << UCSZ01);
 
   // load upper 8 bits of the baud rate into the high byte of the UBRR register
   UBRR0H = (BAUD_PRESCALE >> 8);
@@ -87,18 +89,40 @@ static void sendbyte(uint8_t b) {
   UDR0 = b;
 }
 
+static void digi_init() {
+  // configure port B7 (arduino digital port 13) as output and set it
+  // high
+  PORTB = (0<<PB7);
+  DDRB = (1<<DDB7);
+}
+
+static void digi_set(int val) {
+  PORTB = (val<<PB7);
+}
+
 int main(void) {
   uint8_t pin;
   uint16_t val;
 
   serial_init();
   adc_init();
+  digi_init();
   pin = 0;
 
   adc_measure(pin++);
   val = adc_read_result();
   while (1) {
     adc_measure((pin++)&0x0f);
+
+    // do we have to change the output value?
+    if ((UCSR0A & (1 << RXC0)) == 1) {
+      uint8_t cmd = UDR0;
+      if (cmd == 42) {
+        digi_set(1);
+      } else if (cmd == 41) {
+        digi_set(0);
+      }
+    }
 
     // start by sending the pin id of the current value
     // high bit is 1, lowest 4 bits are the pin id
