@@ -21,6 +21,9 @@ double markovchain_getprob(markovchainmatrix *matrix
 int markovchain_getMostProbableNextState(markovchainmatrix *matrix
                                        , int stateindex_from);
 
+int markovchain_getSamplesAt(markovchainmatrix *matrix
+                           , int stateindex_from);
+
 void markovchain_printToFile(markovchainmatrix *matrix, char *filepath);
 
 #endif // _MARKOV_CHAIN_H

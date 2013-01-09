@@ -33,6 +33,25 @@ double markovchain_getprob(markovchainmatrix *matrix
        / (double)matrix->samplesperstate[stateindex_from];
 }
 
+int markovchain_getMostProbableNextState(markovchainmatrix *matrix
+                                       , int stateindex_from) {
+  int bestcount = 0;
+  int bestindex = -1;
+  for (int i = 0; i < matrix->statenum; i++) {
+    if (matrix->relations[stateindex_from][i] > bestcount) {
+      bestcount = matrix->relations[stateindex_from][i];
+      bestindex = i;
+    }
+  }
+  
+  return bestindex;
+}
+
+int markovchain_getSamplesAt(markovchainmatrix *matrix
+                           , int stateindex_from) {
+  return matrix->samplesperstate[stateindex_from];
+};
+
 void markovchain_printToFile(markovchainmatrix *matrix, char *filepath) {
   FILE *f = fopen(filepath , "w+");
   if (! f) {
