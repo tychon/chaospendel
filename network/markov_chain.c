@@ -1,7 +1,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include "memory_wrappers.h"
+#include "common.h"
 
 #include "markov_chain.h"
 
@@ -75,4 +75,28 @@ void markovchain_printToFile(markovchainmatrix *matrix, char *filepath) {
   // print closing
   fputs("}\n", f);
 }
+
+
+void markovchain_writeDataFile(markovchainmatrix *matrix, char *filepath) {
+  fprintf(stderr, "expected file size: %ld MB\n", (matrix->statenum*matrix->statenum+matrix->statenum)*sizeof(int) / 1000000);
+  FILE *f = fopen(filepath, "wb+");
+  for (int i = 0; i < matrix->statenum; i++) {
+    fprintf(stderr, ESCAPE_CLEARLINE"step 1: (%2.1lf%%) writing line %d  ", (double)i / (double)matrix->statenum * 100.0, i+1);
+    if (fwrite(matrix->relations[i], sizeof(int), matrix->statenum, f) <= 0) {
+      perror("saving markov chain: writing binary data");
+      exit(1);
+    }
+  }
+  fprintf(stderr, "\nstep 2: writing additional line\n");
+  if (fwrite(matrix->samplesperstate, sizeof(int), matrix->statenum, f) <= 0) {
+    perror("saving markov chain: writing binary data");
+    exit(1);
+  }
+  fflush(f);
+  fclose(f);
+  fprintf(stderr, "finished writing markov data file.\n");
+}
+//int markovchain_readDataFile(char *filepath, markovchainmatrix *matrix) {
+//}
+
 

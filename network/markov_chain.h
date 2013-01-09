@@ -25,6 +25,8 @@ int markovchain_getSamplesAt(markovchainmatrix *matrix
                            , int stateindex_from);
 
 void markovchain_printToFile(markovchainmatrix *matrix, char *filepath);
+void markovchain_writeDataFile(markovchainmatrix *matrix, char *filepath);
+int markovchain_readDataFile(char *filepath, markovchainmatrix *matrix);
 
 #endif // _MARKOV_CHAIN_H
 

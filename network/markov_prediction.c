@@ -84,45 +84,6 @@ int encodeVelocityRangeIndex(projectdata *pd, double velocity) {
   return VELOCITYNUM-1;
 }
 
-/*
-long long encodeIndex(int range, int indicesnum, int *indices, int velocity) {
-  long long enc = 0;
-  long long basemult = 1;
-  int shrink;
-  for (int i = 0; i < indicesnum; i++) {
-    // shrink values from 0 to range to 0 to range-1
-    // because previous values (previous in time but later in 'indices' array)
-    // are not included in the range of the current value
-    if (i < indicesnum-1 && indices[i] > indices[i+1]) shrink = indices[i]-1;
-    else shrink = indices[i];
-    enc += (long long)shrink * basemult;
-    basemult *= range-1;
-  }
-  
-  basemult *= range;
-  enc += (long long)velocity * basemult;
-  
-  return enc;
-}
-
-void decodeIndex(long long encoded, int range, int indicesnum, int *indices, int *velocity) {
-  long double basemult = 1;
-  for (int i = 0; i < indicesnum; i++) {
-    indices[i] = floor((double)((long double)encoded / basemult));
-    indices[i] %= range;
-    basemult *= range-1;
-  }
-  
-  // deshrink values
-  for (int i = indicesnum-2; i >= 0; i--) {
-    if(indices[i] >= indices[i+1]) indices[i] ++;
-  }
-  
-  basemult *= range;
-  *velocity = floor((double)((long double)encoded / basemult));
-}
-*/
-
 /**
  * Returns the index with the first index of indices in the least significant
  * place and the velocity on the most significant end of the long.
@@ -258,17 +219,6 @@ int main(int argc, char *argv[]) {
           printf("\n");
           nextsolindex = -1;
         }
-        
-        /*
-        // print some info to console
-        printf("%lld", packet->timestamp);
-        printf("\td=%lf\tv=%lf\n", dist, velocity);
-        
-        for (int i = tracklength-1; i >= 0; i--) {
-          printf("\t-> %d", track[i]);
-        }
-        printf("\n");
-        */
       }
     }
     
@@ -282,6 +232,8 @@ int main(int argc, char *argv[]) {
   }
   
   fprintf(stderr, "\nend of data\n");
+  fprintf(stderr, "writing markov chain data ...\n");
+  markovchain_writeDataFile(mcm, "markovchain");
   uds_close_client(udscs);
 }
 
