@@ -10,7 +10,7 @@
 #include "markov_chain.h"
 
 #define VELOCITYMAX 2.5
-#define VELOCITYNUM 10
+#define VELOCITYNUM 3
 
 double getPolarDistance(projectdata *pd, int solindex1, int solindex2) {
   double r1 = pd->sols[solindex1][IDX_RADIUS] * pd->sols[solindex1][IDX_RADIUS];
@@ -119,12 +119,16 @@ void decodeIndex(long encoded, int range, int indicesnum, int *indices, int *vel
 int main(int argc, char *argv[]) {
   char *inputsocketpath = NULL;
   char *pendulumdatapath = NULL;
+  char *markovinputpath = NULL;
+  char *markovoutputpath = NULL;
   int maxframerate = 80;
   int tracklength = 4;
   
   for (int i = 1; i < argc; i++) {
     if (argcmpass("--pendulum|-p", argc, argv, &i, &pendulumdatapath) );
     else if (argcmpass("--inputsocket|-i", argc, argv, &i, &inputsocketpath) );
+    else if (argcmpass("--markovinput|-mi", argc, argv, &i, &markovinputpath) );
+    else if (argcmpass("--markovoutput|-mo", argc, argv, &i, &markovoutputpath) );
     else if (argcmpassint("--maxframerate|-fps", argc, argv, &i, &maxframerate) );
     else if (argcmpassint("--tracklength|-t", argc, argv, &i, &tracklength) );
     else fprintf(stderr, "warning: Ignoring unknown argument \"%s\"\n", argv[i]);
@@ -163,6 +167,10 @@ int main(int argc, char *argv[]) {
   double dist, velocity;
   
   markovchainmatrix *mcm = allocateMarkovChain(pow(pd->solnum, tracklength) * VELOCITYNUM);
+  if (markovinputpath) {
+    fprintf(stderr, "reading markov chain data from \"%s\"...\n", markovinputpath);
+    markovchain_readDataFile(markovinputpath, mcm);
+  }
   int *nexttrack = assert_malloc(tracklength * sizeof(int));
   int nextvelocityrange, nextsolindex = -1;
   double probability;
@@ -232,8 +240,10 @@ int main(int argc, char *argv[]) {
   }
   
   fprintf(stderr, "\nend of data\n");
-  fprintf(stderr, "writing markov chain data ...\n");
-  markovchain_writeDataFile(mcm, "markovchain");
+  if (markovoutputpath) {
+    fprintf(stderr, "writing markov chain data to \"%s\"...\n", markovoutputpath);
+    markovchain_writeDataFile(mcm, markovoutputpath);
+  }
   uds_close_client(udscs);
 }
 
