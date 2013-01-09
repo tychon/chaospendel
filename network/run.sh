@@ -72,7 +72,7 @@ if [ "$1" == "prediction" ]; then
     sleep 0.1
     
     echo -e "\nstarting markov prediction ...\n\n"
-    gdb --args ./markov_prediction.x -p data_pendulum -i socket_angles
+    ./markov_prediction.x -p data_pendulum -i socket_angles
   else
     echo -e "\nstarting arduino reader ...\n\n"
     xterm -e ./reader.x -p data_pendulum -o socket_arduino &
@@ -85,7 +85,7 @@ if [ "$1" == "prediction" ]; then
     sleep 0.1
     
     echo -e "\nstarting markov prediction ...\n\n"
-    ./markov_prediction.x -t 10 -p data_pendulum -i socket_angles
+    ./markov_prediction.x -t 3 -p data_pendulum -i socket_angles
   fi
 fi
 

@@ -66,6 +66,7 @@ void drawPendulum(shmsurface *sf, projectdata *pd
   }
 }
 
+/*
 long long encodeIndex(int range, int indicesnum, int *indices, int velocity) {
   long long enc = 0;
   long long basemult = 1;
@@ -101,6 +102,42 @@ void decodeIndex(long long encoded, int range, int indicesnum, int *indices, int
   
   basemult *= range;
   *velocity = floor((double)((long double)encoded / basemult));
+}
+*/
+
+/**
+ * Returns the index with the first index of indices in the least significant
+ * place and the velocity on the most significant end of the long.
+ */
+long encodeIndex(int range, int indicesnum, int *indices, int velocity) {
+  long enc = 0;
+  long basemult = 1;
+  //printf("encode:\n");
+  for (int i = 0; i < indicesnum; i++) {
+    enc += (long)indices[i] * basemult;
+    //printf("(%2d) enc += %d * %ld\t: %ld\n", i, indices[i], basemult, enc);
+    basemult *= range;
+  }
+  
+  basemult *= range;
+  enc += (long)velocity * basemult;
+  
+  return enc;
+}
+
+void decodeIndex(long encoded, int range, int indicesnum, int *indices, int *velocity) {
+  //rintf("decoding:\n");
+  double basemult = pow(range, indicesnum);
+  *velocity = (int) floor((double)encoded / basemult);
+  //printf("velocity: %d = floor(%ld / %lf)\n", *velocity, encoded, basemult);
+  
+  long largerindexpart = (*velocity) * basemult;
+  for (int i = 0; i < indicesnum; i++) {
+    basemult /= range;
+    indices[i] = (int) floor(((double)encoded - largerindexpart) / basemult);
+    //printf("dec (%d) %d = floor( (%ld - %ld) / %lf)\n", i, indices[i], encoded, largerindexpart, basemult);
+    largerindexpart += indices[i] * basemult;
+  }
 }
 
 int main(int argc, char *argv[]) {
