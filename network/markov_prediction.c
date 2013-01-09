@@ -66,6 +66,43 @@ void drawPendulum(shmsurface *sf, projectdata *pd
   }
 }
 
+long long encodeIndex(int range, int indicesnum, int *indices, int velocity) {
+  long long enc = 0;
+  long long basemult = 1;
+  int shrink;
+  for (int i = 0; i < indicesnum; i++) {
+    // shrink values from 0 to range to 0 to range-1
+    // because previous values (previous in time but later in 'indices' array)
+    // are not included in the range of the current value
+    if (i < indicesnum-1 && indices[i] > indices[i+1]) shrink = indices[i]-1;
+    else shrink = indices[i];
+    enc += (long long)shrink * basemult;
+    basemult *= range-1;
+  }
+  
+  basemult *= range;
+  enc += (long long)velocity * basemult;
+  
+  return enc;
+}
+
+void decodeIndex(long long encoded, int range, int indicesnum, int *indices, int *velocity) {
+  long double basemult = 1;
+  for (int i = 0; i < indicesnum; i++) {
+    indices[i] = floor((double)((long double)encoded / basemult));
+    indices[i] %= range;
+    basemult *= range-1;
+  }
+  
+  // deshrink values
+  for (int i = indicesnum-2; i >= 0; i--) {
+    if(indices[i] >= indices[i+1]) indices[i] ++;
+  }
+  
+  basemult *= range;
+  *velocity = floor((double)((long double)encoded / basemult));
+}
+
 int main(int argc, char *argv[]) {
   char *inputsocketpath = NULL;
   char *pendulumdatapath = NULL;
@@ -109,9 +146,11 @@ int main(int argc, char *argv[]) {
   // 'lastframemillis' is for saving the time of the last frame flushed
   int micros, lastframemicros = getMicroseconds();
   
-  long long timediff;
-  int index;
+  long long timediff, stateindex;
+  int index, velocityrange;
   double dist, velocity;
+  
+  int realtracklength = 0;
   
   fprintf(stderr, "start reading data ...\n");
   while ( (bufferlength = uds_read(udscs, buffer, GLOBALSEQPACKETSIZE)) > 0) {
@@ -129,26 +168,41 @@ int main(int argc, char *argv[]) {
       }
       track[0] = index;
       tracktimes[0] = packet->timestamp;
+      if (realtracklength < tracklength) realtracklength ++;
       
-      dist = 0;
-      timediff = 0;
-      for (int i = 1; i < tracklength && track[i] >= 0; i ++) {
-        timediff = tracktimes[0] - tracktimes[i];
-        dist += getPolarDistance(pd, track[i-1], track[i]);
+      if (realtracklength == tracklength) {
+        dist = 0;
+        timediff = 0;
+        for (int i = 1; i < tracklength && track[i] >= 0; i ++) {
+          timediff = tracktimes[0] - tracktimes[i];
+          dist += getPolarDistance(pd, track[i-1], track[i]);
+        }
+        if (timediff > 0) velocity = dist / (double)((long double)timediff / 1000000.0);
+        else velocity = -1;
+        
+        stateindex = encodeIndex(pd->solnum, tracklength, track, 0);
+        
+        // print track to console
+        printf("%lld\tenc:%lld", packet->timestamp, stateindex);
+        printf("\td=%lf\tv=%lf\n", dist, velocity);
+        
+        for (int i = tracklength-1; i >= 0; i--) {
+          printf("\t-> %d", track[i]);
+        }
+        printf("\n");
+        
+        
+        decodeIndex(stateindex, pd->solnum, tracklength, track, &velocityrange);
+        
+        
+        printf("  vrange=%d\n", velocityrange);
+        for (int i = tracklength-1; i >= 0; i--) {
+          printf("\t-> %d", track[i]);
+        }
+        printf("\n");
+        
+        fflush(stdout);
       }
-      if (timediff > 0) velocity = dist / (double)((long double)timediff / 1000000.0);
-      else velocity = -1;
-      
-      // print track to console
-      printf("%lld", packet->timestamp);
-      printf("\td=%lf\tv=%lf\n", dist, velocity);
-      /*
-      for (int i = tracklength-1; i >= 0; i--) {
-        printf("\t-> %d", track[i]);
-      }
-      printf("\n");
-      */
-      fflush(stdout);
     }
     
     micros = getMicroseconds();

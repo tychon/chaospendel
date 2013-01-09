@@ -62,7 +62,7 @@ fi
 if [ "$1" == "prediction" ]; then
   if [ "$2" == "replay" ]; then
     echo -e "\nstarting replayer ...\n\n"
-    ./replay.x -f -d -i data_values_lastreplay.csv -p data_pendulum -o socket_replay -r 550 > /dev/null &
+    xterm -e ./replay.x -f -d -i data_values_lastreplay.csv -p data_pendulum -o socket_replay -r 550 > /dev/null &
     
     sleep 0.1
     
@@ -72,7 +72,7 @@ if [ "$1" == "prediction" ]; then
     sleep 0.1
     
     echo -e "\nstarting markov prediction ...\n\n"
-    ./markov_prediction.x -p data_pendulum -i socket_angles
+    gdb --args ./markov_prediction.x -p data_pendulum -i socket_angles
   else
     echo -e "\nstarting arduino reader ...\n\n"
     xterm -e ./reader.x -p data_pendulum -o socket_arduino &
