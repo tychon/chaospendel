@@ -80,6 +80,10 @@ void markovchain_printDOTLanguageToFile(markovchainmatrix *matrix, char *filepat
 void markovchain_writeDataFile(markovchainmatrix *matrix, char *filepath) {
   fprintf(stderr, "expected file size: %ld MB\n", (matrix->statenum*matrix->statenum+matrix->statenum)*sizeof(int) / 1000000);
   FILE *f = fopen(filepath, "wb+");
+  if (! f) {
+    perror("opening file");
+    exit(1);
+  }
   for (int i = 0; i < matrix->statenum; i++) {
     fprintf(stderr, ESCAPE_CLEARLINE"step 1: (%2.1lf%%) writing line %d  ", (double)i / (double)matrix->statenum * 100.0, i+1);
     if (fwrite(matrix->relations[i], sizeof(int), matrix->statenum, f) <= 0) {
@@ -96,7 +100,26 @@ void markovchain_writeDataFile(markovchainmatrix *matrix, char *filepath) {
   fclose(f);
   fprintf(stderr, "finished writing markov data file.\n");
 }
-//int markovchain_readDataFile(char *filepath, markovchainmatrix *matrix) {
-//}
+
+void markovchain_readDataFile(char *filepath, markovchainmatrix *matrix) {
+  FILE *f = fopen(filepath, "rb");
+  if (! f) {
+    perror("opening file");
+    exit(1);
+  }
+  for (int i = 0; i < matrix->statenum; i++) {
+    if (fread(matrix->relations[i], sizeof(int), matrix->statenum, f) <= 0) {
+      perror("reading markov chain");
+      exit(1);
+    }
+  }
+  if (fread(matrix->samplesperstate, sizeof(int), matrix->statenum, f) <= 0) {
+    perror("reading markov chain");
+    exit(1);
+  }
+  fclose(f);
+  fprintf(stderr, "finished reading markov data file.\n");
+}
+
 
 

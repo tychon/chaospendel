@@ -26,7 +26,7 @@ int markovchain_getSamplesAt(markovchainmatrix *matrix
 
 void markovchain_printDOTLanguageToFile(markovchainmatrix *matrix, char *filepath);
 void markovchain_writeDataFile(markovchainmatrix *matrix, char *filepath);
-int markovchain_readDataFile(char *filepath, markovchainmatrix *matrix);
+void markovchain_readDataFile(char *filepath, markovchainmatrix *matrix);
 
 #endif // _MARKOV_CHAIN_H
 
