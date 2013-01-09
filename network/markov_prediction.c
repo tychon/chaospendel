@@ -9,6 +9,9 @@
 #include "protocol.h"
 #include "markov_chain.h"
 
+#define VELOCITYMAX 2.5
+#define VELOCITYNUM 3
+
 double getPolarDistance(projectdata *pd, int solindex1, int solindex2) {
   double r1 = pd->sols[solindex1][IDX_RADIUS] * pd->sols[solindex1][IDX_RADIUS];
   double r2 = pd->sols[solindex2][IDX_RADIUS] * pd->sols[solindex2][IDX_RADIUS];
@@ -64,6 +67,14 @@ void drawPendulum(shmsurface *sf, projectdata *pd
     lastx = xpos;
     lasty = ypos;
   }
+}
+
+int encodeVelocityRangeIndex(projectdata *pd, double velocity) {
+  for (int i = 1; i <= VELOCITYNUM; i++) {
+    if (velocity < VELOCITYMAX/VELOCITYNUM*i) return i-1;
+  }
+  fprintf(stderr, " velocity out of range!\n");
+  return VELOCITYNUM-1;
 }
 
 /*
@@ -132,7 +143,7 @@ void decodeIndex(long encoded, int range, int indicesnum, int *indices, int *vel
   //printf("velocity: %d = floor(%ld / %lf)\n", *velocity, encoded, basemult);
   
   long largerindexpart = (*velocity) * basemult;
-  for (int i = 0; i < indicesnum; i++) {
+  for (int i = indicesnum-1; i >= 0; i--) {
     basemult /= range;
     indices[i] = (int) floor(((double)encoded - largerindexpart) / basemult);
     //printf("dec (%d) %d = floor( (%ld - %ld) / %lf)\n", i, indices[i], encoded, largerindexpart, basemult);
@@ -183,8 +194,9 @@ int main(int argc, char *argv[]) {
   // 'lastframemillis' is for saving the time of the last frame flushed
   int micros, lastframemicros = getMicroseconds();
   
-  long long timediff, stateindex;
-  int index, velocityrange;
+  long long timediff;
+  long stateindex;
+  int index, velocityrangeindex;
   double dist, velocity;
   
   int realtracklength = 0;
@@ -218,27 +230,19 @@ int main(int argc, char *argv[]) {
         else velocity = -1;
         
         stateindex = encodeIndex(pd->solnum, tracklength, track, 0);
+        velocityrangeindex = encodeVelocityRangeIndex(pd, velocity);
         
-        // print track to console
-        printf("%lld\tenc:%lld", packet->timestamp, stateindex);
+        // print some info to console
+        printf("%lld\tstate=%ld\td=%lf\tv=%lf\t(range: %d)\n", packet->timestamp, stateindex, dist, velocity, velocityrangeindex);
+        /*
+        printf("%lld", packet->timestamp);
         printf("\td=%lf\tv=%lf\n", dist, velocity);
         
         for (int i = tracklength-1; i >= 0; i--) {
           printf("\t-> %d", track[i]);
         }
         printf("\n");
-        
-        
-        decodeIndex(stateindex, pd->solnum, tracklength, track, &velocityrange);
-        
-        
-        printf("  vrange=%d\n", velocityrange);
-        for (int i = tracklength-1; i >= 0; i--) {
-          printf("\t-> %d", track[i]);
-        }
-        printf("\n");
-        
-        fflush(stdout);
+        */
       }
     }
     
