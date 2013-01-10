@@ -41,7 +41,10 @@ int argcmpass(char *options, const int argc, char *argv[], int *argindex, char *
       exit(1);
     }
     (*argindex) ++;
-    *dest = argv[*argindex];
+    
+    if (strcmp("NULL", argv[*argindex]) != 0)
+      *dest = argv[*argindex];
+    else *dest = NULL;
     
     return 1;
   }
