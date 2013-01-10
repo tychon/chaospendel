@@ -117,9 +117,9 @@ void decodeIndex(long encoded, int range, int indicesnum, int *indices, int *vel
 }
 
 int main(int argc, char *argv[]) {
-  char *inputsocketpath = NULL;
-  char *pendulumdatapath = NULL;
-  char *markovinputpath = NULL;
+  char *inputsocketpath = "socket_integrals";
+  char *pendulumdatapath = "data_pendulum";
+  char *markovinputpath = "data_markovchain";
   char *markovoutputpath = NULL;
   int maxframerate = 80;
   int tracklength = 4;
@@ -174,6 +174,7 @@ int main(int argc, char *argv[]) {
   int *nexttrack = assert_malloc(tracklength * sizeof(int));
   int nextvelocityrange, nextsolindex = -1;
   double probability;
+  int predictionfitcount = 0, predictionfailcount = 0;
   
   fprintf(stderr, "opening connection to server on \"%s\"\n", inputsocketpath);
   udsclientsocket *udscs = uds_create_client(inputsocketpath);
@@ -206,6 +207,17 @@ int main(int argc, char *argv[]) {
         if (timediff > 0) velocity = dist / (double)((long double)timediff / 1000000.0);
         else velocity = -1;
         
+        printf("%lld  d=%lf  v=%lf (%d)", packet->timestamp, dist, velocity, velocityrangeindex);
+        if (nextsolindex >= 0) {
+          if (index == nextsolindex) {
+            predictionfitcount ++;
+            printf("\t ok!");
+          } else if (nextstateindex >= 0) {
+            predictionfailcount ++;
+            printf("\tfail");
+          }
+        } else printf("\t    ");
+        
         velocityrangeindex = encodeVelocityRangeIndex(pd, velocity);
         stateindex = encodeIndex(pd->solnum, tracklength, track, velocityrangeindex);
         
@@ -214,19 +226,20 @@ int main(int argc, char *argv[]) {
         }
         laststateindex = stateindex;
         
-        printf("%lld\tstate=%ld\td=%lf\tv=%lf\t(range: %d)", packet->timestamp, stateindex, dist, velocity, velocityrangeindex);
-        fflush(stdout);
         
         nextstateindex = markovchain_getMostProbableNextState(mcm, stateindex);
         if (nextstateindex >= 0) {
           probability = markovchain_getprob(mcm, stateindex, nextstateindex);
           decodeIndex(nextstateindex, pd->solnum, tracklength, nexttrack, &nextvelocityrange);
           nextsolindex = nexttrack[0];
-          printf("\tnextstate=%d\tnextrange=%d\t(%2.1lf%%, %d)\n", nextstateindex, nextvelocityrange, probability, markovchain_getSamplesAt(mcm, stateindex));
+          printf(" nextsol=%d\tnextvrange=%d prob=%2.1lf%%, at %d samples", nextsolindex, nextvelocityrange, probability, markovchain_getSamplesAt(mcm, stateindex));
+          printf("\tfit: %2.2lf%%", (double)predictionfitcount / (double)(predictionfitcount + predictionfailcount) * 100.0);
         } else {
-          printf("\n");
           nextsolindex = -1;
         }
+        
+        printf("\n");
+        fflush(stdout);
       }
     }
     
