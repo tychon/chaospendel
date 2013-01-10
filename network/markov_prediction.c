@@ -135,7 +135,7 @@ int main(int argc, char *argv[]) {
   }
   
   if (! inputsocketpath || ! pendulumdatapath) {
-    printf("usage %s [--tracklength|-t INT] [--maxframerate|-fps INT] --pendulum|-p PATH --inputsocket|-i PATH\n", argv[0]);
+    printf("usage %s [--tracklength|-t INT] [--maxframerate|-fps INT] [--markovinput|-mi PATH] [--markovoutput|-mo PATH] [--pendulum|-p PATH] [--inputsocket|-i PATH]\n", argv[0]);
     exit(1);
   }
   

@@ -4,118 +4,78 @@ make
 
 if [ "$1" == "rangetest" ]; then
   # start arduino reader
-  xterm -e ./reader.x -p data_pendulum -o socket_arduino &
+  xterm -e ./reader.x &
   sleep 1
-  ./rangetester.x -p data_pendulum -n data_normalisation -i socket_arduino > data_rangetest.csv
+  ./rangetester.x > data_rangetest.csv
 fi
 
 if [ "$1" == "normalisation" ]; then
   if [ "$2" == "replay" ]; then
-    # start replayer in background
-    echo -e "\nstarting replayer ...\n\n"
-    ./replay.x -f -d -nt -i data_values_normalisation.csv -p data_pendulum -o socket_replay -r 100 &
-    
-    sleep 0.1
-    echo -e "\nstarting normalisation ...\n\n"
-    ./normalisation.x -p data_pendulum -i socket_replay --samplenum 1000 > data_normalisation
-    
-    echo -e "\nkilling replayer ... \n\n"
+    ./replay.x -f -d -r 1000 &
+    sleep 0.0001
+    ./normalisation.x --samplenum 1000 > data_normalisation
     kill $!
   else
-    xterm -e ./reader.x -p data_pendulum -o socket_arduino &
+    xterm -e ./reader.x &
     sleep 1
-    ./normalisation.x -p data_pendulum -i socket_arduino --samplenum 10000 > data_normalisation
+    ./normalisation.x --samplenum 10000 > data_normalisation
     kill $!
   fi
 fi
 
 if [ "$1" == "tracking" ]; then
   if [ "$2" == "fastreplay" ]; then
-    # start replayer in background
-    echo -e "\nstarting replayer ...\n\n"
-    ./replay.x -f -d -i data_values_lastreplay.csv -p data_pendulum -o socket_replay -r 100000 > /dev/null &
-    
+    ./replay.x -f -d -r 100000 > /dev/null &
     sleep 0.00000001
-    echo -e "\nstarting tracker ...\n\n"
-    ./tracker.x -p data_pendulum -n data_normalisation -i socket_replay -o socket_angles --showoverflows --printtempdata > data_tracking_lasttemporary.csv
-  
+    ./tracker.x --showoverflows --printtempdata > data_tracking_lasttemporary.csv
   elif [ "$2" == "replay" ]; then
-    # start replayer in background
-    echo -e "\nstarting replayer ...\n\n"
     ./replay.x -f -d -i data_values_lastreplay.csv -p data_pendulum -o socket_replay -r 550 > /dev/null &
-    
-    sleep 0.1
-    
-    echo -e "\nstarting tracker ...\n\n"
-    ./tracker.x -p data_pendulum -n data_normalisation -i socket_replay -o socket_angles --showx11gui --showoverflows --printtempdata > data_tracking_lasttemporary.csv
-  
+    sleep 0.01
+    ./tracker.x --showx11gui --showoverflows --printtempdata > data_tracking_lasttemporary.csv
   else
-    echo -e "\nstarting arduino reader ...\n\n"
-    xterm -e ./reader.x -p data_pendulum -o socket_arduino &
-    
+    xterm -e ./reader.x &
     sleep 1
-    
-    ./tracker.x -p data_pendulum -n data_normalisation -i socket_arduino -o socket_angles --showx11gui --maxframerate 50 --showoverflows --printtempdata > data_tracking_lasttemporary.csv
+    ./tracker.x --showx11gui --maxframerate 50 --showoverflows --printtempdata > data_tracking_lasttemporary.csv
   fi
 fi
 
 if [ "$1" == "collectmarkov" ]; then
   if [ "$2" == "replay" ]; then
-    echo -e "\nstarting replayer ...\n\n"
-    xterm -e ./replay.x -f -d -i data_values_lastreplay.csv -p data_pendulum -o socket_replay -r 550 > /dev/null &
-    
+    xterm -e ./replay.x -f -d -r 550 &
     sleep 0.5
-    
-    echo -e "\nstarting tracker ...\n\n"
-    ./tracker.x -p data_pendulum -n data_normalisation -i socket_replay -o socket_angles --showoverflows &
-    
+    ./tracker.x --showoverflows &
     sleep 0.5
-    
-    echo -e "\nstarting markov prediction ...\n\n"
-    ./markov_prediction.x -p data_pendulum -t3 -mo data_markovchain -i socket_angles
+    if [ -e "data_markovchain" ]; then
+      ./markov_prediction.x -mo data_markov
+    else
+      ./markov_prediction.x -mi NULL data_markov
+    fi
   else
-    echo -e "\nstarting arduino reader ...\n\n"
-    xterm -e ./reader.x -p data_pendulum -o socket_arduino &
-    
+    xterm -e ./reader.x &
     sleep 0.5
-    
-    echo -e "\nstarting tracker ...\n\n"
-    xterm -e ./tracker.x -p data_pendulum -n data_normalisation -i socket_arduino -o socket_angles --showoverflows &
-    
+    xterm -e ./tracker.x --showoverflows &
     sleep 0.5
-    
-    echo -e "\nstarting markov prediction ...\n\n"
-    ./markov_prediction.x -t 3 -mo data_markovchain -p data_pendulum -i socket_angles
+    if [ -e "data_markovchain" ]; then
+      ./markov_prediction.x -mo data_markov
+    else
+      ./markov_prediction.x -mi NULL -mo data_markov
+    fi
   fi
 fi
 
 if [ "$1" == "prediction" ]; then
   if [ "$2" == "replay" ]; then
-    echo -e "\nstarting replayer ...\n\n"
-    xterm -e ./replay.x -f -d -i data_values_lastreplay.csv -p data_pendulum -o socket_replay -r 550 > /dev/null &
-    
+    xterm -e ./replay.x -f -d -r 550 &
     sleep 0.5
-    
-    echo -e "\nstarting tracker ...\n\n"
-    ./tracker.x -p data_pendulum -n data_normalisation -i socket_replay -o socket_angles --showoverflows &
-    
+    xterm -e ./tracker.x --showoverflows &
     sleep 0.5
-    
-    echo -e "\nstarting markov prediction ...\n\n"
-    ./markov_prediction.x -t 3 -mi data_markovchain -p data_pendulum -i socket_angles
+    ./markov_prediction.x
   else
-    echo -e "\nstarting arduino reader ...\n\n"
-    xterm -e ./reader.x -p data_pendulum -o socket_arduino &
-    
+    xterm -e ./reader.x &
     sleep 0.5
-    
-    echo -e "\nstarting tracker ...\n\n"
-    xterm -e ./tracker.x -p data_pendulum -n data_normalisation -i socket_arduino -o socket_angles --showoverflows &
-    
+    xterm -e ./tracker.x --showoverflows &
     sleep 0.5
-    
-    echo -e "\nstarting markov prediction ...\n\n"
-    ./markov_prediction.x -t 3 -mi data_markovchain -p data_pendulum -i socket_angles
+    ./markov_prediction.x
   fi
 fi
 
