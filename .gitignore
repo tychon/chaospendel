@@ -9,6 +9,7 @@
 *.info
 *.pgm
 
+*.dot
 *.png
 *.jpg
 *.avi
@@ -24,6 +25,9 @@
 *.blg
 
 *octave-core
+
+data_*
+socket_*
 
 fftw/fourier
 numerical/main
