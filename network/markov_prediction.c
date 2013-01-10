@@ -9,9 +9,6 @@
 #include "protocol.h"
 #include "markov_chain.h"
 
-#define VELOCITYMAX 2.5
-#define VELOCITYNUM 3
-
 double getPolarDistance(projectdata *pd, int solindex1, int solindex2) {
   double r1 = pd->sols[solindex1][IDX_RADIUS] * pd->sols[solindex1][IDX_RADIUS];
   double r2 = pd->sols[solindex2][IDX_RADIUS] * pd->sols[solindex2][IDX_RADIUS];
@@ -77,11 +74,11 @@ void drawPendulum(shmsurface *sf, projectdata *pd
 }
 
 int encodeVelocityRangeIndex(projectdata *pd, double velocity) {
-  for (int i = 1; i <= VELOCITYNUM; i++) {
-    if (velocity < VELOCITYMAX/VELOCITYNUM*i) return i-1;
+  for (int i = 1; i <= pd->markovvelrangenum; i++) {
+    if (velocity < pd->markovvelmax/pd->markovvelrangenum*i) return i-1;
   }
   fprintf(stderr, "!WARNING!: velocity out of range!\n");
-  return VELOCITYNUM-1;
+  return pd->markovvelrangenum-1;
 }
 
 /**
@@ -122,7 +119,7 @@ int main(int argc, char *argv[]) {
   char *markovinputpath = "data_markovchain";
   char *markovoutputpath = NULL;
   int maxframerate = 80;
-  int tracklength = 4;
+  int tracklength = 3;
   
   for (int i = 1; i < argc; i++) {
     if (argcmpass("--pendulum|-p", argc, argv, &i, &pendulumdatapath) );
@@ -166,9 +163,10 @@ int main(int argc, char *argv[]) {
   int index, velocityrangeindex, nextstateindex = -1;
   double dist, velocity;
   
-  markovchainmatrix *mcm = allocateMarkovChain(pow(pd->solnum, tracklength) * VELOCITYNUM);
+  markovchainmatrix *mcm = allocateMarkovChain(pow(pd->solnum, tracklength) * pd->markovvelrangenum);
   if (markovinputpath) {
     fprintf(stderr, "reading markov chain data from \"%s\"...\n", markovinputpath);
+    fflush(stderr);
     markovchain_readDataFile(markovinputpath, mcm);
   }
   int *nexttrack = assert_malloc(tracklength * sizeof(int));
@@ -211,7 +209,7 @@ int main(int argc, char *argv[]) {
         if (nextsolindex >= 0) {
           if (index == nextsolindex) {
             predictionfitcount ++;
-            printf("\t ok!");
+            printf("\tok! ");
           } else if (nextstateindex >= 0) {
             predictionfailcount ++;
             printf("\tfail");
