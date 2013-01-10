@@ -56,9 +56,9 @@ if [ "$1" == "collectmarkov" ]; then
     xterm -e ./tracker.x --showoverflows &
     sleep 0.5
     if [ -e "data_markovchain" ]; then
-      ./markov_prediction.x -mo data_markov
+      ./markov_prediction.x -mo data_markovchain
     else
-      ./markov_prediction.x -mi NULL -mo data_markov
+      ./markov_prediction.x -mi NULL -mo data_markovchain
     fi
   fi
 fi
