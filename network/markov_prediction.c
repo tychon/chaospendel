@@ -119,7 +119,6 @@ int main(int argc, char *argv[]) {
   char *markovinputpath = "data_markovchain";
   char *markovoutputpath = NULL;
   int maxframerate = 80;
-  int tracklength = 3;
   
   for (int i = 1; i < argc; i++) {
     if (argcmpass("--pendulum|-p", argc, argv, &i, &pendulumdatapath) );
@@ -127,12 +126,11 @@ int main(int argc, char *argv[]) {
     else if (argcmpass("--markovinput|-mi", argc, argv, &i, &markovinputpath) );
     else if (argcmpass("--markovoutput|-mo", argc, argv, &i, &markovoutputpath) );
     else if (argcmpassint("--maxframerate|-fps", argc, argv, &i, &maxframerate) );
-    else if (argcmpassint("--tracklength|-t", argc, argv, &i, &tracklength) );
     else fprintf(stderr, "warning: Ignoring unknown argument \"%s\"\n", argv[i]);
   }
   
   if (! inputsocketpath || ! pendulumdatapath) {
-    printf("usage %s [--tracklength|-t INT] [--maxframerate|-fps INT] [--markovinput|-mi PATH] [--markovoutput|-mo PATH] [--pendulum|-p PATH] [--inputsocket|-i PATH]\n", argv[0]);
+    printf("usage %s [--maxframerate|-fps INT] [--markovinput|-mi PATH] [--markovoutput|-mo PATH] [--pendulum|-p PATH] [--inputsocket|-i PATH]\n", argv[0]);
     exit(1);
   }
   
@@ -142,9 +140,9 @@ int main(int argc, char *argv[]) {
   
   shmsurface *surface = createSHMSurface(100, 100, 500, 500);
   
-  int *track = assert_malloc(tracklength * sizeof(int));
-  for (int i = 0; i < tracklength; i++) track[i] = -1;
-  long long *tracktimes = assert_malloc(tracklength * sizeof(long long));
+  int *track = assert_malloc(pd->markovtracklength * sizeof(int));
+  for (int i = 0; i < pd->markovtracklength; i++) track[i] = -1;
+  long long *tracktimes = assert_malloc(pd->markovtracklength * sizeof(long long));
   
   unsigned char buffer[GLOBALSEQPACKETSIZE];
   int bufferlength;
@@ -163,13 +161,13 @@ int main(int argc, char *argv[]) {
   int index, velocityrangeindex, nextstateindex = -1;
   double dist, velocity;
   
-  markovchainmatrix *mcm = allocateMarkovChain(pow(pd->solnum, tracklength) * pd->markovvelrangenum);
+  markovchainmatrix *mcm = allocateMarkovChain(pow(pd->solnum, pd->markovtracklength) * pd->markovvelrangenum);
   if (markovinputpath) {
     fprintf(stderr, "reading markov chain data from \"%s\"...\n", markovinputpath);
     fflush(stderr);
     markovchain_readDataFile(markovinputpath, mcm);
   }
-  int *nexttrack = assert_malloc(tracklength * sizeof(int));
+  int *nexttrack = assert_malloc(pd->markovtracklength * sizeof(int));
   int nextvelocityrange, nextsolindex = -1;
   double probability;
   int predictionfitcount = 0, predictionfailcount = 0;
@@ -187,18 +185,18 @@ int main(int argc, char *argv[]) {
     
     index = packet->values[0] - 1;
     if (index >= 0 && index != track[0]) {
-      for (int i = tracklength-1; i > 0; i--) {
+      for (int i = pd->markovtracklength-1; i > 0; i--) {
         track[i] = track[i-1];
         tracktimes[i] = tracktimes[i-1];
       }
       track[0] = index;
       tracktimes[0] = packet->timestamp;
-      if (realtracklength < tracklength) realtracklength ++;
+      if (realtracklength < pd->markovtracklength) realtracklength ++;
       
-      if (realtracklength == tracklength) {
+      if (realtracklength == pd->markovtracklength) {
         dist = 0;
         timediff = 0;
-        for (int i = 1; i < tracklength && track[i] >= 0; i ++) {
+        for (int i = 1; i < pd->markovtracklength && track[i] >= 0; i ++) {
           timediff = tracktimes[0] - tracktimes[i];
           dist += getPolarDistance(pd, track[i-1], track[i]);
         }
@@ -217,7 +215,7 @@ int main(int argc, char *argv[]) {
         } else printf("\t    ");
         
         velocityrangeindex = encodeVelocityRangeIndex(pd, velocity);
-        stateindex = encodeIndex(pd->solnum, tracklength, track, velocityrangeindex);
+        stateindex = encodeIndex(pd->solnum, pd->markovtracklength, track, velocityrangeindex);
         
         if (laststateindex >= 0) {
           markovchain_addsample(mcm, laststateindex, stateindex);
@@ -228,7 +226,7 @@ int main(int argc, char *argv[]) {
         nextstateindex = markovchain_getMostProbableNextState(mcm, stateindex);
         if (nextstateindex >= 0) {
           probability = markovchain_getprob(mcm, stateindex, nextstateindex);
-          decodeIndex(nextstateindex, pd->solnum, tracklength, nexttrack, &nextvelocityrange);
+          decodeIndex(nextstateindex, pd->solnum, pd->markovtracklength, nexttrack, &nextvelocityrange);
           nextsolindex = nexttrack[0];
           printf(" nextsol=%d\tnextvrange=%d prob=%2.1lf%%, at %d samples", nextsolindex, nextvelocityrange, probability, markovchain_getSamplesAt(mcm, stateindex));
           printf("\tfit: %2.2lf%%", (double)predictionfitcount / (double)(predictionfitcount + predictionfailcount) * 100.0);
@@ -244,7 +242,7 @@ int main(int argc, char *argv[]) {
     micros = getMicroseconds();
     if (micros-lastframemicros > minframewait) {
       drawPendulum(surface, pd
-                 , tracklength, track, nextsolindex, probability);
+                 , pd->markovtracklength, track, nextsolindex, probability);
       flushSHMSurface(surface);
       lastframemicros = micros;
     }
