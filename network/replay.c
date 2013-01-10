@@ -56,9 +56,9 @@ int main(int argc, char *argv[]) {
   int deleteOldSocket = 0;
   int deleteSocketAfterUse = 0;
   int quiet = 0;
-  char *socketpath = NULL;
-  char *pendulumdatapath = NULL;
-  char *csvpath = NULL;
+  char *socketpath = "socket_arduino";
+  char *pendulumdatapath = "data_pendulum";
+  char *csvpath = "data_values_lastreplay.csv";
   int readtimestamp = 1; // if a timestamp is in csv file present
   int samplerate = -1; // default value: send as fast as we can
   

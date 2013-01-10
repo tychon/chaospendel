@@ -68,10 +68,12 @@ double normalizeValue(double inputvalue, double *soldata) {
 }
 
 int main(int argc, char *argv[]) {
-  char *socketpath = NULL, *outsockpath = NULL;
-  char *pendulumdatapath = NULL;
-  char *normalisationdatapath = NULL;
-  int printtempdata = 0, showoverflows = 0;
+  char *socketpath = "socket_arduino";
+  char *outsockpath = "socket_integrals";
+  char *pendulumdatapath = "data_pendulum";
+  char *normalisationdatapath = "data_normalisation";
+  int printtempdata = 0;
+  int showoverflows = 0;
   int showx11gui = 0;
   int maxframerate = 80;
   
