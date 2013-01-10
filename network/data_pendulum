@@ -16,7 +16,12 @@ inputrange maximum = 1023
 
 noise factor = 1.01
 integral reset samples = 50
-integral maximum = 600000
+# remember: spaces are ignored
+integral maximum = 600 000
+integral threshold = 10 000
+markov tracklength = 3
+markov velocity range num = 5
+markov velocity max = 1.5
 
 # solenoids
 solnum = 16

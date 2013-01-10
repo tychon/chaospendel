@@ -172,6 +172,10 @@ projectdata *readData(projectdata *dest, const char *filepath, const int mode) {
       else if CMPREAD("noisefactor", dest->noisefactor)
       else if CMPREAD("integralresetsamples", dest->integralresetsamples)
       else if CMPREAD("integralmaximum", dest->integralmax)
+      else if CMPREAD("integralthreshold", dest->integralthreshold)
+      else if CMPREAD("markovtracklength", dest->markovtracklength)
+      else if CMPREAD("markovvelocityrangenum", dest->markovvelrangenum)
+      else if CMPREAD("markovvelocitymax", dest->markovvelmax)
       // parse number of solenoids as integer
       else if (strcmp("solnum", keybuffer) == 0) {
         dest->solnum = atoi(valbuffer);
