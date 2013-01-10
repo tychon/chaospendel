@@ -19,9 +19,9 @@
 #define BARWIDTH 30
 
 int main(int argc, char *argv[]) {
-  char *socketpath = NULL;
-  char *pendulumdatapath = NULL;
-  char *normalisationdatapath = NULL;
+  char *socketpath = "socket_arduino";
+  char *pendulumdatapath = "data_pendulum";
+  char *normalisationdatapath = "data_normalisation";
   int maxframerate = 80;
   
   for (int i = 1; i < argc; i++) {
@@ -33,7 +33,7 @@ int main(int argc, char *argv[]) {
   }
   
   if (! socketpath || ! pendulumdatapath || ! normalisationdatapath) {
-    printf("usage: %s [--maxframerate|-f INT] --pendulum|-p PATH --normalisation|-n PATH --inputsocket|-i PATH\n", argv[0]);
+    printf("usage: %s [--maxframerate|-f INT] [--pendulum|-p PATH] [--normalisation|-n PATH] [--inputsocket|-i PATH]\n", argv[0]);
     exit(1);
   }
   

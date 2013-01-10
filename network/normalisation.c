@@ -10,8 +10,8 @@
 #include "projectreader.h"
 
 int main(int argc, char *argv[]) {
-  char *socketpath = NULL;
-  char *pendulumdatapath = NULL;
+  char *socketpath = "socket_arduino";
+  char *pendulumdatapath = "data_pendulum";
   int samplenum = 1000;
   
   for (int i = 1; i < argc; i++) {
