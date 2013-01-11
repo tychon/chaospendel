@@ -91,9 +91,10 @@ int main(int argc, char *argv[]) {
       }
     }
     char b;
-    while (((b=fgetc(serial))&0xe0) != 0xa0) {
+    if (((b=fgetc(serial))&0xe0) != 0xa0) {
       // ignore bad head
       fprintf(stderr, "bad byte 0x%x - waiting for valid head\n", b);
+      continue;
     };
     
     int adc_blocked = (b&0x10) ? true : false;

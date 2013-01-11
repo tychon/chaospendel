@@ -77,9 +77,9 @@ static void serial_init(void) {
   UBRR0L = BAUD_PRESCALE;
 
   // 8data,1stopbit
-  UCSR0C |= (0 << UMSEL00) | (1 << UCSZ00) | (1 << UCSZ01);
+  UCSR0C = (0 << UMSEL00) | (1 << UCSZ00) | (1 << UCSZ01);
   // turn on the transmission and reception circuitry
-  UCSR0B |= (1 << RXEN0) | (1 << TXEN0);
+  UCSR0B = (1 << RXEN0) | (1 << TXEN0) | (0 << UCSZ02);
 }
 
 static void sendbyte(uint8_t b) {
@@ -91,13 +91,13 @@ static void sendbyte(uint8_t b) {
 
 static void digi_init() {
   // configure port B7 (arduino digital port 13) as output and set it
-  // high
-  PORTB = (0<<PB7);
-  DDRB = (1<<DDB7);
+  // low
+  PORTB = (0<<PB7) | (0<<PB4);
+  DDRB = (1<<DDB7) | (1<<DDB4);
 }
 
 static void digi_set(int val) {
-  PORTB = (val<<PB7);
+  PORTB = (val<<PB7) | (val<<PB4);
 }
 
 int main(void) {
@@ -107,22 +107,27 @@ int main(void) {
   serial_init();
   adc_init();
   digi_init();
+  digi_set(1);
   pin = 0;
 
   adc_measure(pin++);
   val = adc_read_result();
   while (1) {
-    adc_measure((pin++)&0x0f);
-
     // do we have to change the output value?
     if ((UCSR0A & (1 << RXC0)) == 1) {
       uint8_t cmd = UDR0;
+      cmd += 1; // UNDO THIS!!!!!
+      digi_set(1);
+      /*
       if (cmd == 42) {
         digi_set(1);
       } else if (cmd == 41) {
         digi_set(0);
       }
+      */
     }
+    
+    adc_measure((pin++)&0x0f);
 
     // start by sending the pin id of the current value
     // high bit is 1, lowest 4 bits are the pin id
