@@ -107,24 +107,19 @@ int main(void) {
   serial_init();
   adc_init();
   digi_init();
-  digi_set(1);
   pin = 0;
 
   adc_measure(pin++);
   val = adc_read_result();
   while (1) {
     // do we have to change the output value?
-    if ((UCSR0A & (1 << RXC0)) == 1) {
+    if (UCSR0A & (1 << RXC0)) {
       uint8_t cmd = UDR0;
-      cmd += 1; // UNDO THIS!!!!!
-      digi_set(1);
-      /*
       if (cmd == 42) {
         digi_set(1);
       } else if (cmd == 41) {
         digi_set(0);
       }
-      */
     }
     
     adc_measure((pin++)&0x0f);
