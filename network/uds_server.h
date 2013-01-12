@@ -6,6 +6,7 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <pthread.h>
+#include <ev.h>
 
 #if !defined(__GLIBC__) && _POSIX_C_SOURCE < 200809
 #error "dprintf may not exist, or may be wrong"
@@ -23,6 +24,13 @@ struct udsserversocket {
   int messagesocketsfds[MAXCONNECTIONS];
   pthread_t thread;
   pthread_mutex_t mutex;
+  struct ev_loop *loop;
+
+  // rules for this callback:
+  //  - called from the network thread
+  //  - called with no locks held
+  //  - data buffer may not be accessed after this returns
+  void (*handle_incoming)(struct udsserversocket *, char *, size_t);
 };
 typedef struct udsserversocket udsserversocket;
 

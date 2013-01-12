@@ -45,3 +45,10 @@ int uds_read(udsclientsocket *udscs, void *buffer, size_t nbytes) {
   } else return retval;
 }
 
+int uds_write(udsclientsocket *udscs, void *buffer, size_t nbytes) {
+  int retval = write(udscs->socketfd, buffer, nbytes);
+  if (retval < 0) {
+    perror("uds client, write");
+    exit(1);
+  } else return retval;
+}

@@ -6,6 +6,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <pthread.h>
+#include <assert.h>
 
 #include "common.h"
 #include "memory_wrappers.h"
@@ -32,6 +34,28 @@
   (byte & 0x01 ? 1 : 0) 
 
 #define PRINTABLE(ch) (ch >= 32 && ch <= 126)
+
+void *cmd_worker(void *data) {
+  udsclientsocket *udscs = data;
+  while (1) {
+    char line[10];
+    char *r = fgets(line, 10, stdin);
+    assert(r != NULL);
+    if ((line[0] != '+' && line[0] != '-') || line[1] == 0) {
+      fprintf(stderr, "bad command\n");
+      continue;
+    }
+    int on_off = (line[0] == '+') ? 1 : 0;
+    char *endp;
+    int pin = strtol(line+1, &endp, 10);
+    if (*endp != 0 || pin<0 || pin>3) {
+      fprintf(stderr, "bad command\n");
+      continue;
+    }
+    uint8_t cmd = (pin<<1)|on_off;
+    uds_write(udscs, &cmd, 1);
+  }
+}
 
 int main(int argc, char *argv[]) {
   char *sockpath = NULL;
@@ -67,6 +91,8 @@ int main(int argc, char *argv[]) {
   
   fprintf(stderr, "opening socket on \"%s\"\n", sockpath);
   udsclientsocket *udscs = uds_create_client(sockpath);
+  pthread_t worker_id;
+  pthread_create(&worker_id, NULL, cmd_worker, udscs);
   
   int retv;
   unsigned char buffer[1024];

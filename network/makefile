@@ -1,6 +1,6 @@
 
 CFLAGS := -g -std=gnu99 -Wall -Werror
-LIBS := -g -lc -lpthread -lm -lfftw3 -lX11 -lXext
+LIBS := -g -lc -lpthread -lm -lfftw3 -lX11 -lXext -lev
 
 NONMAINOBJS := memory_wrappers.o integral.o x11draw.o markov_chain.o
 NONMAINOBJS += common.o uds_server.o uds_client.o protocol.o projectreader.o

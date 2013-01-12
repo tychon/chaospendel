@@ -5,6 +5,8 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #include <signal.h>
+#include <errno.h>
+#include <assert.h>
 
 #include "memory_wrappers.h"
 #include "uds_server.h"
@@ -12,25 +14,72 @@
 ////////
 // local
 
+static void connection_read_cb(struct ev_loop *loop, ev_io *w, int revents) {
+  udsserversocket *udsss = w->data;
+  pthread_mutex_lock( &(udsss->mutex) );
+
+  char data[257];
+  ssize_t n = read(w->fd, data, 256);
+  if (n == 0 || n == -1) {
+    // this socket was closed
+    if (n == 0) errno = 0;
+    perror("message socket was closed");
+    // remove socket
+    int i;
+    for (i=0; i<udsss->connection_count; i++) {
+      if (udsss->messagesocketsfds[i] == w->fd) break;
+    }
+    assert(i != udsss->connection_count);
+    for (int x = i; x < udsss->connection_count-1; i++) // shift following sockets
+      udsss->messagesocketsfds[x] = udsss->messagesocketsfds[x+1];
+    udsss->connection_count --;
+    pthread_mutex_unlock( &(udsss->mutex) );
+    return;
+  }
+
+  pthread_mutex_unlock( &(udsss->mutex) );
+
+  data[n] = 0;
+  if (udsss->handle_incoming != NULL) {
+    udsss->handle_incoming(udsss, data, n);
+  }
+}
+
+static void udsss_master_ready_cb(struct ev_loop *loop, ev_io *w, int revents) {
+  udsserversocket *udsss = w->data;
+  pthread_mutex_lock( &(udsss->mutex) );
+
+  if (udsss->connection_count == MAXCONNECTIONS-1) {
+    fprintf(stderr, "connection refused: maximum connection count of %d was reached\n", MAXCONNECTIONS);
+    goto out;
+  }
+
+  int msgsock = accept(udsss->socketfd, 0, 0);
+  if (msgsock == -1) {
+    perror("accepting for server socket");
+    abort();
+  }
+  
+  ev_io *w_ = malloc(sizeof(*w_));
+  ev_io_init(w_, connection_read_cb, msgsock, EV_READ);
+  udsss->messagesocketsfds[udsss->connection_count] = msgsock;
+  udsss->connection_count ++;
+  fprintf(stderr, "new connection accepted\n");
+
+out:
+  pthread_mutex_unlock( &(udsss->mutex) );
+}
+
 void *uds_run(void *ptr) {
   udsserversocket *udsss = (udsserversocket*)ptr;
+  udsss->loop = ev_loop_new(0);
   listen(udsss->socketfd, 5);
-  for (;;) {
-    int msgsock = accept(udsss->socketfd, 0, 0);
-    if (msgsock == -1) {
-      perror("accepting for server socket");
-      return NULL;
-    }
-    pthread_mutex_lock( &(udsss->mutex) );
-    if (udsss->connection_count == MAXCONNECTIONS-1) {
-      fprintf(stderr, "connection refused: maximum connection counf of %d was reached\n", MAXCONNECTIONS);
-    } else {
-      udsss->messagesocketsfds[udsss->connection_count] = msgsock;
-      udsss->connection_count ++;
-      fprintf(stderr, "new connection accepted\n");
-    }
-    pthread_mutex_unlock( &(udsss->mutex) );
-  }
+  ev_io udsss_watcher;
+  ev_io_init(&udsss_watcher, udsss_master_ready_cb, udsss->socketfd, EV_READ);
+  ev_io_start(udsss->loop, &udsss_watcher);
+  udsss_watcher.data = udsss;
+  ev_run(udsss->loop, 0);
+  return NULL;
 }
 
 /////////////////////
@@ -88,12 +137,8 @@ void uds_send_toall(udsserversocket *udsss, const void *buffer, size_t nbytes) {
     int retv = send(udsss->messagesocketsfds[i], buffer, nbytes, MSG_EOR);
     if (retv < 0) {
       // this socket was closed
-      perror("message socket was closed");
-      // remove socket
-      for (int x = i; x < udsss->connection_count-1; i++) // shift following sockets
-        udsss->messagesocketsfds[x] = udsss->messagesocketsfds[x+1];
-      i --;
-      udsss->connection_count --;
+      perror("trying to send message, but socket was closed");
+      // no, we don't clean up here - we let the network thread take care of that
     }
   }
   pthread_mutex_unlock( &(udsss->mutex) );

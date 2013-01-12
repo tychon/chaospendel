@@ -17,6 +17,7 @@ udsclientsocket *uds_create_client(char *socketpath);
 void uds_close_client(udsclientsocket*);
 
 int uds_read(udsclientsocket*, void *buffer, size_t nbytes);
+int uds_write(udsclientsocket *udscs, void *buffer, size_t nbytes);
 
 #endif // _UDS_CLIENT_H
 

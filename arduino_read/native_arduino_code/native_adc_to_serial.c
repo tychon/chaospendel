@@ -7,6 +7,13 @@
 
 // arduino digital pin 13 (LED) is at port B, bit 7 (high bit)
 
+// output wires are at these pins:
+//  - pin 22 - PA0
+//  - pin 24 - PA2
+//  - pin 26 - PA4
+//  - pin 28 - PA6
+// so, they're all port A
+
 // set up the analog->digital converter chip
 static void adc_init(void) {
   // increment instead of setting at the bottom of the method to
@@ -90,14 +97,16 @@ static void sendbyte(uint8_t b) {
 }
 
 static void digi_init() {
-  // configure port B7 (arduino digital port 13) as output and set it
-  // low
-  PORTB = (0<<PB7) | (0<<PB4);
-  DDRB = (1<<DDB7) | (1<<DDB4);
+  // configure ports as output and set them low
+  PORTA = (0<<PA0) | (0<<PA2) | (0<<PA4) | (0<<PA6);
+  PORTB = (0<<PB7);
+  DDRA = (1<<DDA0) | (1<<DDA2) | (1<<DDA4) | (1<<DDA6);
+  DDRB = (1<<DDB0);
 }
 
-static void digi_set(int val) {
-  PORTB = (val<<PB7) | (val<<PB4);
+static void digi_set(volatile uint8_t *port, int i, int val) {
+  val = val?1:0;
+  *port = (*port & ~(1<<i)) | (val<<i);
 }
 
 int main(void) {
@@ -115,10 +124,10 @@ int main(void) {
     // do we have to change the output value?
     if (UCSR0A & (1 << RXC0)) {
       uint8_t cmd = UDR0;
-      if (cmd == 42) {
-        digi_set(1);
-      } else if (cmd == 41) {
-        digi_set(0);
+      if (cmd>>3 == 0) {
+        int i = (cmd>>1)&0x3; // bits 1-2
+        int val = cmd&0x1; // bit 0
+        digi_set(&DDRB, i*2, val);
       }
     }
     

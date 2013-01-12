@@ -15,6 +15,12 @@
 #define SAMPLERATEBUFFERSIZE 100
 #define SAMPLERATEREFRESHWAIT 100000 // every tenth second
 
+static int serial_fd = -1;
+
+void proxy_command(struct udsserversocket *udsss, char *data, size_t size) {
+  write(serial_fd, data, size);
+}
+
 int main(int argc, char *argv[]) {
   char *serialdevicepath = "/dev/ttyACM0";
   char *outputsocketpath = "socket_arduino";
@@ -35,7 +41,7 @@ int main(int argc, char *argv[]) {
   readPendulumData(pd, pendulumdatapath);
   
   fprintf(stderr, "Connecting to serial device ...\n");
-  int serial_fd = open(serialdevicepath, O_RDWR | O_NOCTTY);
+  serial_fd = open(serialdevicepath, O_RDWR | O_NOCTTY);
   struct termios config;
   if(tcgetattr(serial_fd, &config) < 0) exit(1);
   config.c_iflag &= ~(IGNBRK | BRKINT | ICRNL | INLCR | PARMRK | INPCK | ISTRIP | IXON);
@@ -68,6 +74,7 @@ int main(int argc, char *argv[]) {
   fprintf(stderr, "Starting unix domain server on \"%s\" ...\n", outputsocketpath);
   unlink(outputsocketpath);
   udsserversocket *udsserver = uds_create_server(outputsocketpath);
+  udsserver->handle_incoming = proxy_command;
   uds_start_server(udsserver);
   
   FILE *replayf = NULL;
@@ -80,16 +87,6 @@ int main(int argc, char *argv[]) {
   }
 
   while (1) {
-    {
-      char c;
-      while (read(0, &c, 1) == 1) {
-        if (c != '+' && c != '-') continue;
-        uint8_t val = (c == '+') ? 42 : 41;
-        if (write(serial_fd, &val, 1) != 1) {
-          assert(0);
-        }
-      }
-    }
     char b;
     if (((b=fgetc(serial))&0xe0) != 0xa0) {
       // ignore bad head
