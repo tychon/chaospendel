@@ -48,7 +48,7 @@ void *cmd_worker(void *data) {
     int on_off = (line[0] == '+') ? 1 : 0;
     char *endp;
     int pin = strtol(line+1, &endp, 10);
-    if (*endp != 0 || pin<0 || pin>3) {
+    if (*endp != '\n' || pin<0 || pin>3) {
       fprintf(stderr, "bad command (wrong pin %d): %s\n", pin, line);
       continue;
     }

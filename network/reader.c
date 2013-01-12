@@ -18,6 +18,7 @@
 static int serial_fd = -1;
 
 void proxy_command(struct udsserversocket *udsss, char *data, size_t size) {
+  printf("proxying data ...\n");
   write(serial_fd, data, size);
 }
 
