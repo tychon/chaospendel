@@ -64,6 +64,7 @@ static void udsss_master_ready_cb(struct ev_loop *loop, ev_io *w, int revents) {
   
   ev_io *w_ = malloc(sizeof(*w_));
   ev_io_init(w_, connection_read_cb, msgsock, EV_READ);
+  w_->data = udsss;
   ev_io_start(udsss->loop, w_);
   udsss->messagesocketsfds[udsss->connection_count] = msgsock;
   udsss->connection_count ++;
