@@ -127,7 +127,7 @@ int main(void) {
       if (cmd>>3 == 0) {
         int i = (cmd>>1)&0x3; // bits 1-2
         int val = cmd&0x1; // bit 0
-        digi_set(&DDRB, i*2, val);
+        digi_set(&DDRA, i*2, val);
       }
     }
     
