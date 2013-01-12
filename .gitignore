@@ -32,6 +32,8 @@ socket_*
 fftw/fourier
 numerical/main
 numerical/fourier
+numerical/pendulum
 numerical/doc/
 wikihaskell/main
 
+!doc-ger/images/*
