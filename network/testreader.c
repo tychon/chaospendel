@@ -42,14 +42,14 @@ void *cmd_worker(void *data) {
     char *r = fgets(line, 10, stdin);
     assert(r != NULL);
     if ((line[0] != '+' && line[0] != '-') || line[1] == 0) {
-      fprintf(stderr, "bad command\n");
+      fprintf(stderr, "bad command, use + / -: %s\n", line);
       continue;
     }
     int on_off = (line[0] == '+') ? 1 : 0;
     char *endp;
     int pin = strtol(line+1, &endp, 10);
     if (*endp != 0 || pin<0 || pin>3) {
-      fprintf(stderr, "bad command\n");
+      fprintf(stderr, "bad command (wrong pin %d): %s\n", pin, line);
       continue;
     }
     uint8_t cmd = (pin<<1)|on_off;
