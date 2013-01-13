@@ -129,18 +129,22 @@ int main(int argc, char *argv[]) {
   char *markovinputpath = "data_markovchain";
   char *markovoutputpath = NULL;
   int maxframerate = 80;
+  char *manipulatorsocketpath = NULL;
+  int minimizeenergy = 0;
   
   for (int i = 1; i < argc; i++) {
     if (argcmpass("--pendulum|-p", argc, argv, &i, &pendulumdatapath) );
     else if (argcmpass("--inputsocket|-i", argc, argv, &i, &inputsocketpath) );
     else if (argcmpass("--markovinput|-mi", argc, argv, &i, &markovinputpath) );
     else if (argcmpass("--markovoutput|-mo", argc, argv, &i, &markovoutputpath) );
+    else if (argcmpass("--manip|-m", argc, argv, &i, &manipulatorsocketpath) );
     else if (argcmpassint("--maxframerate|-fps", argc, argv, &i, &maxframerate) );
+    else if (ARGCMP("--minen", i)) minimizeenergy = 1;
     else fprintf(stderr, "warning: Ignoring unknown argument \"%s\"\n", argv[i]);
   }
   
   if (! inputsocketpath || ! pendulumdatapath) {
-    printf("usage %s [--maxframerate|-fps INT] [--markovinput|-mi PATH] [--markovoutput|-mo PATH] [--pendulum|-p PATH] [--inputsocket|-i PATH]\n", argv[0]);
+    printf("usage %s [--maxframerate|-fps INT] [--markovinput|-mi PATH] [--markovoutput|-mo PATH] [--pendulum|-p PATH] [--inputsocket|-i PATH] [--minen --manip|-m PATH]\n", argv[0]);
     exit(1);
   }
   
@@ -182,7 +186,13 @@ int main(int argc, char *argv[]) {
   double probability;
   int predictionfitcount = 0, predictionfailcount = 0;
   
-  fprintf(stderr, "opening connection to server on \"%s\"\n", inputsocketpath);
+  udsclientsocket *manipulatorsocket = NULL;  
+  if (manipulatorsocketpath) {
+    fprintf(stderr, "opening connection to server on \"%s\"\n", manipulatorsocketpath);
+    manipulatorsocket = uds_create_client(manipulatorsocketpath);
+  }
+  
+  fprintf(stderr, "opening connection to manipulation server on \"%s\"\n", inputsocketpath);
   udsclientsocket *udscs = uds_create_client(inputsocketpath);
   
   fprintf(stderr, "start reading data ...\n");
@@ -258,6 +268,26 @@ int main(int argc, char *argv[]) {
           // print some output
           printf(" nextsol=%d\tnextvrange=%d prob=%2.1lf%%, at %d samples", nextsolindex, nextvelocityrange, probability, markovchain_getSamplesAt(mcm, stateindex));
           printf("\tfit: %2.2lf%%", (double)predictionfitcount / (double)(predictionfitcount + predictionfailcount) * 100.0);
+          
+          int cmd;
+          if (minimizeenergy) {
+            if (index != 12 && nextsolindex == 12) {
+              printf(" on ");
+              cmd = (1 << 1) | 1;
+            } else {
+              printf(" off");
+              cmd = (1 << 1) | 0;
+            }
+            uds_write(manipulatorsocket, &cmd, 1);
+            if (index != 13 && nextsolindex == 13) {
+              printf(" on ");
+              cmd = (2 << 1) | 1;
+            } else {
+              printf(" off");
+              cmd = (2 << 1) | 0;
+            }
+            uds_write(manipulatorsocket, &cmd, 1);
+          }
         } else {
           // aw, no prediction possible, this state has never occurred before.
           nextsolindex = -1;
@@ -283,6 +313,10 @@ int main(int argc, char *argv[]) {
     fprintf(stderr, "writing markov chain data to \"%s\"...\n", markovoutputpath);
     markovchain_writeDataFile(mcm, markovoutputpath);
   }
+  if (manipulatorsocketpath) {
+    uds_close_client(manipulatorsocket);
+  }
   uds_close_client(udscs);
+  
 }
 

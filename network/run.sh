@@ -80,3 +80,11 @@ if [ "$1" == "prediction" ]; then
 fi
 
 
+if [ "$1" == "minen" ]; then
+  xterm -e ./reader.x &
+  sleep 0.5
+  xterm -e ./tracker.x --showoverflows &
+  sleep 0.5
+  ./markov_prediction.x --manip socket_arduino --minen
+fi
+
