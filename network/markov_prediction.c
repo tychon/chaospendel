@@ -188,11 +188,11 @@ int main(int argc, char *argv[]) {
   
   udsclientsocket *manipulatorsocket = NULL;  
   if (manipulatorsocketpath) {
-    fprintf(stderr, "opening connection to server on \"%s\"\n", manipulatorsocketpath);
+    fprintf(stderr, "opening connection to manipulation server on \"%s\"\n", manipulatorsocketpath);
     manipulatorsocket = uds_create_client(manipulatorsocketpath);
   }
   
-  fprintf(stderr, "opening connection to manipulation server on \"%s\"\n", inputsocketpath);
+  fprintf(stderr, "opening connection to server on \"%s\"\n", inputsocketpath);
   udsclientsocket *udscs = uds_create_client(inputsocketpath);
   
   fprintf(stderr, "start reading data ...\n");
@@ -271,7 +271,7 @@ int main(int argc, char *argv[]) {
           
           int cmd;
           if (minimizeenergy) {
-            if (index != 12 && nextsolindex == 12) {
+            if (index == 12) {
               printf(" on ");
               cmd = (1 << 1) | 1;
             } else {
@@ -279,7 +279,7 @@ int main(int argc, char *argv[]) {
               cmd = (1 << 1) | 0;
             }
             uds_write(manipulatorsocket, &cmd, 1);
-            if (index != 13 && nextsolindex == 13) {
+            if (index == 13) {
               printf(" on ");
               cmd = (2 << 1) | 1;
             } else {
