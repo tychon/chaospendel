@@ -4,7 +4,7 @@ make
 
 if [ "$1" == "rangetest" ]; then
   # start arduino reader
-  xterm -e ./reader.x &
+  xterm -e ./reader.x --serialdevice $device &
   sleep 1
   ./rangetester.x > data_rangetest.csv
 fi
@@ -33,9 +33,9 @@ if [ "$1" == "tracking" ]; then
     sleep 0.01
     ./tracker.x --showx11gui --showoverflows --printtempdata > data_tracking_lasttemporary.csv
   else
-    xterm -e ./reader.x &
+    xterm -e ./reader.x $device &
     sleep 1
-    ./tracker.x --showx11gui --maxframerate 50 --showoverflows --printtempdata > data_tracking_lasttemporary.csv
+    ./tracker.x --showx11gui --maxframerate 50 --showoverflows --multikill --printtempdata > data_tracking_lasttemporary.csv
   fi
 fi
 
@@ -81,10 +81,10 @@ fi
 
 
 if [ "$1" == "minen" ]; then
-  xterm -e ./reader.x &
+  xterm -e ./reader.x --serialdevice $device &
   sleep 0.5
-  xterm -e ./tracker.x --showoverflows &
-  sleep 0.5
-  ./markov_prediction.x --manip socket_arduino --minen
+  xterm -e ./tracker.x --showoverflows --multikill --manip socket_arduino
+  #sleep 0.5
+  #./markov_prediction.x --manip socket_arduino --minen
 fi
 
