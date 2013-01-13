@@ -140,12 +140,16 @@ void uds_stop_server(udsserversocket *udsss) {
 void uds_send_toall(udsserversocket *udsss, const void *buffer, size_t nbytes) {
   pthread_mutex_lock( &(udsss->mutex) );
   for (int i = 0; i < udsss->connection_count; i++) {
-    int retv = send(udsss->messagesocketsfds[i], buffer, nbytes, MSG_EOR);
+    send(udsss->messagesocketsfds[i], buffer, nbytes, MSG_EOR);
+    
+    // Since the socket is nonblocking, the buffer may be full, because the
+    // client only wants to write and not read.
+    /*
     if (retv < 0) {
       // this socket was closed
       perror("trying to send message, but socket was closed");
       // no, we don't clean up here - we let the network thread take care of that
-    }
+    }*/
   }
   pthread_mutex_unlock( &(udsss->mutex) );
 }
