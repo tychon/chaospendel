@@ -7,6 +7,7 @@
 #include <signal.h>
 #include <errno.h>
 #include <assert.h>
+#include <fcntl.h>
 
 #include "memory_wrappers.h"
 #include "uds_server.h"
@@ -61,7 +62,7 @@ static void udsss_master_ready_cb(struct ev_loop *loop, ev_io *w, int revents) {
     perror("accepting for server socket");
     abort();
   }
-  fnctl(msgsock, F_SETFL, O_NONBLOCK);
+  fcntl(msgsock, F_SETFL, O_NONBLOCK);
   
   ev_io *w_ = malloc(sizeof(*w_));
   ev_io_init(w_, connection_read_cb, msgsock, EV_READ);
