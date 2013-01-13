@@ -232,8 +232,9 @@ int main(int argc, char *argv[]) {
         if (timediff > 0) velocity = dist / (double)((long double)timediff / 1000000.0);
         else {
           fprintf(stderr, "Whow, thats tooo fast!\n");
-          velocity = -1;
+          exit(1);
         }
+        velocityrangeindex = encodeVelocityRangeIndex(pd, velocity);
         
         // make some output
         printf("%lld  d=%lf  v=%lf (%d)", packet->timestamp, dist, velocity, velocityrangeindex);
@@ -248,7 +249,6 @@ int main(int argc, char *argv[]) {
         } else printf("\t    ");
         
         // encode the index
-        velocityrangeindex = encodeVelocityRangeIndex(pd, velocity);
         stateindex = encodeIndex(pd->solnum, pd->markovtracklength, track, velocityrangeindex);
         
         // add encoded index to markov chain
