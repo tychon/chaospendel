@@ -73,6 +73,13 @@ void drawPendulum(shmsurface *sf, projectdata *pd
   }
 }
 
+/**
+ * This function sorts the given 'velocity' into one of the ranges, given int
+ * the projectdata and returns the ranges index.
+ * There are a number of projectdata.markovvelrangenum ranges and the maximum
+ * velocity is projectdata.markovvelmax. Every velocity above this maximum is
+ * assigned to the last range and a error message is given on stderr.
+ */
 int encodeVelocityRangeIndex(projectdata *pd, double velocity) {
   for (int i = 1; i <= pd->markovvelrangenum; i++) {
     if (velocity < pd->markovvelmax/pd->markovvelrangenum*i) return i-1;
@@ -82,19 +89,22 @@ int encodeVelocityRangeIndex(projectdata *pd, double velocity) {
 }
 
 /**
- * Returns the index with the first index of indices in the least significant
- * place and the velocity on the most significant end of the long.
+ * Encodes the indices of the solenoids and the velocity unambiguously into one
+ * integer. First first solenoid index is in the most insignificant place of the
+ * encoded integer, the velocity at the most significant end.
+ * @param range The range of the indices from zero (included) to range (excluded).
+ * @param indicesnum The length of the integer array in 'indices'
+ * @param indices The array of indices in the given range
+ * @param velocityrange the range of the velocity
  */
-long encodeIndex(int range, int indicesnum, int *indices, int velocity) {
-  long enc = 0;
-  long basemult = 1;
-  //printf("encode:\n");
+int encodeIndex(int range, int indicesnum, int *indices, int velocityrange) {
+  int enc = 0;
+  int basemult = 1;
   for (int i = 0; i < indicesnum; i++) {
-    enc += (long)indices[i] * basemult;
-    //printf("(%2d) enc += %d * %ld\t: %ld\n", i, indices[i], basemult, enc);
+    enc += indices[i] * basemult;
     basemult *= range;
   }
-  enc += (long)velocity * basemult;
+  enc += velocityrange * basemult;
   return enc;
 }
 
@@ -183,8 +193,13 @@ int main(int argc, char *argv[]) {
       continue;
     }
     
-    index = packet->values[0] - 1;
+    // this is the index of the solenoid with the strongest current magnetic field
+    index = packet->values[0] - 1; 
+    
     if (index >= 0 && index != track[0]) {
+      // the solenoid with the stronges field has changed
+      
+      // add it to track
       for (int i = pd->markovtracklength-1; i > 0; i--) {
         track[i] = track[i-1];
         tracktimes[i] = tracktimes[i-1];
@@ -194,15 +209,23 @@ int main(int argc, char *argv[]) {
       if (realtracklength < pd->markovtracklength) realtracklength ++;
       
       if (realtracklength == pd->markovtracklength) {
+        // the track is filled, hence we can make reasonable statements
+        
+        // calculate velocity
         dist = 0;
         timediff = 0;
         for (int i = 1; i < pd->markovtracklength && track[i] >= 0; i ++) {
           timediff = tracktimes[0] - tracktimes[i];
           dist += getPolarDistance(pd, track[i-1], track[i]);
         }
-        if (timediff > 0) velocity = dist / (double)((long double)timediff / 1000000.0);
-        else velocity = -1;
         
+        if (timediff > 0) velocity = dist / (double)((long double)timediff / 1000000.0);
+        else {
+          fprintf(stderr, "Whow, thats tooo fast!\n");
+          velocity = -1;
+        }
+        
+        // make some output
         printf("%lld  d=%lf  v=%lf (%d)", packet->timestamp, dist, velocity, velocityrangeindex);
         if (nextsolindex >= 0) {
           if (index == nextsolindex) {
@@ -214,23 +237,29 @@ int main(int argc, char *argv[]) {
           }
         } else printf("\t    ");
         
+        // encode the index
         velocityrangeindex = encodeVelocityRangeIndex(pd, velocity);
         stateindex = encodeIndex(pd->solnum, pd->markovtracklength, track, velocityrangeindex);
         
-        if (laststateindex >= 0) {
+        // add encoded index to markov chain
+        if (laststateindex >= 0)
           markovchain_addsample(mcm, laststateindex, stateindex);
-        }
         laststateindex = stateindex;
         
-        
+        // make prediction
         nextstateindex = markovchain_getMostProbableNextState(mcm, stateindex);
         if (nextstateindex >= 0) {
+          // there is a prediction for the current state
+          // calculate the probability of the best prediction:
           probability = markovchain_getprob(mcm, stateindex, nextstateindex);
+          // get the first solenoid of the predicted track:
           decodeIndex(nextstateindex, pd->solnum, pd->markovtracklength, nexttrack, &nextvelocityrange);
           nextsolindex = nexttrack[0];
+          // print some output
           printf(" nextsol=%d\tnextvrange=%d prob=%2.1lf%%, at %d samples", nextsolindex, nextvelocityrange, probability, markovchain_getSamplesAt(mcm, stateindex));
           printf("\tfit: %2.2lf%%", (double)predictionfitcount / (double)(predictionfitcount + predictionfailcount) * 100.0);
         } else {
+          // aw, no prediction possible, this state has never occurred before.
           nextsolindex = -1;
         }
         
@@ -239,6 +268,7 @@ int main(int argc, char *argv[]) {
       }
     }
     
+    // draw image if necessary
     micros = getMicroseconds();
     if (micros-lastframemicros > minframewait) {
       drawPendulum(surface, pd
