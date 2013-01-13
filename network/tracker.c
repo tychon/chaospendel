@@ -74,17 +74,23 @@ int main(int argc, char *argv[]) {
   char *normalisationdatapath = "data_normalisation";
   int printtempdata = 0;
   int showoverflows = 0;
+  int multikill = 0;
   int showx11gui = 0;
   int maxframerate = 80;
+  
+  char *manipulatorsocketpath = NULL;
+  int minimizeenergy = 0;
   
   for (int i = 1; i < argc; i++) {
     if (argcmpass("--pendulum|-p", argc, argv, &i, &pendulumdatapath)) ;
     else if (argcmpass("--normalisation|-n", argc, argv, &i, &normalisationdatapath)) ;
     else if (argcmpass("--inputsocket|-i", argc, argv, &i, &socketpath)) ;
     else if (argcmpass("--outputsocket|-o", argc, argv, &i, &outsockpath)) ;
+    else if (argcmpass("--manip", argc, argv, &i, &manipulatorsocketpath)) minimizeenergy = 1;
     else if (argcmpassint("--maxframerate|-f", argc, argv, &i, &maxframerate)) ;
     else if (ARGCMP("--printtempdata", i)) printtempdata = 1;
     else if (ARGCMP("--showoverflows", i)) showoverflows = 1;
+    else if (ARGCMP("--multikill", i)) multikill = 1;
     else if (ARGCMP("--showx11gui", i)) showx11gui = 1;
     else fprintf(stderr, "warning: Unknown argument ignored: \"%s\"\n", argv[i]);
   }
@@ -101,9 +107,6 @@ int main(int argc, char *argv[]) {
   
   fprintf(stderr, "reading normalisation data from \"%s\" ...\n", normalisationdatapath);
   readNormalisationData(pd, normalisationdatapath);
-  
-  fprintf(stderr, "opening connection to server on \"%s\"\n", socketpath);
-  udsclientsocket *udscs = uds_create_client(socketpath);
   
   unlink(outsockpath);
   fprintf(stderr, "opening server socket with path \"%s\"\n", outsockpath);
@@ -134,7 +137,7 @@ int main(int argc, char *argv[]) {
     integrals[i] = integral_allocate(noiseabs[i], pd->integralresetsamples);
   
   // used in loop
-  double normval, integ, currentintegral;
+  double normval, lastinteg, integ, currentintegral;
   int currentsolindex;
   
   // This is the number of milliseconds to sleep before flushing
@@ -147,6 +150,16 @@ int main(int argc, char *argv[]) {
   unsigned char buffer[GLOBALSEQPACKETSIZE];
   int bufferlength;
   struct packet2byte *packet = allocate2bytePacket(pd->solnum);
+  
+  udsclientsocket *manipulatorsocket = NULL;  
+  if (manipulatorsocketpath) {
+    fprintf(stderr, "opening connection to manipulation server on \"%s\"\n", manipulatorsocketpath);
+    manipulatorsocket = uds_create_client(manipulatorsocketpath);
+  }
+  int lastcmd = 0;
+  
+  fprintf(stderr, "opening connection to server on \"%s\"\n", socketpath);
+  udsclientsocket *udscs = uds_create_client(socketpath);
   
   fprintf(stderr, "start reading data ...\n");
   while ( (bufferlength = uds_read(udscs, buffer, GLOBALSEQPACKETSIZE)) > 0) {
@@ -170,16 +183,45 @@ int main(int argc, char *argv[]) {
       continue;
     }
     
+    for (int i = 0; i < pd->solnum; i++) {
+      lastnormvalue[i] = normalizeValue((double)packet->values[i], pd->sols[i]);
+    }
+    
+    if (multikill) {
+      int outofnoisenum = 0;
+      for (int i = 0; i < pd->solnum; i++) {
+        if (fabs(lastnormvalue[i]) > noiseabs[i]) outofnoisenum ++;
+      }
+      if (outofnoisenum > 1) {
+        fprintf(stderr, "multikill(%d) ", outofnoisenum);
+        fflush(stderr);
+        continue;
+      }
+    }
+    
     currentintegral = pd->integralthreshold;
     currentsolindex = -1;
     // calculate integral
     for (int i = 0; i < pd->solnum; i++) {
-      normval = normalizeValue((double)packet->values[i], pd->sols[i]);
-      lastnormvalue[i] = normval;
-      integ = integral_push(integrals[i], normval);
+      lastinteg = integral_getsum(integrals[i]);
+      integ = integral_push(integrals[i], lastnormvalue[i]);
       if (integ > currentintegral) {
         currentintegral = integ;
         currentsolindex = i;
+      }
+      
+      if (minimizeenergy) {
+        if (i == 12 || i == 13) {
+          int cmd = 0;
+          if (i == 12 && i == currentsolindex) cmd = 1 << 1;
+          else if (i == 13 && i == currentsolindex) cmd = 2 << 1;
+          
+          if (lastinteg > integ) cmd |= 1;
+          if (cmd != lastcmd) {
+            uds_write(manipulatorsocket, &cmd, 1);
+            lastcmd = cmd;
+          }
+        }
       }
     }
     
@@ -225,6 +267,7 @@ int main(int argc, char *argv[]) {
   
   fprintf(stderr, "end of data\n");
   uds_close_client(udscs);
+  if (manipulatorsocketpath) uds_close_client(manipulatorsocket);
   uds_stop_server(udsss);
   unlink(outsockpath);
 }
