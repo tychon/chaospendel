@@ -13,12 +13,12 @@
 #include "protocol.h"
 
 #define SAMPLERATEBUFFERSIZE 100
-#define SAMPLERATEREFRESHWAIT 100000 // every tenth second
+#define SAMPLERATEREFRESHWAIT 10000 // every hundredth second
 
 static int serial_fd = -1;
 
 void proxy_command(struct udsserversocket *udsss, char *data, size_t size) {
-  printf("proxying data ...");
+  printf(">");
   write(serial_fd, data, size);
 }
 
