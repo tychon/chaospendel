@@ -85,13 +85,13 @@ void markovchain_writeDataFile(markovchainmatrix *matrix, char *filepath) {
     exit(1);
   }
   for (int i = 0; i < matrix->statenum; i++) {
-    fprintf(stderr, ESCAPE_CLEARLINE"step 1: (%2.1lf%%) writing line %d  ", (double)i / (double)matrix->statenum * 100.0, i+1);
+    fprintf(stderr, ESCAPE_CLEARLINE"  step 1: (%2.1lf%%) writing line %d  ", (double)i / (double)matrix->statenum * 100.0, i+1);
     if (fwrite(matrix->relations[i], sizeof(int), matrix->statenum, f) <= 0) {
       perror("saving markov chain: writing binary data");
       exit(1);
     }
   }
-  fprintf(stderr, "\nstep 2: writing additional line\n");
+  fprintf(stderr, "\n  step 2: writing additional line\n");
   if (fwrite(matrix->samplesperstate, sizeof(int), matrix->statenum, f) <= 0) {
     perror("saving markov chain: writing binary data");
     exit(1);
@@ -108,11 +108,13 @@ void markovchain_readDataFile(char *filepath, markovchainmatrix *matrix) {
     exit(1);
   }
   for (int i = 0; i < matrix->statenum; i++) {
+    fprintf(stderr, ESCAPE_CLEARLINE"  step 1: (%2.1lf%%) reading line %d  ", (double)i / (double)matrix->statenum * 100.0, i+1);
     if (fread(matrix->relations[i], sizeof(int), matrix->statenum, f) <= 0) {
       perror("reading markov chain");
       exit(1);
     }
   }
+  fprintf(stderr, "\n  step 2: reading additional line\n");
   if (fread(matrix->samplesperstate, sizeof(int), matrix->statenum, f) <= 0) {
     perror("reading markov chain");
     exit(1);
