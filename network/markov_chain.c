@@ -78,7 +78,7 @@ void markovchain_printDOTLanguageToFile(markovchainmatrix *matrix, char *filepat
 
 
 void markovchain_writeDataFile(markovchainmatrix *matrix, char *filepath) {
-  fprintf(stderr, "expected file size: %ld MB\n", (matrix->statenum*matrix->statenum+matrix->statenum)*sizeof(int) / 1000000);
+  fprintf(stderr, "expected file size: %d MB\n", (int)((matrix->statenum*matrix->statenum+matrix->statenum)*sizeof(int) / 1000000));
   FILE *f = fopen(filepath, "wb+");
   if (! f) {
     perror("opening file");
