@@ -67,6 +67,24 @@ double normalizeValue(double inputvalue, double *soldata) {
   return inputvalue;
 }
 
+void turnOn(udsclientsocket *socket, int solindex) {
+  int cmd;
+  
+  // turn OFF all other solenoids
+  for (int i = 0; i < 4; i++) {
+    if (i == solindex) continue;
+    cmd = i << 1;
+    uds_write(socket, &cmd, 1);
+  }
+  
+  if (socket < 0) return;
+  
+  // turn ON one solenoid
+  cmd = solindex << 1;
+  cmd |= 1;
+  uds_write(socket, &cmd, 1);
+}
+
 int main(int argc, char *argv[]) {
   char *socketpath = "socket_arduino";
   char *outsockpath = "socket_integrals";
@@ -80,13 +98,15 @@ int main(int argc, char *argv[]) {
   
   char *manipulatorsocketpath = NULL;
   int minimizeenergy = 0;
+  int maximizeenergy = 0;
   
   for (int i = 1; i < argc; i++) {
     if (argcmpass("--pendulum|-p", argc, argv, &i, &pendulumdatapath)) ;
     else if (argcmpass("--normalisation|-n", argc, argv, &i, &normalisationdatapath)) ;
     else if (argcmpass("--inputsocket|-i", argc, argv, &i, &socketpath)) ;
     else if (argcmpass("--outputsocket|-o", argc, argv, &i, &outsockpath)) ;
-    else if (argcmpass("--manip", argc, argv, &i, &manipulatorsocketpath)) minimizeenergy = 1;
+    else if (argcmpass("--minimize", argc, argv, &i, &manipulatorsocketpath)) minimizeenergy = 1;
+    else if (argcmpass("--maximize", argc, argv, &i, &manipulatorsocketpath)) maximizeenergy = 1, minimizeenergy = 0;
     else if (argcmpassint("--maxframerate|-f", argc, argv, &i, &maxframerate)) ;
     else if (ARGCMP("--printtempdata", i)) printtempdata = 1;
     else if (ARGCMP("--showoverflows", i)) showoverflows = 1;
@@ -156,7 +176,6 @@ int main(int argc, char *argv[]) {
     fprintf(stderr, "opening connection to manipulation server on \"%s\"\n", manipulatorsocketpath);
     manipulatorsocket = uds_create_client(manipulatorsocketpath);
   }
-  int lastcmd = 0;
   
   fprintf(stderr, "opening connection to server on \"%s\"\n", socketpath);
   udsclientsocket *udscs = uds_create_client(socketpath);
@@ -193,7 +212,7 @@ int main(int argc, char *argv[]) {
         if (fabs(lastnormvalue[i]) > noiseabs[i]) outofnoisenum ++;
       }
       if (outofnoisenum > 1) {
-        fprintf(stderr, "multikill(%d) ", outofnoisenum);
+        fprintf(stderr, "mk(%d) ", outofnoisenum);
         fflush(stderr);
         continue;
       }
@@ -209,19 +228,15 @@ int main(int argc, char *argv[]) {
         currentintegral = integ;
         currentsolindex = i;
       }
-      
-      if (minimizeenergy) {
-        if (i == 12 || i == 13) {
-          int cmd = 0;
-          if (i == 12 && i == currentsolindex) cmd = 1 << 1;
-          else if (i == 13 && i == currentsolindex) cmd = 2 << 1;
-          
-          if (lastinteg > integ) cmd |= 1;
-          if (cmd != lastcmd) {
-            uds_write(manipulatorsocket, &cmd, 1);
-            lastcmd = cmd;
-          }
-        }
+      if (maximizeenergy && i == currentsolindex) {
+        if (integ < lastinteg && i == 12) turnOn(manipulatorsocket, 1);
+        else if (integ < lastinteg && i == 13) turnOn(manipulatorsocket, 2);
+        else turnOn(manipulatorsocket, -1);
+      }
+      if (minimizeenergy && i == currentsolindex) {
+        if (integ > lastinteg && i == 12) turnOn(manipulatorsocket, 1);
+        else if (integ > lastinteg && i == 13) turnOn(manipulatorsocket, 2);
+        else turnOn(manipulatorsocket, -1);
       }
     }
     
@@ -264,6 +279,8 @@ int main(int argc, char *argv[]) {
       uds_send_toall(udsss, buffer, bufferlength);
     }
   }
+  
+  if (manipulatorsocket) turnOn(manipulatorsocket, -1); // turn off all sols
   
   fprintf(stderr, "end of data\n");
   uds_close_client(udscs);

@@ -80,11 +80,15 @@ if [ "$1" == "prediction" ]; then
 fi
 
 
-if [ "$1" == "minen" ]; then
+if [ "$1" == "minimize" ]; then
   xterm -e ./reader.x --serialdevice $device &
   sleep 0.5
-  xterm -e ./tracker.x --showoverflows --multikill --manip socket_arduino
-  #sleep 0.5
-  #./markov_prediction.x --manip socket_arduino --minen
+  ./tracker.x --showoverflows --multikill --minimize socket_arduino
+fi
+
+if [ "$1" == "maximize" ]; then
+  xterm -e ./reader.x --serialdevice $device &
+  sleep 0.5
+  ./tracker.x --showoverflows --multikill --maximize socket_arduino
 fi
 
