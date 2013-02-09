@@ -212,7 +212,7 @@ int main(int argc, char *argv[]) {
         if (fabs(lastnormvalue[i]) > noiseabs[i]) outofnoisenum ++;
       }
       if (outofnoisenum > 1) {
-        fprintf(stderr, "mk(%d) ", outofnoisenum);
+        fprintf(stderr, " kill(%d) ", outofnoisenum);
         fflush(stderr);
         continue;
       }
