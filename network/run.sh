@@ -16,7 +16,7 @@ if [ "$1" == "normalisation" ]; then
     ./normalisation.x --samplenum 1000 > data_normalisation
     kill $!
   else
-    xterm -e ./reader.x &
+    xterm -e ./reader.x --serialdevice $device &
     sleep 1
     ./normalisation.x --samplenum 10000 > data_normalisation
     kill $!
@@ -51,7 +51,7 @@ if [ "$1" == "collectmarkov" ]; then
       ./markov_prediction.x -mi NULL -mo $markovdata
     fi
   else
-    xterm -e ./reader.x &
+    xterm -e ./reader.x --serialdevice $device &
     sleep 0.5
     xterm -e ./tracker.x --showoverflows &
     sleep 0.5
@@ -71,7 +71,7 @@ if [ "$1" == "prediction" ]; then
     sleep 0.5
     ./markov_prediction.x -mi $markovdata
   else
-    xterm -e ./reader.x &
+    xterm -e ./reader.x --serialdevice $device &
     sleep 0.5
     xterm -e ./tracker.x --showoverflows &
     sleep 0.5
