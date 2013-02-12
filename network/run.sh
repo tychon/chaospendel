@@ -45,20 +45,20 @@ if [ "$1" == "collectmarkov" ]; then
     sleep 0.5
     ./tracker.x --showoverflows &
     sleep 0.5
-    if [ -e "data_markovchain" ]; then
-      ./markov_prediction.x -mo data_markov
+    if [ -e $markovdata ]; then
+      ./markov_prediction.x -mi $markovdata -mo $markodata
     else
-      ./markov_prediction.x -mi NULL data_markov
+      ./markov_prediction.x -mi NULL -mo $markovdata
     fi
   else
     xterm -e ./reader.x &
     sleep 0.5
     xterm -e ./tracker.x --showoverflows &
     sleep 0.5
-    if [ -e "data_markovchain" ]; then
-      ./markov_prediction.x -mo data_markovchain
+    if [ -e $markovdata ]; then
+      ./markov_prediction.x -mi $markovdata -mo $markovdata
     else
-      ./markov_prediction.x -mi NULL -mo data_markovchain
+      ./markov_prediction.x -mi NULL -mo $markovdata
     fi
   fi
 fi
@@ -69,13 +69,13 @@ if [ "$1" == "prediction" ]; then
     sleep 0.5
     xterm -e ./tracker.x --showoverflows &
     sleep 0.5
-    ./markov_prediction.x
+    ./markov_prediction.x -mi $markovdata
   else
     xterm -e ./reader.x &
     sleep 0.5
     xterm -e ./tracker.x --showoverflows &
     sleep 0.5
-    ./markov_prediction.x
+    ./markov_prediction.x -mi $markovdata
   fi
 fi
 
