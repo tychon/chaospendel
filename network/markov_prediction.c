@@ -266,7 +266,7 @@ int main(int argc, char *argv[]) {
           decodeIndex(nextstateindex, pd->solnum, pd->markovtracklength, nexttrack, &nextvelocityrange);
           nextsolindex = nexttrack[0];
           // print some output
-          printf(" nextsol=%d\tnextvrange=%d prob=%2.1lf%%, at %d samples", nextsolindex, nextvelocityrange, probability, markovchain_getSamplesAt(mcm, stateindex));
+          printf(" nextsol=%d\tnextvrange=%d prob=%2.1lf%%, at %d samples", nextsolindex, nextvelocityrange, probability*100, markovchain_getSamplesAt(mcm, stateindex));
           printf("\tfit: %2.2lf%%", (double)predictionfitcount / (double)(predictionfitcount + predictionfailcount) * 100.0);
           
           int cmd;
