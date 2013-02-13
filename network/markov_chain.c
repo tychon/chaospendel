@@ -91,10 +91,16 @@ void markovchain_writeDataFile(markovchainmatrix *matrix, char *filepath) {
   int *emptydata = calloc(matrix->statenum, sizeof(int));
   for (int i = 0; i < matrix->statenum; i++) {
     fprintf(stderr, ESCAPE_CLEARLINE"  step 1: (%2.1lf%%) writing line %d  ", (double)i / (double)matrix->statenum * 100.0, i+1);
-    int *data = (matrix->relations[i] == NULL) ? emptydata : matrix->relations[i];
-    if (fwrite(data, sizeof(int), matrix->statenum, f) <= 0) {
-      perror("saving markov chain: writing binary data");
-      exit(1);
+    if (matrix->relations[i] == NULL) {
+      if (fseek(f, sizeof(int) * matrix->statenum, SEEK_CUR) != 0) {
+        perror("saving markov chain: seeking forward");
+        exit(1);
+      }
+    } else {
+      if (fwrite(matrix->relations[i], sizeof(int), matrix->statenum, f) <= 0) {
+        perror("saving markov chain: writing binary data");
+        exit(1);
+      }
     }
   }
   free(emptydata);
@@ -144,6 +150,3 @@ void markovchain_readDataFile(char *filepath, markovchainmatrix *matrix) {
   fclose(f);
   fprintf(stderr, "finished reading markov data file.\n");
 }
-
-
-
