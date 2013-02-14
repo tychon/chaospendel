@@ -79,6 +79,9 @@ bool is_active_time() {
 }
 
 void turnOn(int solindex) {
+  static int last_solindex = -42;
+  if (solindex == last_solindex) return;
+  last_solindex = solindex;
   int cmd;
   
   // turn OFF all other solenoids
