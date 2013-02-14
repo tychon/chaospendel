@@ -68,14 +68,16 @@ double normalizeValue(double inputvalue, double *soldata) {
   return inputvalue;
 }
 
-void turnOn(udsclientsocket *socket, int solindex) {
+udsclientsocket *manipulatorsocket = NULL;  
+
+void turnOn(int solindex) {
   int cmd;
   
   // turn OFF all other solenoids
   for (int i = 0; i < 4; i++) {
     if (i == solindex) continue;
     cmd = i << 1;
-    uds_write(socket, &cmd, 1);
+    uds_write(manipulatorsocket, &cmd, 1);
   }
   
   if (socket < 0) return;
@@ -83,13 +85,12 @@ void turnOn(udsclientsocket *socket, int solindex) {
   // turn ON one solenoid
   cmd = solindex << 1;
   cmd |= 1;
-  uds_write(socket, &cmd, 1);
+  uds_write(manipulatorsocket, &cmd, 1);
 }
 
-udsclientsocket *manipulatorsocket = NULL;  
-
 static void stopit(int a) {
-  turnOn(manipulatorsocket, -1);
+  turnOn(-1);
+  exit(0);
 }
 
 int main(int argc, char *argv[]) {
@@ -236,14 +237,14 @@ int main(int argc, char *argv[]) {
         currentsolindex = i;
       }
       if (maximizeenergy && i == currentsolindex) {
-        if (integ < lastinteg && i == 12) turnOn(manipulatorsocket, 1);
-        else if (integ < lastinteg && i == 13) turnOn(manipulatorsocket, 2);
-        else turnOn(manipulatorsocket, -1);
+        if (integ < lastinteg && i == 12) turnOn(1);
+        else if (integ < lastinteg && i == 13) turnOn(2);
+        else turnOn(-1);
       }
       if (minimizeenergy && i == currentsolindex) {
-        if (integ > lastinteg && i == 12) turnOn(manipulatorsocket, 1);
-        else if (integ > lastinteg && i == 13) turnOn(manipulatorsocket, 2);
-        else turnOn(manipulatorsocket, -1);
+        if (integ > lastinteg && i == 12) turnOn(1);
+        else if (integ > lastinteg && i == 13) turnOn(2);
+        else turnOn(-1);
       }
     }
     
@@ -287,7 +288,7 @@ int main(int argc, char *argv[]) {
     }
   }
   
-  if (manipulatorsocket) turnOn(manipulatorsocket, -1); // turn off all sols
+  if (manipulatorsocket) turnOn(-1); // turn off all sols
   
   fprintf(stderr, "end of data\n");
   uds_close_client(udscs);
