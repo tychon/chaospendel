@@ -7,6 +7,8 @@
 #include <unistd.h>
 #include <math.h>
 #include <signal.h>
+#include <stdbool.h>
+#include <sys/time.h>
 
 #include "common.h"
 #include "projectreader.h"
@@ -68,7 +70,13 @@ double normalizeValue(double inputvalue, double *soldata) {
   return inputvalue;
 }
 
-udsclientsocket *manipulatorsocket = NULL;  
+udsclientsocket *manipulatorsocket = NULL;
+
+bool is_active_time() {
+  struct timeval cur_t;
+  gettimeofday(&cur_t, NULL);
+  return (cur_t.tv_usec > 10000);
+}
 
 void turnOn(int solindex) {
   int cmd;
@@ -236,15 +244,19 @@ int main(int argc, char *argv[]) {
         currentintegral = integ;
         currentsolindex = i;
       }
-      if (maximizeenergy && i == currentsolindex) {
-        if (integ < lastinteg && i == 12) turnOn(1);
-        else if (integ < lastinteg && i == 13) turnOn(2);
-        else turnOn(-1);
-      }
-      if (minimizeenergy && i == currentsolindex) {
-        if (integ > lastinteg && i == 12) turnOn(1);
-        else if (integ > lastinteg && i == 13) turnOn(2);
-        else turnOn(-1);
+      if (!is_active_time() && (maximizeenergy || minimizeenergy)) {
+        turnOn(-1);
+      } else {
+        if (maximizeenergy && i == currentsolindex) {
+          if (integ < lastinteg && i == 12) turnOn(1);
+          else if (integ < lastinteg && i == 13) turnOn(2);
+          else turnOn(-1);
+        }
+        if (minimizeenergy && i == currentsolindex) {
+          if (integ > lastinteg && i == 12) turnOn(1);
+          else if (integ > lastinteg && i == 13) turnOn(2);
+          else turnOn(-1);
+        }
       }
     }
     
