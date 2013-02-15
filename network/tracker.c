@@ -75,7 +75,7 @@ udsclientsocket *manipulatorsocket = NULL;
 bool is_active_time() {
   struct timeval cur_t;
   gettimeofday(&cur_t, NULL);
-  return (cur_t.tv_usec > 10000);
+  return (cur_t.tv_usec > 100000);
 }
 
 void turnOn(int solindex) {
