@@ -1,0 +1,3 @@
+[submodule "chaospendel-doc"]
+	path = chaospendel-doc
+	url = git@github.com:tychon/chaospendel-doc.git
