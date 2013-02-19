@@ -18,16 +18,10 @@ static double optFps = 60;
 
 
 // Startbedingungen
-/*
-static const double l1 = 4;
-static const double l2 = 3;
-static const double m1 = 2;
-static const double m2 = 1;
-*/
-#define l1 ((double)4)
-#define l2 ((double)3)
-#define m1 ((double)2)
-#define m2 ((double)1)
+#define l1 4.0
+#define l2 3.0
+#define m1 2.0
+#define m2 1.0
 
 static const double phi1_0 = M_PI*1.5;
 static const double phi2_0 = M_PI;
@@ -102,28 +96,7 @@ static double v2(double phi1, double phi2) {
 }
 
 
-//static char outbuf[10000];
-//static int outbuf_pos = 0;
 static void print_state_as_csv(pstate s) {
-//  if (outbuf_pos + 177 >= 10000) {
-//    write(1, outbuf, outbuf_pos);
-//    outbuf_pos = 0;
-//  }
-//  char *p = outbuf + outbuf_pos;
-//  // 11 times 15+1 bytes max plus one newline => 177 bytes max
-//  p+=fmt_double(p,s.phi1,15,10); *(p++) = ',';
-//  p+=fmt_double(p,s.phi2,15,10); *(p++) = ',';
-//  p+=fmt_double(p,s.p1  ,15,10); *(p++) = ',';
-//  p+=fmt_double(p,s.p2  ,15,10); *(p++) = ',';
-//  p+=fmt_double(p,s.kin1,15,10); *(p++) = ',';
-//  p+=fmt_double(p,s.pot1,15,10); *(p++) = ',';
-//  p+=fmt_double(p,s.kin2,15,10); *(p++) = ',';
-//  p+=fmt_double(p,s.pot2,15,10); *(p++) = ',';
-//  p+=fmt_double(p,s.kin ,15,10); *(p++) = ',';
-//  p+=fmt_double(p,s.pot ,15,10); *(p++) = ',';
-//  p+=fmt_double(p,s.e   ,15,10); *(p++) = ',';
-//  *(p++) = '\n';
-//  outbuf_pos = p - outbuf;
   printf("%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f\n"
         , s.phi1
         , s.phi2
@@ -137,17 +110,6 @@ static void print_state_as_csv(pstate s) {
         , s.pot
         , s.e);
 }
-static void flush_outbuf() {
-//  if (outbuf_pos > 0) {
-//    *(outbuf+outbuf_pos) = '\0';
-//    write(1, outbuf, outbuf_pos+1);
-//    outbuf_pos = 0;
-//  }
-}
-
-/*
-(phi1':phi2':p1':p2':_) = multiRungeKuttaStep [fphi1, fphi2, fp1, fp2] state timeStep
-*/
 
 static pstate calc_s_(pstate s) {
   pstate s_;
@@ -238,7 +200,6 @@ static void run(pstate s, double timestep, double time, int output_each_nth) {
       print_state_as_csv(s);
     }
   }
-  flush_outbuf();
 }
 
 int main(void) {
