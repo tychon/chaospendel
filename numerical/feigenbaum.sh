@@ -12,6 +12,7 @@ MAX_ANGLE=$(echo "$PI/2" | bc -l)
 
 DIRECTORY=feigenbaum-data
 FWINDOW=512
+CRASHTIMEFILE=feigenbaum_crashtimes.csv
 
 # Run ...
 
@@ -29,6 +30,8 @@ for X in $(seq 1 $STEPS); do
   
   # stats
   awk -F "," -f stats.awk $DATAFILE >> $INFOFILE
+  CRASHTIME=$(awk -F "," -f print_crash_time.awk $DATAFILE)
+  echo $X"  "$CRASHTIME >> feigenbaum_crashtimes.csv
   
   # fourier
   ./fourier.x --inputfile $DATAFILE --samples `cat $DATAFILE | wc -l` --window $FWINDOW --column 0 --projectfile $INFOFILE --outputfile $DIRECTORY"/out$X.pend1.pgm" > /dev/null

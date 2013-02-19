@@ -85,12 +85,12 @@ int main(int argc, char** argv) {
   printf("window: %d\n", window);
   
   if (window <= 0) {
-    printf("Exit. Window too small: %d\n", window);
+    fprintf(stderr, "Exit. Window too small: %d\n", window);
     return 0;
   }
   
   if (samples <= window) {
-    printf("you should give me more samples: samples > window.\n");
+    fprintf(stderr, "you should give me more samples: samples > window.\n");
     return -1;
   }
   

@@ -15,8 +15,8 @@ fourier.x: fourier.c
 RungeKutta: RungeKutta.hs 
 	ghc --make RungeKutta.hs
 
-### These following targets are phony and
-### are built always. Therefore they are
+### These following targets are possibly phony and
+### are maybe built always. Therefore they are
 ### not included in the "all" target
 
 # run all the programms and scripts
@@ -34,6 +34,9 @@ out.pend1.pgm out.pend2.pgm: ./fourier.x out.csv
 	echo "\n"
 	time ./fourier.x --inputfile out.csv --samples `cat out.csv | wc -l` --window $(FWINDOW) --column 1 --projectfile out.info --outputfile out.pend2.pgm
 	echo "\n"	
+
+feigenbaum:
+	./feigenbaum.sh
 
 # generate haskell doc
 documentation:
