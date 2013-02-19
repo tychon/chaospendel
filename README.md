@@ -1,31 +1,11 @@
 
-see
+This is the code (and the documentation in the submodule) for the "Jugend Forscht" project "Untersuchung und Kontrolle von chaotischem Verhalten am Doppelpendel".
 
-http://piratepad.net/lExBotVYBM
+See the `README.md` files in the directories for detailed infos about their content.
 
-Network
-=======
-
-See the big README in the network folder and some graphics in the german
-documentation.
-
-Dependencies
-============
-
-* ghc
-* python
-* make
-
-## Fourier analysis
-* haskell package: fft (install it with cabal)
-* fftw development files (e.g. debian package: libfftw3-dev)
-
-## Plotting
-* octave (plus some things for octave to print plots)
-* gnuplot
-
-## Doc
-* Tex (texlive for example; plus some packages for maths)
-* rubber (for compiling tex on the easy way)
-* POVRay
+* `wikihaskell` Haskell-implementation of the differential equations from the Wikipedia for double compound pendulums.
+* `povray` Some simple povray-animation for the model.
+* `numerical` More sophisticated simulation of the pendulum with fourier analysis.
+* `network` All the programs involved in reading and processing data from the Arduino.
+* `arduino_read` The code uploaded to the Arduino.
 
