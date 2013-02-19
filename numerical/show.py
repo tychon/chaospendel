@@ -306,7 +306,6 @@ def main():
         fouriersampnum += 1
       else: fouriershow.set_values([0 for x in range(fourier_freqn)], [])
     
-    
     #Draw Everything
     allsprites.update()
     allsprites.draw(screen)
@@ -318,8 +317,8 @@ def main():
     fps = round(len(frameTimes)/float(sum(frameTimes)), 2) if len(frameTimes) > 0 else float('nan')
     text2 = font.render("fps="+str(fps), True, (0, 250, 0))
     screen.blit(text2, (0, 30) )
-    ediff = round((data[10]/start_energy-1) *ENERGY_DIFF_ROUNDING) /ENERGY_DIFF_ROUNDING
-    text4 = font.render("ediff="+str(ediff), True, (250, 0, 0))
+    ediff = round((1-data[10]/start_energy) *ENERGY_DIFF_ROUNDING) / ENERGY_DIFF_ROUNDING * 100
+    text4 = font.render("ediff="+str(ediff)+"%", True, (250, 0, 0))
     screen.blit(text4, (RECT_SIZE, RECT_SIZE-15) )
     screen.blit(text_t1, (RECT_SIZE, 0) )
     screen.blit(text_t2, (RECT_SIZE+ENERGY_WIDTH/barnum, 15) )

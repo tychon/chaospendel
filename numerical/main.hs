@@ -55,6 +55,9 @@ data Pendulum = Pendulum {
 
 main :: IO ()
 main = do
+  -- read command line arguments
+  args <- getArgs
+  let pend = parseArgs (Pendulum phi1_0 phi2_0 0 0) args
   -- write info data to stderr
   hPutStrLn stderr $ "time          ="++(show time)
   hPutStrLn stderr $ "integral_step ="++(show timestep)
@@ -63,13 +66,20 @@ main = do
   hPutStrLn stderr $ "frames_loss   ="++(show $ 1-optFps*timestep)
   hPutStrLn stderr $ "l1="++(show l1)
   hPutStrLn stderr $ "l2="++(show l2)
+  hPutStrLn stderr $ "phi1="++(show (getPhi1 pend))
+  hPutStrLn stderr $ "phi2="++(show (getPhi2 pend))
   -- run simulation
-  let pend = Pendulum phi1_0 phi2_0 0 0
-      fullres = step pend timestep time
+  let fullres = step pend timestep time
       outres = every (fromIntegral $ toInteger $ ceiling ((1/timestep)/optFps)) fullres
   -- write simulation data to stdout
   putStr . formatCSV $ outres
   exitWith ExitSuccess
+
+parseArgs (Pendulum phi1 phi2 mom1 mom2) ("1":angle:args) =
+  parseArgs (Pendulum (read angle) phi2 mom1 mom2) args
+parseArgs (Pendulum phi1 phi2 mom1 mom2) ("2":angle:args) =
+  parseArgs (Pendulum phi1 (read angle) mom1 mom2) args
+parseArgs pend [] = pend
 
 -- Formatiert eine Liste von Listen mit Doubles als Comma-separated values in einen String.
 formatCSV :: [[Double]] -> String
