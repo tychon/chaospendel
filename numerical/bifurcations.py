@@ -30,12 +30,12 @@ def main():
   matrix1 = []
   matrix2 = []
   
-  for i in range(0, steps):
+  for i in range(0, steps+1):
     print "Step "+str(i)+" / "+str(steps)
     curr_project_name = project_name+str(i)
     
     # Read info file
-    print "reading "+curr_project_name+".info ..."
+    #print "reading "+curr_project_name+".info ..."
     infof = open(curr_project_name+".info")
     fourier_rows = 0 # number of rows in pgm file
     fourier_window = -1 # size of fourier window
@@ -48,7 +48,7 @@ def main():
     infof.close()
     
     ##### Read first pgm file
-    print "reading "+curr_project_name+".pend1.pgm ..."
+    #print "reading "+curr_project_name+".pend1.pgm ..."
     pgmf = open(curr_project_name+".pend1.pgm")
     pgmf.readline() # skip first line with type
     # read pgm header
@@ -64,17 +64,17 @@ def main():
     pgmf.close()
     
     ##### Read second pgm file
-    print "reading "+curr_project_name+".pend2.pgm ..."
+    #print "reading "+curr_project_name+".pend2.pgm ..."
     pgmf2 = open(curr_project_name+".pend2.pgm")
     pgmf2.readline() # skip first line
     pgmf2.readline() # skip second line
     [pgmmax2] = pgmf2.readline().split() # read out third line
     pgmmax2 = int(pgmmax2)
     
-    print "fourier window:", fourier_window
-    print "fourier maximum value: "+str(pgmmax/fourier_scale)
-    print "number of fourier samples: "+str(fourier_rows)
-    print "number of frequ in 1 sample: "+str(fourier_freqn)
+    #print "fourier window:", fourier_window
+    #print "fourier maximum value: "+str(pgmmax/fourier_scale)
+    #print "number of fourier samples: "+str(fourier_rows)
+    #print "number of frequ in 1 sample: "+str(fourier_freqn)
     
     numberstrs = pgmf2.readline().split()
     data2 = [float(x) for x in numberstrs]
