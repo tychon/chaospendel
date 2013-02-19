@@ -92,6 +92,8 @@ class Fourier2Show(pygame.sprite.Sprite):
 RECT_SIZE = 500
 ENERGY_WIDTH = 100
 
+ENERGY_DIFF_ROUNDING = 10000
+
 def main():
   # read arguments
   args = sys.argv[1:]
@@ -176,6 +178,7 @@ def main():
   numberstrs = csvf.readline().split(",")
   if len(numberstrs[0]) is 0: return
   data = [float(x) for x in numberstrs ]
+  start_energy = data[10]
   
   ##############################
   if fourier_window > 0:
@@ -315,13 +318,16 @@ def main():
     fps = round(len(frameTimes)/float(sum(frameTimes)), 2) if len(frameTimes) > 0 else float('nan')
     text2 = font.render("fps="+str(fps), True, (0, 250, 0))
     screen.blit(text2, (0, 30) )
+    ediff = round((data[10]/start_energy-1) *ENERGY_DIFF_ROUNDING) /ENERGY_DIFF_ROUNDING
+    text4 = font.render("ediff="+str(ediff), True, (250, 0, 0))
+    screen.blit(text4, (RECT_SIZE, RECT_SIZE-15) )
     screen.blit(text_t1, (RECT_SIZE, 0) )
     screen.blit(text_t2, (RECT_SIZE+ENERGY_WIDTH/barnum, 15) )
     screen.blit(text_t, (RECT_SIZE+ENERGY_WIDTH/barnum*2+2, 0) )
-    screen.blit(text_v1, (RECT_SIZE+ENERGY_WIDTH/barnum*3, RECT_SIZE-15) )
-    screen.blit(text_v2, (RECT_SIZE+ENERGY_WIDTH/barnum*4, RECT_SIZE-30) )
-    screen.blit(text_v, (RECT_SIZE+ENERGY_WIDTH/barnum*5+2, RECT_SIZE-15) )
-    screen.blit(text_e, (RECT_SIZE+ENERGY_WIDTH/barnum*6+2, RECT_SIZE-30) )
+    screen.blit(text_v1, (RECT_SIZE+ENERGY_WIDTH/barnum*3, RECT_SIZE-15-15) )
+    screen.blit(text_v2, (RECT_SIZE+ENERGY_WIDTH/barnum*4, RECT_SIZE-30-15) )
+    screen.blit(text_v, (RECT_SIZE+ENERGY_WIDTH/barnum*5+2, RECT_SIZE-15-15) )
+    screen.blit(text_e, (RECT_SIZE+ENERGY_WIDTH/barnum*6+2, RECT_SIZE-30-15) )
     pygame.display.flip()
     
     artificial_time += time_step
