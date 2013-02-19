@@ -27,6 +27,7 @@ run: main.x fourier.x show.py out.info out.csv out.pend1.pgm out.pend2.pgm
 # it's only used by the "run" target
 out.csv out.info: ./main.x
 	./main.x > out.csv 2> out.info
+	awk -F "," -f stats.awk out.csv >> out.info
 
 out.pend1.pgm out.pend2.pgm: ./fourier.x out.csv
 	time ./fourier.x --inputfile out.csv --samples `cat out.csv | wc -l` --window $(FWINDOW) --column 0 --projectfile out.info --outputfile out.pend1.pgm

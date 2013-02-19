@@ -55,6 +55,7 @@ data Pendulum = Pendulum {
 
 main :: IO ()
 main = do
+  -- write info data to stderr
   hPutStrLn stderr $ "time          ="++(show time)
   hPutStrLn stderr $ "integral_step ="++(show timestep)
   hPutStrLn stderr $ "opt_fps       ="++(show optFps)
@@ -62,24 +63,12 @@ main = do
   hPutStrLn stderr $ "frames_loss   ="++(show $ 1-optFps*timestep)
   hPutStrLn stderr $ "l1="++(show l1)
   hPutStrLn stderr $ "l2="++(show l2)
+  -- run simulation
   let pend = Pendulum phi1_0 phi2_0 0 0
       fullres = step pend timestep time
       outres = every (fromIntegral $ toInteger $ ceiling ((1/timestep)/optFps)) fullres
+  -- write simulation data to stdout
   putStr . formatCSV $ outres
-  hPutStrLn stderr $ "t1min="++(show $ minimum $ map (\xs -> xs !! 4) outres)
-  hPutStrLn stderr $ "v1min="++(show $ minimum $ map (\xs -> xs !! 5) outres)
-  hPutStrLn stderr $ "t2min="++(show $ minimum $ map (\xs -> xs !! 6) outres)
-  hPutStrLn stderr $ "v2min="++(show $ minimum $ map (\xs -> xs !! 7) outres)
-  hPutStrLn stderr $ "tmin=" ++(show $ minimum $ map (\xs -> xs !! 8) outres)
-  hPutStrLn stderr $ "vmin=" ++(show $ minimum $ map (\xs -> xs !! 9) outres)
-  hPutStrLn stderr $ "emin=" ++(show $ minimum $ map (\xs -> xs !! 10) outres)
-  hPutStrLn stderr $ "t1max="++(show $ maximum $ map (\xs -> xs !! 4) outres)
-  hPutStrLn stderr $ "v1max="++(show $ maximum $ map (\xs -> xs !! 5) outres)
-  hPutStrLn stderr $ "t2max="++(show $ maximum $ map (\xs -> xs !! 6) outres)
-  hPutStrLn stderr $ "v2max="++(show $ maximum $ map (\xs -> xs !! 7) outres)
-  hPutStrLn stderr $ "tmax=" ++(show $ maximum $ map (\xs -> xs !! 8) outres)
-  hPutStrLn stderr $ "vmax=" ++(show $ maximum $ map (\xs -> xs !! 9) outres)
-  hPutStrLn stderr $ "emax=" ++(show $ maximum $ map (\xs -> xs !! 10) outres)
   exitWith ExitSuccess
 
 -- Formatiert eine Liste von Listen mit Doubles als Comma-separated values in einen String.
