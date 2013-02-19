@@ -1,4 +1,4 @@
-#/usr/bin/env python
+#!/usr/bin/env python
 
 #Import Modules
 import os, sys, pygame, math, time, re
