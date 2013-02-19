@@ -225,6 +225,15 @@ def main():
     spritelist.append(fouriershow)
   allsprites = pygame.sprite.RenderPlain(spritelist)
   
+  
+  text_t1 = font.render("T1", True, (250, 0, 0))
+  text_v1 = font.render("V1", True, (250, 0, 0))
+  text_t2 = font.render("T2", True, (250, 0, 0))
+  text_v2 = font.render("V2", True, (250, 0, 0))
+  text_t = font.render("T", True, (250, 0, 0))
+  text_v = font.render("V", True, (250, 0, 0))
+  text_e = font.render("E", True, (250, 0, 0))
+  
   samplenum = 0
   artificial_time = 0.0
   fouriersampnum = 0
@@ -252,8 +261,6 @@ def main():
         fouriersampnum += 1
     artificial_time = gototime
     real_time_start = time.time()-artificial_time
-      
-        
   
   ##########
   #Main Loop
@@ -301,13 +308,20 @@ def main():
     allsprites.update()
     allsprites.draw(screen)
     # draw text
-    text1 = font.render("t/s="+str(artificial_time), 1, (0, 250, 0))
+    text1 = font.render("t/s="+str(artificial_time), True, (0, 250, 0))
     screen.blit(text1, (0, 0) )
-    text3 = font.render("tscale="+str(round(artificial_time/(time.time()-real_time_start), 5)), 1, (0, 250, 0))
+    text3 = font.render("tscale="+str(round(artificial_time/(time.time()-real_time_start), 5)), True, (0, 250, 0))
     screen.blit(text3, (0, 15) )
     fps = round(len(frameTimes)/float(sum(frameTimes)), 2) if len(frameTimes) > 0 else float('nan')
-    text2 = font.render("fps="+str(fps), 1, (0, 250, 0))
+    text2 = font.render("fps="+str(fps), True, (0, 250, 0))
     screen.blit(text2, (0, 30) )
+    screen.blit(text_t1, (RECT_SIZE, 0) )
+    screen.blit(text_t2, (RECT_SIZE+ENERGY_WIDTH/barnum, 15) )
+    screen.blit(text_t, (RECT_SIZE+ENERGY_WIDTH/barnum*2+2, 0) )
+    screen.blit(text_v1, (RECT_SIZE+ENERGY_WIDTH/barnum*3, RECT_SIZE-15) )
+    screen.blit(text_v2, (RECT_SIZE+ENERGY_WIDTH/barnum*4, RECT_SIZE-30) )
+    screen.blit(text_v, (RECT_SIZE+ENERGY_WIDTH/barnum*5+2, RECT_SIZE-15) )
+    screen.blit(text_e, (RECT_SIZE+ENERGY_WIDTH/barnum*6+2, RECT_SIZE-30) )
     pygame.display.flip()
     
     artificial_time += time_step

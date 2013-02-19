@@ -12,25 +12,6 @@ module RungeKutta (
   multiRungeKuttaStep
 ) where
 
-{- Test code
-main :: IO ()
-main = do
-  let f = \y -> 1 * y * (3 - y)
-      y0 = 0.01 :: Double
-      h  = 0.01
-      res = rungeKutta (f) y0 h 2000
-  --putStrLn $ foldr (\x acc -> show x ++ "\n" ++ acc) "" res
-  
-  let f1 (y1:y2:y3:_) = y1*y2 + y2
-      f2 (y1:y2:y3:_) = y1
-      f3 (y1:y2:y3:_) = y1 :: Double
-      y0s = [1, 1, 1]
-      h = 0.01
-      res2 = multiRungeKutta [f1, f2, f3] y0s h 200
-  --putStrLn (show (length res2))
-  putStrLn $ foldr (\(y1:y2:y3:_) acc -> (show y1)++","++(show y2)++","++(show y3) ++ "\n" ++ acc) "" res2
--}
-
 -- | Runs the Runge-Kutta-Method on the given function
 rungeKutta :: (Fractional a)
     => (a -> a) -- ^ differential equation with 'y0' as argument and the
@@ -90,7 +71,8 @@ multiRungeKuttaStep funs y0s h = multiRungeKuttaStepRecursive 0 (length funs) fu
 -- | This function executes one 'rungeKuttaStep' for one differential equ and
 -- calls itself recursively to do the other differentials. You need to give it
 -- the number of differential equations and initialize the
--- recursion with 0 for n
+-- recursion with 0 for n.
+-- This function is not visible outside this module.
 multiRungeKuttaStepRecursive :: (Fractional a) => Int -> Int -> [([a] -> a)] -> [a] -> a -> [a]
 multiRungeKuttaStepRecursive n nbound funs y0s h
   | n == nbound  = []
