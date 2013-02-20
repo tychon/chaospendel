@@ -125,7 +125,8 @@ def main():
   l1 = -1 # Length of first pendulum
   l2 = -1 # Length of second pendulum
   fourier_rows = 0 # number of rows in pgm file
-  fourier_window = -1 # size of fourier window
+  fourier1_window = fourier2_window = -1 # size of fourier window
+  fourier1_scale = fourier2_scale = 0
   for line in infof:
     res = re.match(r"\s*(\S+)\s*=\s*(\S+)", line)
     if res:

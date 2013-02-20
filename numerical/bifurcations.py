@@ -5,10 +5,11 @@ import os, sys, math, re
 
 def write_pgm(path, rows, cols, maxval, data, invert=False):
   outf = open(path, "w+")
-  outf.write("P2\n"+str(cols)+" "+str(rows)+"\n"+str(maxval)+"\n")
+  outf.write("P2\n"+str(cols)+" "+str(rows)+"\n256\n")
   for row in data:
     for val in row:
-      if invert: outf.write(str(int(round(maxval-val)))+" ")
+      val = val/maxval * 256
+      if invert: outf.write(str(int(round(256-val)))+" ")
       else: outf.write(str(int(round(val)))+" ")
     outf.write("\n")
   outf.close()
@@ -32,7 +33,7 @@ def main():
   
   matrix = []
   
-  for i in range(0, steps+1):
+  for i in range(1, steps+1):
     print "bifurcations "+str(index)+": Step "+str(i)+" / "+str(steps)
     curr_project_name = project_name+str(i)
     
@@ -61,7 +62,17 @@ def main():
     
     numberstrs = pgmf.readline().split()
     data = [float(x) for x in numberstrs]
-    matrix.append(data)
+    
+    peeks = []
+    lastval1 = lastval2 = 0
+    for val in data:
+      if lastval2 < lastval1 > val: peeks.append(256)
+      else: peeks.append(0)
+      lastval2 = lastval1
+      lastval1 = val
+    
+    #matrix.append(data)
+    matrix.append(peeks)
     
     pgmf.close()
     
