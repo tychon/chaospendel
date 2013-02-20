@@ -2,22 +2,24 @@
 # Uhh, useful?
 PI=3.141592653589793238462643383279502884197169
 
-# Change settings here:
-ANGLE_OFFSET=$PI
-STEPS=1000
-START_ANGLE=0.0
-MAX_ANGLE=$(echo "$PI/3" | bc -l)
+STEPS=$(awk -F "=" '/steps/ {print $2}' feigenbaum)
 
-DIRECTORY=feigenbaum-data
-FWINDOW=512
-CRASHTIMEFILE=feigenbaum_crashtimes.csv
+DIRECTORY=$(awk -F "=" '/directory/ {print $2}' feigenbaum)
 
 if [ "$1" == "simulations" ]; then
-  mkdir -p $DIRECTORY
-  ANGLE_STEP=$(echo "($START_ANGLE-$MAX_ANGLE) / $STEPS.0" | bc -l)
-  ANGLE=$START_ANGLE
+  # load angle configs
+  ANGLE_OFFSET=$(awk -F "=" '/angle_offset/ {print $2}' feigenbaum)
+  ANGLE_OFFSET=$(echo "pi=$PI;"$ANGLE_OFFSET | bc -l)
+  ANGLE_START=$(awk -F "=" '/angle_start/ {print $2}' feigenbaum)
+  ANGLE_START=$(echo "pi=$PI;"$ANGLE_START | bc -l)
+  ANGLE_END=$(awk -F "=" '/angle_end/ {print $2}' feigenbaum)
+  ANGLE_END=$(echo "pi=$PI;"$ANGLE_END | bc -l)
+  
+  mkdir -p $DIRECTORY # create directory, if it doesn't exist
+  ANGLE_STEP=$(echo "($ANGLE_START - $ANGLE_END) / $STEPS.0" | bc -l)
+  ANGLE=$ANGLE_START
   for X in $(seq 0 $STEPS); do
-    echo Step: $X / $STEPS
+    echo "simulations: step: "$X" / "$STEPS
     DATAFILE=$DIRECTORY"/out$X.csv"
     INFOFILE=$DIRECTORY"/out$X.info"
     
@@ -33,21 +35,28 @@ if [ "$1" == "simulations" ]; then
   done
 fi
 
+CRASHTIMEFILE=$(awk -F "=" '/crash_times/ {print $2}' feigenbaum)
+
 if [ "$1" == "crashes" ]; then
-  echo "" > feigenbaum_crashtimes.csv
+  CRASHRATIO=$(awk -F "=" '/crash_energy_ratio/ {print $2}' feigenbaum)
+  echo "" > feigenbaum_crashtimes.csv # Clear old data
   for X in $(seq 0 $STEPS); do
-    echo -n "."
+    echo -n "." # Some feedback to the user
     DATAFILE=$DIRECTORY"/out$X.csv"
     CRASHTIME=$(awk -F "," -f print_crash_time.awk $DATAFILE)
     echo $X"  "$CRASHTIME >> feigenbaum_crashtimes.csv
   done
-  echo
+  echo # newline
 fi
 
 if [ "$1" == "fourier" ]; then
+  FWINDOW=$(awk -F "=" '/fourier_window_max/ {print $2}' feigenbaum)
+  
   for X in $(seq 0 $STEPS); do
     DATAFILE=$DIRECTORY"/out$X.csv"
     INFOFILE=$DIRECTORY"/out$X.info"
+    
+    # TODO load crash time and shorten window if necessary
     
     ./fourier.x --inputfile $DATAFILE --samples `cat $DATAFILE | wc -l` --window $FWINDOW --column 0 --projectfile $INFOFILE --outputfile $DIRECTORY"/out$X.pend1.pgm" > /dev/null
     ./fourier.x --inputfile $DATAFILE --samples `cat $DATAFILE | wc -l` --window $FWINDOW --column 1 --projectfile $INFOFILE --outputfile $DIRECTORY"/out$X.pend2.pgm" > /dev/null

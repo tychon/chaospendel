@@ -1,0 +1,15 @@
+
+# This is the configuration file for the feigenbaum script.
+
+directory=feigenbaum-data
+
+steps=1000
+angle_offset=pi
+angle_start=0
+angle_end=pi/4
+
+crash_times=feigenbaum_crashtimes.csv
+crash_energy_ratio=2
+
+fourier_window_max=512
+
