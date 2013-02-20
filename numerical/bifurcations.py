@@ -3,12 +3,13 @@
 #Import Modules
 import os, sys, math, re
 
-def write_pgm(path, rows, cols, maxval, data):
+def write_pgm(path, rows, cols, maxval, data, invert=False):
   outf = open(path, "w+")
   outf.write("P2\n"+str(cols)+" "+str(rows)+"\n"+str(maxval)+"\n")
   for row in data:
     for val in row:
-      outf.write(str(int(round(val)))+" ");
+      if invert: outf.write(str(int(round(maxval-val)))+" ");
+      else: outf.write(str(int(round(val)))+" ");
     outf.write("\n");
   outf.close()
 
@@ -31,7 +32,7 @@ def main():
   matrix2 = []
   
   for i in range(0, steps+1):
-    print "Step "+str(i)+" / "+str(steps)
+    print "bifurcations: Step "+str(i)+" / "+str(steps)
     curr_project_name = project_name+str(i)
     
     # Read info file
@@ -82,8 +83,8 @@ def main():
     
     pgmf2.close()
   
-  write_pgm("feigenbaum1.pgm", len(matrix1), fourier_freqn, 256, matrix1)
-  write_pgm("feigenbaum2.pgm", len(matrix2), fourier_freqn, 256, matrix2)
+  write_pgm("feigenbaum1.pgm", len(matrix1), fourier_freqn, 256, matrix1, True)
+  write_pgm("feigenbaum2.pgm", len(matrix2), fourier_freqn, 256, matrix2, True)
 
 #this calls the 'main' function when this script is executed
 if __name__ == '__main__': main()

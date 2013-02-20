@@ -40,11 +40,12 @@ CRASHTIMEFILE=$(awk -F "=" '/crash_times/ {print $2}' feigenbaum)
 if [ "$1" == "crashes" ]; then
   CRASHRATIO=$(awk -F "=" '/crash_energy_ratio/ {print $2}' feigenbaum)
   echo "" > feigenbaum_crashtimes.csv # Clear old data
+  echo -n "crashes: "
   for X in $(seq 0 $STEPS); do
     echo -n "." # Some feedback to the user
     DATAFILE=$DIRECTORY"/out$X.csv"
     CRASHTIME=$(awk -F "," -f print_crash_time.awk $DATAFILE)
-    echo $X"  "$CRASHTIME >> feigenbaum_crashtimes.csv
+    echo $X","$CRASHTIME >> feigenbaum_crashtimes.csv
   done
   echo # newline
 fi

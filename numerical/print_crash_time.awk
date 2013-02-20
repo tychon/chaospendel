@@ -13,7 +13,7 @@ BEGIN {
   diff = $11/start
   absdiff = diff >= 0.0 ? diff : diff * -1
   if (absdiff < 0.5 || absdiff > 2) {
-    printf "%d  %f", sample, diff
+    printf "%d,%f", sample, diff
     exit
   }
 }
