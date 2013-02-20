@@ -52,8 +52,9 @@ fi
 
 if [ "$1" == "fourier" ]; then
   FWINDOW=$(awk -F "=" '/fourier_window_max/ {print $2}' feigenbaum)
-  
+  echo -n "fourier: "
   for X in $(seq 0 $STEPS); do
+    echo -n "."
     DATAFILE=$DIRECTORY"/out$X.csv"
     INFOFILE=$DIRECTORY"/out$X.info"
     
@@ -62,9 +63,11 @@ if [ "$1" == "fourier" ]; then
     ./fourier.x --inputfile $DATAFILE --samples `cat $DATAFILE | wc -l` --window $FWINDOW --column 0 --projectfile $INFOFILE --outputfile $DIRECTORY"/out$X.pend1.pgm" > /dev/null
     ./fourier.x --inputfile $DATAFILE --samples `cat $DATAFILE | wc -l` --window $FWINDOW --column 1 --projectfile $INFOFILE --outputfile $DIRECTORY"/out$X.pend2.pgm" > /dev/null
   done
+  echo # newline
 fi
 
 if [ "$1" == "diagram" ]; then
-  python bifurcations.py -n $STEPS $DIRECTORY/out
+  python bifurcations.py -i 1 -n $STEPS $DIRECTORY/out
+  python bifurcations.py -i 2 -n $STEPS $DIRECTORY/out
 fi
 

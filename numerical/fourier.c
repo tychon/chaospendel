@@ -45,6 +45,7 @@ int main(int argc, char** argv) {
   char* inputfilepath = NULL;
   char* outputfilepath = NULL;
   char* projectfilepath = NULL;
+  char *keyprefix = "fourier";
   // with default values
   int window = 512;
   int column = 0;
@@ -73,6 +74,10 @@ int main(int argc, char** argv) {
     else if (strcmp("--outputfile", argv[i]) == 0) {
       i ++;
       outputfilepath = argv[i];
+    }
+    else if (strcmp("--keyprefix", argv[i]) == 0) {
+      i ++;
+      keyprefix = argv[i];
     }
     else {
       printf("Argument ignored: %s\n", argv[i]);
@@ -156,10 +161,10 @@ int main(int argc, char** argv) {
   // append some data to .info project file
   if (projectfilepath) {
     f = fopen(projectfilepath, "a+");
-    fprintf(f, "fourier_window=%d\n", window);
+    fprintf(f, "%s_window=%d\n", keyprefix, window);
     //fprintf(f, "fourier_rows=%d\n", resindex);
     //fprintf(f, "fourier_freqn=%d\n", freqn);
-    fprintf(f, "fourier_pgm_scaling=%f\n", 256/maxval);
+    fprintf(f, "%s_pgm_scaling=%f\n", keyprefix, 256/maxval);
     fclose(f);
   }
   

@@ -148,8 +148,10 @@ def main():
       elif res.group(1) == "tmax":  tmax  = float(res.group(2))
       elif res.group(1) == "vmax":  vmax  = float(res.group(2))
       elif res.group(1) == "emax":  emax  = float(res.group(2))
-      elif res.group(1) == "fourier_window": fourier_window  = float(res.group(2))
-      elif res.group(1) == "fourier_pgm_scaling": fourier_scale  = float(res.group(2))
+      elif res.group(1) == "fourier1_window": fourier1_window  = float(res.group(2))
+      elif res.group(1) == "fourier1_pgm_scaling": fourier1_scale  = float(res.group(2))
+      elif res.group(1) == "fourier2_window": fourier2_window  = float(res.group(2))
+      elif res.group(1) == "fourier2_pgm_scaling": fourier2_scale  = float(res.group(2))
   infof.close()
   print "estimated total time:", total_time
   print "optimal framerate:", opt_fps
@@ -162,6 +164,9 @@ def main():
   if req_fps < 0:
     # since no argument for fps was given, we will try opt_fps
     req_fps = opt_fps
+  
+  fourier_window = max(fourier1_window, fourier2_window)
+  fourier_scale = min(fourier1_scale, fourier2_scale)
   if fourier_window > 0 and fourier_scale == 0.0: fourier_window = -1
   print "favoured framerate:", req_fps
   print "estimated time scale:", req_fps/opt_fps
