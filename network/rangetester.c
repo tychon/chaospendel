@@ -22,6 +22,7 @@ int main(int argc, char *argv[]) {
   char *socketpath = "socket_arduino";
   char *pendulumdatapath = "data_pendulum";
   char *normalisationdatapath = "data_normalisation";
+  int whitebg = 0;
   int maxframerate = 80;
   
   for (int i = 1; i < argc; i++) {
@@ -29,6 +30,7 @@ int main(int argc, char *argv[]) {
     else if (argcmpass("--normalisation|-n", argc, argv, &i, &normalisationdatapath)) ;
     else if (argcmpass("--inputsocket|-i", argc, argv, &i, &socketpath)) ;
     else if (argcmpassint("--maxframerate|-f", argc, argv, &i, &maxframerate)) ;
+    else if ARGCMP("--whitebg", i) whitebg = 1;
     else fprintf(stderr, "warning: Unknown argument ignored: \"%s\"\n", argv[i]);
   }
   
@@ -98,7 +100,8 @@ int main(int argc, char *argv[]) {
     
     micros = getMicroseconds();
     if (micros-lastframemicros > minframewait) {
-      shmsurface_fill(surface, COLOR_BLACK);
+      if (whitebg) shmsurface_fill(surface, COLOR_WHITE);
+      else shmsurface_fill(surface, COLOR_BLACK);
       
       // draw bars
       for (int i = 0; i < pd->solnum; i++) {
