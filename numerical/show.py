@@ -5,10 +5,14 @@ import os, sys, pygame, math, time, re
 from pygame.locals import *
 if not pygame.font: print 'Warning, fonts disabled'
 
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
 RED = (250, 0, 0)
 BLUE = (0, 0, 250)
 GREEN = (0, 250, 0)
 BARCOLOR = GREEN
+
+backgroundcolor = [BLACK]
 
 #classes for our game objects
 class Pendulum(pygame.sprite.Sprite):
@@ -16,7 +20,7 @@ class Pendulum(pygame.sprite.Sprite):
     pygame.sprite.Sprite.__init__(self) #call Sprite initializer
     self.rect = rect
     self.image = pygame.Surface((rect.width, rect.height))
-    self.image.fill( (0, 0, 0) )
+    self.image.fill(backgroundcolor[0])
     l = rect.height/2.0 * (4./5.)
     self.l1 = l * (l1 / (l1+l2))
     self.l2 = l * (l2 / (l1+l2))
@@ -25,14 +29,22 @@ class Pendulum(pygame.sprite.Sprite):
     self.angles = angles
   
   def update(self):
-    self.image.fill( (0, 0, 0) )
+    self.image.fill(backgroundcolor[0])
     middle = self.rect.height/2
     x1 = middle + self.l1 *  math.sin(self.angles[0])
     y1 = middle + self.l1 * -math.cos(self.angles[0])
     x2 = x1     + self.l2 *  math.sin(self.angles[1])
     y2 = y1     + self.l2 * -math.cos(self.angles[1])
     pygame.draw.line(self.image, RED, (middle, middle), (x1, y1) )
+    pygame.draw.line(self.image, RED, (middle+1, middle), (x1+1, y1) )
+    pygame.draw.line(self.image, RED, (middle-1, middle), (x1-1, y1) )
+    pygame.draw.line(self.image, RED, (middle, middle+1), (x1, y1+1) )
+    pygame.draw.line(self.image, RED, (middle, middle-1), (x1, y1-1) )
     pygame.draw.line(self.image, RED, (x1, y1), (x2, y2) )
+    pygame.draw.line(self.image, RED, (x1+1, y1), (x2+1, y2) )
+    pygame.draw.line(self.image, RED, (x1-1, y1), (x2-1, y2) )
+    pygame.draw.line(self.image, RED, (x1, y1+1), (x2, y2+1) )
+    pygame.draw.line(self.image, RED, (x1, y1-1), (x2, y2-1) )
 
 class Bar(pygame.sprite.Sprite):
   def __init__(self, rect, minval, maxval, initval=0, fix=False, fixval=0):
@@ -50,7 +62,7 @@ class Bar(pygame.sprite.Sprite):
     self.val = val
   
   def update(self):
-    self.image.fill( (0, 0, 0) )
+    self.image.fill(backgroundcolor[0])
     if self.fix: fixpos = self.scale * (self.maxval - self.fixval)
     else:            fixpos = self.scale * self.maxval
     valpos = self.scale * (self.fixval - self.val)
@@ -58,8 +70,10 @@ class Bar(pygame.sprite.Sprite):
     # blue zero line
     zeropos = self.scale * self.maxval
     pygame.draw.line(self.image, BLUE, (0, zeropos), (self.rect.width, zeropos))
+    pygame.draw.line(self.image, BLUE, (0, zeropos+1), (self.rect.width, zeropos+1))
     # red fix line
     pygame.draw.line(self.image, RED, (0, fixpos), (self.rect.width, fixpos))
+    pygame.draw.line(self.image, RED, (0, fixpos+1), (self.rect.width, fixpos+1))
 
 class Fourier2Show(pygame.sprite.Sprite):
   def __init__(self, rect, maxval):
@@ -75,7 +89,7 @@ class Fourier2Show(pygame.sprite.Sprite):
     self.values2 = vals2
   
   def update(self):
-    self.image.fill( (0, 0, 0) )
+    self.image.fill(backgroundcolor[0])
     xpos = 0
     for val in self.values1:
       valy = self.rect.height/2-self.scale*val
@@ -107,6 +121,16 @@ def main():
       if val != "default": req_fps = float(val)
     elif arg == "-time":
       gototime = float(args.pop(0))
+    elif arg == "--whitebg":
+      global backgroundcolor
+      backgroundcolor = [WHITE]
+      global RED
+      RED = (150, 0, 0)
+      global GREEN
+      GREEN = (0, 150, 0)
+      global BARCOLOR
+      BARCOLOR = GREEN
+      print "WHITE background!"
     elif not project_name:
       project_name = arg
     else: print "Argument ignored: ", arg
@@ -114,6 +138,7 @@ def main():
     print "Give me some project name!"
     exit(1)
   
+  print backgroundcolor
   
   ################
   # open info file
@@ -235,13 +260,13 @@ def main():
   allsprites = pygame.sprite.RenderPlain(spritelist)
   
   
-  text_t1 = font.render("T1", True, (250, 0, 0))
-  text_v1 = font.render("V1", True, (250, 0, 0))
-  text_t2 = font.render("T2", True, (250, 0, 0))
-  text_v2 = font.render("V2", True, (250, 0, 0))
-  text_t = font.render("T", True, (250, 0, 0))
-  text_v = font.render("V", True, (250, 0, 0))
-  text_e = font.render("E", True, (250, 0, 0))
+  text_t1 = font.render("T1", True, RED)
+  text_v1 = font.render("V1", True, RED)
+  text_t2 = font.render("T2", True, RED)
+  text_v2 = font.render("V2", True, RED)
+  text_t = font.render("T", True, RED)
+  text_v = font.render("V", True, RED)
+  text_e = font.render("E", True, RED)
   
   samplenum = 0
   artificial_time = 0.0
@@ -316,15 +341,15 @@ def main():
     allsprites.update()
     allsprites.draw(screen)
     # draw text
-    text1 = font.render("t/s="+str(artificial_time), True, (0, 250, 0))
+    text1 = font.render("t/s="+str(artificial_time), True, GREEN)
     screen.blit(text1, (0, 0) )
-    text3 = font.render("tscale="+str(round(artificial_time/(time.time()-real_time_start), 5)), True, (0, 250, 0))
+    text3 = font.render("tscale="+str(round(artificial_time/(time.time()-real_time_start), 5)), True, GREEN)
     screen.blit(text3, (0, 15) )
     fps = round(len(frameTimes)/float(sum(frameTimes)), 2) if len(frameTimes) > 0 else float('nan')
-    text2 = font.render("fps="+str(fps), True, (0, 250, 0))
+    text2 = font.render("fps="+str(fps), True, GREEN)
     screen.blit(text2, (0, 30) )
     ediff = round((1-data[10]/start_energy) *ENERGY_DIFF_ROUNDING) / ENERGY_DIFF_ROUNDING * 100
-    text4 = font.render("ediff="+str(ediff)+"%", True, (250, 0, 0))
+    text4 = font.render("ediff="+str(ediff)+"%", True, RED)
     screen.blit(text4, (RECT_SIZE, RECT_SIZE-15) )
     screen.blit(text_t1, (RECT_SIZE, 0) )
     screen.blit(text_t2, (RECT_SIZE+ENERGY_WIDTH/barnum, 15) )
@@ -350,3 +375,4 @@ def main():
 
 #this calls the 'main' function when this script is executed
 if __name__ == '__main__': main()
+
