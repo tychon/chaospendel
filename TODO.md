@@ -12,4 +12,5 @@
 * Calculate distance from magnetic field strength
 * prevent reader from freezing on connection closing
 * documentation :-(
+* colors in prediction
 

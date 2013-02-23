@@ -28,9 +28,16 @@ void toPendulumCartesian(double radius, double angle, double *x, double *y) {
 }
 
 void drawPendulum(shmsurface *sf, projectdata *pd
-                , integral **integ, double integrange) {
+                , integral **integ, double integrange
+                , int whitebg) {
+  int green_color = COLOR_GREEN;
+  int red_color = COLOR_RED;
   // clear surface
-  shmsurface_fill(sf, 0xff000000);
+  if (whitebg) {
+    shmsurface_fill(sf, COLOR_WHITE);
+    green_color = 0xff009600;
+    red_color = 0xff960000;
+  } else shmsurface_fill(sf, COLOR_BLACK);
   
   // precompute scaling
   double maxpendlength = (double)(pd->l1 + (pd->l2a > pd->l2b ? pd->l2a : pd->l2b));
@@ -38,7 +45,7 @@ void drawPendulum(shmsurface *sf, projectdata *pd
   double scale = (double)(sf->width < sf->height ? sf->width : sf->height) / 2.0 * (4.0/5.0) / maxpendlength;
   
   // draw center (main axis of pendulum)
-  drawDot(sf, sf->width/2, sf->height/2, 0xffff0000);
+  drawDot(sf, sf->width/2, sf->height/2, red_color);
   
   // draw norm value and integral for every solenoid
   double xpos, ypos, radius;
@@ -48,12 +55,12 @@ void drawPendulum(shmsurface *sf, projectdata *pd
     ypos += sf->height/2;
     
     // make fixed size blue circle
-    drawCircle(sf, xpos, ypos, 2, 0xff0000ff);
+    fillCircle(sf, xpos, ypos, 2, 0xff0000ff);
     
     // make green circle for integral
     radius = integral_getsum(integ[i]) / integrange * 50.0;
     if (radius > 50) radius = 50;
-    fillCircle(sf, xpos, ypos, radius, 0xff00ff00);
+    fillCircle(sf, xpos, ypos, radius, green_color);
   }
 }
 
@@ -113,6 +120,7 @@ int main(int argc, char *argv[]) {
   int showoverflows = 0;
   int multikill = 0;
   int showx11gui = 0;
+  int whitebg = 0;
   int maxframerate = 80;
   
   char *manipulatorsocketpath = NULL;
@@ -131,6 +139,9 @@ int main(int argc, char *argv[]) {
     else if (ARGCMP("--showoverflows", i)) showoverflows = 1;
     else if (ARGCMP("--multikill", i)) multikill = 1;
     else if (ARGCMP("--showx11gui", i)) showx11gui = 1;
+    else if (ARGCMP("--whitebg", i)) {
+      whitebg = 1;
+    }
     else fprintf(stderr, "warning: Unknown argument ignored: \"%s\"\n", argv[i]);
   }
   
@@ -267,7 +278,8 @@ int main(int argc, char *argv[]) {
       micros = getMicroseconds();
       if (micros-lastframemicros > minframewait) {
         drawPendulum(surface, pd
-                   , integrals, pd->integralmax);
+                   , integrals, pd->integralmax
+                   , whitebg);
         flushSHMSurface(surface);
         lastframemicros = micros;
       }

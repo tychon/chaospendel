@@ -30,9 +30,17 @@ void toPendulumCartesian(projectdata *pd, shmsurface *sf
 
 void drawPendulum(shmsurface *sf, projectdata *pd
                 , int tracklength, int *track
-                , int nextindex, double nextprob) {
+                , int nextindex, double nextprob
+                , int whitebg) {
   // clear surface
-  shmsurface_fill(sf, 0xff000000);
+  //int green = COLOR_GREEN;
+  int red = COLOR_RED;
+  if (whitebg) {
+    shmsurface_fill(sf, COLOR_WHITE);
+    //green = 0xff009600;
+    red = 0xff960000;
+  }
+  else shmsurface_fill(sf, COLOR_BLACK);
   
   // precompute scaling
   double maxpendlength = (double)(pd->l1 + (pd->l2a > pd->l2b ? pd->l2a : pd->l2b));
@@ -40,7 +48,7 @@ void drawPendulum(shmsurface *sf, projectdata *pd
   double scale = (double)(sf->width < sf->height ? sf->width : sf->height) / 2.0 * (4.0/5.0) / maxpendlength;
   
   // draw center (main axis of pendulum)
-  drawDot(sf, sf->width/2, sf->height/2, 0xffff0000);
+  drawDot(sf, sf->width/2, sf->height/2, red);
   
   // draw fixed size blue circles
   double xpos, ypos;
@@ -131,6 +139,7 @@ int main(int argc, char *argv[]) {
   int maxframerate = 80;
   char *manipulatorsocketpath = NULL;
   int minimizeenergy = 0;
+  int whitebg = 0;
   
   for (int i = 1; i < argc; i++) {
     if (argcmpass("--pendulum|-p", argc, argv, &i, &pendulumdatapath) );
@@ -140,6 +149,7 @@ int main(int argc, char *argv[]) {
     else if (argcmpass("--manip|-m", argc, argv, &i, &manipulatorsocketpath) );
     else if (argcmpassint("--maxframerate|-fps", argc, argv, &i, &maxframerate) );
     else if (ARGCMP("--minen", i)) minimizeenergy = 1;
+    else if (ARGCMP("--whitebg", i)) whitebg = 1;
     else fprintf(stderr, "warning: Ignoring unknown argument \"%s\"\n", argv[i]);
   }
   
@@ -302,7 +312,8 @@ int main(int argc, char *argv[]) {
     micros = getMicroseconds();
     if (micros-lastframemicros > minframewait) {
       drawPendulum(surface, pd
-                 , pd->markovtracklength, track, nextsolindex, probability);
+                 , pd->markovtracklength, track, nextsolindex, probability
+                 , whitebg);
       flushSHMSurface(surface);
       lastframemicros = micros;
     }
