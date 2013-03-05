@@ -35,7 +35,7 @@ if [ "$1" == "tracking" ]; then
   else
     xterm -e ./reader.x $device &
     sleep 1
-    ./tracker.x --showx11gui --maxframerate 50 --showoverflows --multikill --printtempdata > data_tracking_lasttemporary.csv
+    ./tracker.x --showx11gui --maxframerate 50 --showoverflows --multikill --printtempdata --whitebg > data_tracking_lasttemporary.csv
   fi
 fi
 
@@ -75,7 +75,7 @@ if [ "$1" == "prediction" ]; then
     sleep 0.5
     xterm -e ./tracker.x --showoverflows &
     sleep 0.5
-    ./markov_prediction.x -mi $markovdata
+    ./markov_prediction.x -mi $markovdata --whitebg
   fi
 fi
 
