@@ -253,4 +253,3 @@ projectdata *readCalibrationData(projectdata *dest, const char *filepath) {
 projectdata *readNormalisationData(projectdata *dest, const char *filepath) {
   return readData(dest, filepath, NORMALISATION_DATA);
 }
-
