@@ -31,7 +31,7 @@ static void connection_read_cb(struct ev_loop *loop, ev_io *w, int revents) {
       if (udsss->messagesocketsfds[i] == w->fd) break;
     }
     assert(i != udsss->connection_count);
-    for (int x = i; x < udsss->connection_count-1; i++) // shift following sockets
+    for (int x = i; x < udsss->connection_count-1; x++) // shift following sockets
       udsss->messagesocketsfds[x] = udsss->messagesocketsfds[x+1];
     udsss->connection_count --;
     pthread_mutex_unlock( &(udsss->mutex) );
