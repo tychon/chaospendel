@@ -166,7 +166,7 @@ int main(int argc, char *argv[]) {
   // x11 things
   shmsurface *surface = NULL;
   if (showx11gui) {
-    surface = createSHMSurface(100, 100, 500, 500);
+    surface = createSHMSurface(0, 100, 500, 500);
   }
   
   // precompute ranges of noise

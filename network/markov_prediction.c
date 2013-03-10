@@ -162,7 +162,7 @@ int main(int argc, char *argv[]) {
   fprintf(stderr, "reading pendulum data from \"%s\" ...\n", pendulumdatapath);
   readPendulumData(pd, pendulumdatapath);
   
-  shmsurface *surface = createSHMSurface(100, 100, 500, 500);
+  shmsurface *surface = createSHMSurface(500, 100, 500, 500);
   
   int *track = assert_malloc(pd->markovtracklength * sizeof(int));
   for (int i = 0; i < pd->markovtracklength; i++) track[i] = -1;
