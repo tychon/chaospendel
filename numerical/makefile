@@ -27,14 +27,14 @@ run: main.x fourier.x show.py out.info out.csv out.pend1.pgm out.pend2.pgm
 
 # this target runs the simulation and fourier transforms
 # it's only used by the "run" target
-out.csv out.info: ./main.x
-	time --output=sim_time.info ./main.x > out.csv 2> out.info
+out.csv out.info: ./main.x stats.awk
+	./main.x > out.csv 2> out.info
 	awk -F "," -f stats.awk out.csv >> out.info # energy stats
 
 out.pend1.pgm out.pend2.pgm: ./fourier.x out.csv
-	time ./fourier.x --inputfile out.csv --samples `cat out.csv | wc -l` --window $(FWINDOW) --column 0 --projectfile out.info --outputfile out.pend1.pgm --keyprefix fourier1
+	./fourier.x --inputfile out.csv --samples `cat out.csv | wc -l` --window $(FWINDOW) --column 0 --projectfile out.info --outputfile out.pend1.pgm --keyprefix fourier1
 	echo "\n"
-	time ./fourier.x --inputfile out.csv --samples `cat out.csv | wc -l` --window $(FWINDOW) --column 1 --projectfile out.info --outputfile out.pend2.pgm --keyprefix fourier2
+	./fourier.x --inputfile out.csv --samples `cat out.csv | wc -l` --window $(FWINDOW) --column 1 --projectfile out.info --outputfile out.pend2.pgm --keyprefix fourier2
 	echo "\n"	
 
 feigenbaum:
