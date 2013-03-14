@@ -82,10 +82,10 @@ static double fp2(const pstate s) {
 }
 
 // Energies
-static double t1(double phi1d) { return (1/2) * (phi1d*phi1d) * k1; }
+static double t1(double phi1d) { return (1.0/2) * (phi1d*phi1d) * k1; }
 static double v1(double phi1) { return (-g) * k2 * cos(phi1); }
 static double t2(double phi1, double phi2, double phi1d, double phi2d) {
-  return (1/2)*l1*l1*(phi1d*phi1d)*k3+(1/2)*(phi2d*phi2d)*k4+l1*phi1d*phi2d*k5*cos(phi1-phi2);
+  return (1.0/2)*l1*l1*(phi1d*phi1d)*k3+(1.0/2)*(phi2d*phi2d)*k4+l1*phi1d*phi2d*k5*cos(phi1-phi2);
 }
 static double v2(double phi1, double phi2) {
   return (-g) * l1 * k3 * cos(phi1) - g * k5 * cos(phi2);
