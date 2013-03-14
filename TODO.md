@@ -3,14 +3,13 @@
 
 # numerical
 
-* generate Feigenbaum diagram
+* get C working
+* try to generate Lorentz attractor
+* try to generate fractal
 
 # network
 
 * Prediction of rollover
 * Use differential equations
 * Calculate distance from magnetic field strength
-* prevent reader from freezing on connection closing
-* documentation :-(
-* colors in prediction
 
