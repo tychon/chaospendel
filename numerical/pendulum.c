@@ -1,21 +1,19 @@
-// t steht für kinetische Energie
-// v steht für potenzielle Energie
-
 
 #include <math.h>
 #include <fmt.h>
 #include <stdio.h>
 #include <unistd.h>
 
-// Naturkonstante:
-// Durchschnittliche Ortskraft in Mitteleuropa.
-static double g = -9.81;
+// Average gravity in Germany
+static const double g = 9.81;
 
-// Andere Konstanten
+/////// Other constants with default vals ////////
+// Total time of simulation
 static double time = 60.0;
-static double timestep = 0.001;
-static double optFps = 60;
-
+// Time per step in Runge-Kutta
+static double simtimestep = 0.0001;
+// Time per sample in output
+static double outtimestep = 1. / 80.;
 
 // Startbedingungen
 #define l1 4.0
@@ -34,8 +32,8 @@ static const double k3 = m2;
 static const double k4 = (1.0/3) * l2*(l2) * m2;
 static const double k5 = (1.0/2) * l2      * m2;
 
-
-// Statistiken
+//////// Variables about minimum and maximum vals ///////
+// These are updated during `run`
 static double t1min = HUGE_VAL;
 static double v1min = HUGE_VAL;
 static double t2min = HUGE_VAL;
@@ -51,8 +49,7 @@ static double tmax = -HUGE_VAL;
 static double vmax = -HUGE_VAL;
 static double emax = -HUGE_VAL;
 
-
-// Pendel-Zustand
+//////// Data structure for current values during sim ////////
 typedef struct {
   double phi1;
   double phi2;
@@ -203,14 +200,14 @@ static void run(pstate s, double timestep, double time, int output_each_nth) {
 
 int main(void) {
   fprintf(stderr, "time          = %f\n", time);
-  fprintf(stderr, "integral_step = %f\n", timestep);
-  fprintf(stderr, "opt_fps       = %f\n", optFps);
-  fprintf(stderr, "time_step     = %f\n", 1/optFps);
-  fprintf(stderr, "frames_loss   = %f\n", 1-optFps*timestep);
+  fprintf(stderr, "integral_step = %f\n", simtimestep);
+  fprintf(stderr, "opt_fps       = %f\n", 1/outtimestep);
+  fprintf(stderr, "time_step     = %f\n", outtimestep);
+  fprintf(stderr, "frames_loss   = %f\n", 1-1/outtimestep*simtimestep);
   fprintf(stderr, "l1=%f\n", l1);
   fprintf(stderr, "l2=%f\n", l2);
   pstate state0 = {.phi1=phi1_0, .phi2 = phi2_0, .p1 = p1_0, .p2 = p2_0 };
-  run(state0, timestep, time, (int)ceil((1/timestep)/optFps));
+  run(state0, simtimestep, time, (int)ceil((1/simtimestep)*outtimestep));
   fprintf(stderr, "t1min=%f\n", t1min);
   fprintf(stderr, "v1min=%f\n", v1min);
   fprintf(stderr, "t2min=%f\n", t2min);
