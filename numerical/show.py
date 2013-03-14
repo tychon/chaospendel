@@ -31,10 +31,10 @@ class Pendulum(pygame.sprite.Sprite):
   def update(self):
     self.image.fill(backgroundcolor[0])
     middle = self.rect.height/2
-    x1 = middle + self.l1 *  math.sin(self.angles[0])
-    y1 = middle + self.l1 * -math.cos(self.angles[0])
-    x2 = x1     + self.l2 *  math.sin(self.angles[1])
-    y2 = y1     + self.l2 * -math.cos(self.angles[1])
+    x1 = middle + self.l1 * math.sin(self.angles[0])
+    y1 = middle + self.l1 * math.cos(self.angles[0])
+    x2 = x1     + self.l2 * math.sin(self.angles[1])
+    y2 = y1     + self.l2 * math.cos(self.angles[1])
     pygame.draw.line(self.image, RED, (middle, middle), (x1, y1) )
     pygame.draw.line(self.image, RED, (middle+1, middle), (x1+1, y1) )
     pygame.draw.line(self.image, RED, (middle-1, middle), (x1-1, y1) )

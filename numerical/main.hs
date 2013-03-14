@@ -9,7 +9,7 @@ import RungeKutta
 
 -- Naturkonstante:
 -- Durchschnittliche Ortskraft in Mitteleuropa.
-g = -9.81
+g = 9.81
 -- Andere Konstanten
 time = 60.0
 timestep = 0.001
@@ -21,8 +21,8 @@ l2 = 3
 m1 = 2
 m2 = 1
 
-phi1_0 = (pi+pi/5)
-phi2_0 = (pi+pi/4)
+phi1_0 = pi/5
+phi2_0 = pi/4
 
 k1 = (1/3) * l1^2 * m1
 k2 = (1/2) * l1   * m1
