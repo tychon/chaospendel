@@ -41,25 +41,10 @@ int main(int argc, char *argv[]) {
   projectdata *pd = assert_malloc(sizeof(projectdata));
   readPendulumData(pd, pendulumdatapath);
   
-  fprintf(stderr, "Connecting to serial device ...\n");
-  serial_fd = open(serialdevicepath, O_RDWR | O_NOCTTY);
-  struct termios config;
-  if(tcgetattr(serial_fd, &config) < 0) exit(1);
-  config.c_iflag &= ~(IGNBRK | BRKINT | ICRNL | INLCR | PARMRK | INPCK | ISTRIP | IXON);
-  config.c_lflag &= ~(ECHO | ECHONL | ICANON | IEXTEN | ISIG);
-  config.c_cflag &= ~(CSIZE | PARENB);
-  config.c_cflag |= CS8;
-  config.c_cc[VMIN]  = 1;
-  config.c_cc[VTIME] = 0;
-  if(cfsetispeed(&config, B500000) < 0 || cfsetospeed(&config, B500000) < 0) exit(1);
-  if(tcsetattr(serial_fd, TCSAFLUSH, &config) < 0) exit(1);
-  FILE *serial = fdopen(serial_fd, "r");
-  
   setbuf(stdin, NULL);
   fcntl(0/*stdin*/, F_SETFL, O_NONBLOCK);
   setbuf(stdout, NULL);
   setbuf(stderr, NULL);
-  setbuf(serial, NULL);
   
   int adc_was_blocking = -1;
   int wantport = 0;
@@ -86,10 +71,37 @@ int main(int argc, char *argv[]) {
       exit(1);
     }
   }
+  
+openserial:
+  fprintf(stderr, "Connecting to serial device ...\n");
+  serial_fd = open(serialdevicepath, O_RDWR | O_NOCTTY);
+  if (serial_fd == -1) {
+    fprintf(stderr, "can't connect to serial device, retrying in 1s...\n");
+    sleep(1);
+    goto openserial;
+  }
+  struct termios config;
+  if(tcgetattr(serial_fd, &config) < 0) exit(1);
+  config.c_iflag &= ~(IGNBRK | BRKINT | ICRNL | INLCR | PARMRK | INPCK | ISTRIP | IXON);
+  config.c_lflag &= ~(ECHO | ECHONL | ICANON | IEXTEN | ISIG);
+  config.c_cflag &= ~(CSIZE | PARENB);
+  config.c_cflag |= CS8;
+  config.c_cc[VMIN]  = 1;
+  config.c_cc[VTIME] = 0;
+  if(cfsetispeed(&config, B500000) < 0 || cfsetospeed(&config, B500000) < 0) exit(1);
+  if(tcsetattr(serial_fd, TCSAFLUSH, &config) < 0) exit(1);
+  FILE *serial = fdopen(serial_fd, "r");
+  setbuf(serial, NULL);
 
   while (1) {
     char b;
     if (((b=fgetc(serial))&0xe0) != 0xa0) {
+      if (b == -1) {
+        fprintf(stderr, "serial connection closed! trying again in 1s...\n");
+        fclose(serial);
+        sleep(1);
+        goto openserial;
+      }
       // ignore bad head
       fprintf(stderr, "bad byte 0x%x - waiting for valid head\n", b);
       continue;
