@@ -67,15 +67,15 @@ typedef struct {
   double e;
 } pstate;
 
-
-// Differentialgleichungen
+//////// Equations of motion and energy ////////
+// Differential equations
 static double fphi1(const pstate s) {
   double phidiff = cos(s.phi1-s.phi2);
-  return (k4*s.p1-k5*l1*phidiff*s.p2) / (k1*k4+l1*(k3*k4-(k5*k5)*l1*(phidiff*phidiff)));
+  return (k4*s.p1-k5*l1*phidiff*s.p2) / (k1*k4+l1*l1*(k3*k4-k5*k5*phidiff*phidiff));
 }
 static double fphi2(const pstate s) {
   double phidiff = cos(s.phi1-s.phi2);
-  return (k1*s.p2+l1*(k3*s.p2-k5*s.p1*phidiff)) / (k1*k4+l1*(k3*k4-(k5*k5)*l1*(phidiff*phidiff)));
+  return (k1*s.p2+l1*(k3*l1*s.p2-k5*s.p1*phidiff)) / (k1*k4+l1*l1*(k3*k4-k5*k5*phidiff*phidiff));
 }
 static double fp1(const pstate s) {
   return -l1*fphi1(s)*fphi2(s)*k5*sin(s.phi1-s.phi2) - g*k2*sin(s.phi1) - g*l1*k3*sin(s.phi1);
@@ -84,12 +84,11 @@ static double fp2(const pstate s) {
   return l1*fphi1(s)*fphi2(s)*k5*sin(s.phi1-s.phi2) - g*k5*sin(s.phi2);
 }
 
-
-// Energien
-static double t1(double phi1_) { return (1/2) * (phi1_*phi1_) * k1; }
+// Energies
+static double t1(double phi1d) { return (1/2) * (phi1d*phi1d) * k1; }
 static double v1(double phi1) { return (-g) * k2 * cos(phi1); }
-static double t2(double phi1, double phi2, double phi1_, double phi2_) {
-  return (1/2)*l1*(phi1_*phi1_)*k3+(1/2)*(phi2_*phi2_)*k4+l1*phi1_*phi2_*k5*cos(phi1-phi2);
+static double t2(double phi1, double phi2, double phi1d, double phi2d) {
+  return (1/2)*l1*l1*(phi1d*phi1d)*k3+(1/2)*(phi2d*phi2d)*k4+l1*phi1d*phi2d*k5*cos(phi1-phi2);
 }
 static double v2(double phi1, double phi2) {
   return (-g) * l1 * k3 * cos(phi1) - g * k5 * cos(phi2);
