@@ -12,8 +12,8 @@ import RungeKutta
 g = 9.81
 -- Andere Konstanten
 time = 60.0
-timestep = 0.001
-optFps = 60
+timestep = 0.0001
+optFps = 80
 
 -- Startbedingungen
 l1 = 4
@@ -21,8 +21,8 @@ l2 = 3
 m1 = 2
 m2 = 1
 
-phi1_0 = pi/5
-phi2_0 = pi/4
+phi1_0 = pi/2
+phi2_0 = pi
 
 k1 = (1/3) * l1^2 * m1
 k2 = (1/2) * l1   * m1
@@ -31,15 +31,15 @@ k4 = (1/3) * l2^2 * m2
 k5 = (1/2) * l2   * m2
 
 -- Differentialgleichungen
-fphi1 (phi1:phi2:p1:p2:_) = (k4*p1-k5*l1*(cos (phi1-phi2))*p2) / (k1*k4+l1*(k3*k4-k5^2*l1*(cos (phi1-phi2))^2))
-fphi2 (phi1:phi2:p1:p2:_) = (k1*p2+l1*(k3*p2-k5*p1*(cos (phi1-phi2)))) / (k1*k4+l1*(k3*k4-k5^2*l1*(cos (phi1-phi2))^2))
+fphi1 (phi1:phi2:p1:p2:_) = (k4*p1-k5*l1*(cos (phi1-phi2))*p2) / (k1*k4+l1^2*(k3*k4-k5^2*(cos (phi1-phi2))^2))
+fphi2 (phi1:phi2:p1:p2:_) = (k1*p2+l1*(k3*p2*l1-k5*p1*(cos (phi1-phi2)))) / (k1*k4+l1^2*(k3*k4-k5^2*(cos (phi1-phi2))^2))
 fp1 input@(phi1:phi2:p1:p2:_) = -l1*(fphi1 input)*(fphi2 input)*k5*(sin (phi1-phi2)) - g*k2*(sin phi1) - g*l1*k3*(sin phi1)
 fp2 input@(phi1:phi2:p1:p2:_) =  l1*(fphi1 input)*(fphi2 input)*k5*(sin (phi1-phi2)) - g*k5*(sin phi2)
 
 -- energies
 t1 phi1' = (1/2) * phi1'^2 * k1
 v1 phi1  = (-g) * k2 * (cos phi1)
-t2 phi1 phi2 phi1' phi2' = (1/2)*l1*phi1'^2*k3+(1/2)*phi2'^2*k4+l1*phi1'*phi2'*k5*(cos (phi1-phi2))
+t2 phi1 phi2 phi1' phi2' = (1/2)*l1^2*phi1'^2*k3+(1/2)*phi2'^2*k4+l1*phi1'*phi2'*k5*(cos (phi1-phi2))
 v2 phi1 phi2 = (-g) * l1 * k3 * (cos phi1) - g * k5 * (cos phi2)
 
 -- Data structure for Pendulum:
