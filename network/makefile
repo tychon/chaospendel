@@ -1,6 +1,6 @@
 
 CFLAGS := -g -std=gnu99 -Wall -Werror
-LIBS := -g -lc -lpthread -lm -lfftw3 -lX11 -lXext -lev
+LIBS := -g -lc -lpthread -lm -lfftw3 -lX11 -lXext -lev -lrt
 
 NONMAINOBJS := memory_wrappers.o integral.o x11draw.o markov_chain.o
 NONMAINOBJS += common.o uds_server.o uds_client.o protocol.o projectreader.o
@@ -11,6 +11,7 @@ EXECUTABLES += reader.x replay.x
 EXECUTABLES += rangetester.x normalisation.x tracker.x
 EXECUTABLES += markov_prediction.x
 EXECUTABLES += markovchaintest.x
+EXECUTABLES += measure_rtt.x
 
 .PHONY: all clean
 
