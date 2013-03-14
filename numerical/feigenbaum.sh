@@ -24,7 +24,7 @@ if [ "$1" == "simulations" ]; then
     INFOFILE=$DIRECTORY"/out$X.info"
     
     # simulation
-    MAINARGS="1 "$(echo "$ANGLE+$ANGLE_OFFSET" | bc -l)" 2 "$(echo "2*$ANGLE+$ANGLE_OFFSET" | bc -l)
+    MAINARGS="1 "$(echo "$ANGLE+$ANGLE_OFFSET" | bc | sed 's/^\./0./')" 2 "$(echo "2*$ANGLE+$ANGLE_OFFSET" | bc | sed 's/^\./0./')
     ./main.x $MAINARGS > $DATAFILE 2> $INFOFILE
     
     # energy stats
