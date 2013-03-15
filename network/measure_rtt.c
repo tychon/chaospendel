@@ -107,7 +107,7 @@ int main(int argc, char *argv[]) {
     uds_empty_pipe(udscs);
     // start measuring
     struct timespec start_time, end_time;
-    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start_time);
+    clock_gettime(CLOCK_MONOTONIC, &start_time);
     // send the ping
     uint8_t cmd;
     cmd = (outpin<<1)|1;
@@ -117,7 +117,7 @@ int main(int argc, char *argv[]) {
     for (int j=0; j<10000; j++) {
       int val = getval();
       if (val < rangemin || val > rangemax) {
-        clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end_time);
+        clock_gettime(CLOCK_MONOTONIC, &end_time);
         long long rtt = ts_diff(start_time, end_time);
         fprintf(stdout, "%lld\n", rtt);
         i++;
