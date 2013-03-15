@@ -67,9 +67,19 @@ int main(int argc, char *argv[]) {
   
   fprintf(stderr, "opening socket on \"%s\"\n", sockpath);
   udscs = uds_create_client(sockpath);
+
+  fprintf(stderr, "preparing test...");
+  {
+    uint8_t cmd;
+    cmd = (0<<1)|0; uds_write(udscs, &cmd, 1);
+    cmd = (1<<1)|0; uds_write(udscs, &cmd, 1);
+    usleep(cooldown_us);
+  }
+  fprintf(stderr, " done.\n");
+  
   
   fprintf(stderr, "calibrating, please wait...\n");
-  int rangemin = 10000, rangemax = 0, rangemid, rangebreadth;
+  int rangemin = 10000, rangemax = 0;
   int steps_done = 0;
   char statebuf[] = "\r[                    ] ";
   fputs(statebuf, stderr);
@@ -84,12 +94,12 @@ int main(int argc, char *argv[]) {
       fputs(statebuf, stderr);
     }
   }
-  rangebreadth = rangemax - rangemin;
-  rangemid = rangemin + rangebreadth;
-  rangemin = rangemid - rangebreadth*2;
-  rangemax = rangemid + rangebreadth*2;
+  //int rangebreadth = rangemax - rangemin;
+  //int rangemid = rangemin + rangebreadth;
+  //rangemin = rangemid - rangebreadth*2;
+  //rangemax = rangemid + rangebreadth*2;
   
-  fprintf(stderr, " done.\n");
+  fprintf(stderr, " done – range is %d->%d\n", rangemin, rangemax);
   
   fprintf(stderr, "performing %d rtt measurements, please wait...\n", rtt_rounds);
   for (int i=0; i<rtt_rounds;) {
