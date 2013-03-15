@@ -113,6 +113,8 @@ int main(int argc, char *argv[]) {
         i++;
         fprintf(stderr, "%d of %d done, cooldown                                \r", i, rtt_rounds);
         goto prepare_nextround;
+      } else {
+        fprintf(stderr, "%d of %d done, current value: %d                       \r", i, rtt_rounds, val);
       }
     }
     fprintf(stderr, "%d of %d done, cooldown, last attempt was a failure        \r", i, rtt_rounds);
