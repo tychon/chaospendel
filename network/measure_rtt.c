@@ -67,9 +67,19 @@ int main(int argc, char *argv[]) {
   
   fprintf(stderr, "opening socket on \"%s\"\n", sockpath);
   udscs = uds_create_client(sockpath);
+
+  fprintf(stderr, "preparing test...");
+  {
+    uint8_t cmd;
+    cmd = (0<<1)|0; uds_write(udscs, &cmd, 1);
+    cmd = (1<<1)|0; uds_write(udscs, &cmd, 1);
+    usleep(cooldown_us);
+  }
+  fprintf(stderr, " done.\n");
+  
   
   fprintf(stderr, "calibrating, please wait...\n");
-  int rangemin = 10000, rangemax = 0, rangemid, rangebreadth;
+  int rangemin = 10000, rangemax = 0;
   int steps_done = 0;
   char statebuf[] = "\r[                    ] ";
   fputs(statebuf, stderr);
@@ -84,12 +94,12 @@ int main(int argc, char *argv[]) {
       fputs(statebuf, stderr);
     }
   }
-  rangebreadth = rangemax - rangemin;
-  rangemid = rangemin + rangebreadth;
-  rangemin = rangemid - rangebreadth*2;
-  rangemax = rangemid + rangebreadth*2;
+  //int rangebreadth = rangemax - rangemin;
+  //int rangemid = rangemin + rangebreadth;
+  //rangemin = rangemid - rangebreadth*2;
+  //rangemax = rangemid + rangebreadth*2;
   
-  fprintf(stderr, " done.\n");
+  fprintf(stderr, " done – range is %d->%d\n", rangemin, rangemax);
   
   fprintf(stderr, "performing %d rtt measurements, please wait...\n", rtt_rounds);
   for (int i=0; i<rtt_rounds;) {
@@ -97,7 +107,7 @@ int main(int argc, char *argv[]) {
     uds_empty_pipe(udscs);
     // start measuring
     struct timespec start_time, end_time;
-    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start_time);
+    clock_gettime(CLOCK_MONOTONIC, &start_time);
     // send the ping
     uint8_t cmd;
     cmd = (outpin<<1)|1;
@@ -107,12 +117,14 @@ int main(int argc, char *argv[]) {
     for (int j=0; j<10000; j++) {
       int val = getval();
       if (val < rangemin || val > rangemax) {
-        clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end_time);
+        clock_gettime(CLOCK_MONOTONIC, &end_time);
         long long rtt = ts_diff(start_time, end_time);
         fprintf(stdout, "%lld\n", rtt);
         i++;
         fprintf(stderr, "%d of %d done, cooldown                                \r", i, rtt_rounds);
         goto prepare_nextround;
+      } else {
+        fprintf(stderr, "%d of %d done, current value: %d                       \r", i, rtt_rounds, val);
       }
     }
     fprintf(stderr, "%d of %d done, cooldown, last attempt was a failure        \r", i, rtt_rounds);
