@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include "memory_wrappers.h"
 
 #include "uds_client.h"
@@ -43,6 +44,13 @@ int uds_read(udsclientsocket *udscs, void *buffer, size_t nbytes) {
     perror("uds client, read");
     exit(1);
   } else return retval;
+}
+
+void uds_empty_pipe(udsclientsocket *udscs) {
+  char buf[1024];
+  fcntl(udscs->socketfd, F_SETFL, O_NONBLOCK);
+  while (read(udscs->socketfd, buf, 1024) > 0);
+  fcntl(udscs->socketfd, F_SETFL, 0);
 }
 
 int uds_write(udsclientsocket *udscs, void *buffer, size_t nbytes) {

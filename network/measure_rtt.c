@@ -94,6 +94,7 @@ int main(int argc, char *argv[]) {
   fprintf(stderr, "performing %d rtt measurements, please wait...\n", rtt_rounds);
   for (int i=0; i<rtt_rounds;) {
     fprintf(stderr, "%d of %d done, measuring...                               \r", i, rtt_rounds);
+    uds_empty_pipe(udscs);
     // start measuring
     struct timespec start_time, end_time;
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start_time);
