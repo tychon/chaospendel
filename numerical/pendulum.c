@@ -3,6 +3,10 @@
 #include <fmt.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <stdbool.h>
+#include <string.h>
+#include <stdlib.h>
+#include "pendulum.h"
 
 // Average gravity in Germany
 static const double g = 9.81;
@@ -14,6 +18,8 @@ static double time = 60.0;
 static double simtimestep = 0.0001;
 // Time per sample in output
 static double outtimestep = 1. / 80.;
+
+static bool binout = false;
 
 // Startbedingungen
 #define l1 4.0
@@ -49,21 +55,6 @@ static double tmax = -HUGE_VAL;
 static double vmax = -HUGE_VAL;
 static double emax = -HUGE_VAL;
 
-//////// Data structure for current values during sim ////////
-typedef struct {
-  double phi1;
-  double phi2;
-  double p1;
-  double p2;
-  double kin1;
-  double pot1;
-  double kin2;
-  double pot2;
-  double kin;
-  double pot;
-  double e;
-} pstate;
-
 //////// Equations of motion and energy ////////
 // Differential equations
 static double fphi1(const pstate s) {
@@ -93,7 +84,10 @@ static double v2(double phi1, double phi2) {
 
 
 static void print_state_as_csv(pstate s) {
-  printf("%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f\n"
+  if (binout) {
+    write(1, &s, sizeof(pstate));
+  } else {
+    printf("%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f\n"
         , s.phi1
         , s.phi2
         , s.p1
@@ -105,6 +99,7 @@ static void print_state_as_csv(pstate s) {
         , s.kin
         , s.pot
         , s.e);
+  }
 }
 
 static pstate calc_s_(pstate s) {
@@ -198,7 +193,15 @@ static void run(pstate s, double timestep, double time, int output_each_nth) {
   }
 }
 
-int main(void) {
+int main(int argc, char *argv[]) {
+  for (int i = 1; i < argc; i++) {
+    if (!strcmp("--binout", argv[i])) binout = true;
+    if (!strcmp("--time", argv[i])) {
+      i++;
+      time = strtod(argv[i], NULL);
+    }
+  }
+  
   fprintf(stderr, "time          = %f\n", time);
   fprintf(stderr, "integral_step = %f\n", simtimestep);
   fprintf(stderr, "opt_fps       = %f\n", 1/outtimestep);
