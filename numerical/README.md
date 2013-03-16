@@ -1,4 +1,18 @@
 
+## Programs
+
+#### genpmovie.x
+
+`genpmovie` basically lets you invoke a program multiple times with different
+arguments, e.g. for rendering different paths a pendulum could take. Here's
+a usage example:
+
+```
+./genpmovie.x <command> <start> <step> <count>
+./genpmovie.x './pendulum.x --phi1 0.785 --phi2 %f --binout 2>/dev/null >out.bin; ./lighttrail.x --dump movie/%d.ppm --l1 0.285 --l2b 0.19' \
+0 0.0031415 1000
+```
+
 ## Output Files
 
 #### out.info
@@ -64,6 +78,10 @@ Thats the content.
 0. Sum of kinetic and potential energies.
 
 (At all: 11 columns)
+
+#### out.bin
+
+Just like out.bin, but in binary.
 
 #### out.pend1.pgm out.pend2.pgm
 

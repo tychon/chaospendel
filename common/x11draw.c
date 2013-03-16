@@ -66,6 +66,10 @@ shmsurface *createSHMSurface(int xpos, int ypos, int width, int height) {
     exit(1);
   }
   shminfo->shmid = shmget(IPC_PRIVATE, img->bytes_per_line*img->height, IPC_CREAT|0777);
+  if (shminfo->shmid == -1) {
+    perror("can't create SHM area");
+    exit(1);
+  }
   shminfo->shmaddr = img->data = shmat(shminfo->shmid, 0, 0);
   fprintf(stderr, "img->data is at %p\n", img->data);
   shminfo->readOnly = False;
