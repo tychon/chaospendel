@@ -137,10 +137,12 @@ void run() {
 
 int main(int argc, char *argv[]) {
   char *pendulumdatapath = "data_pendulum";
+  char *dumppath = NULL;
   
   for (int i = 1; i < argc; i++) {
     if (argcmpass("--pendulum|-p", argc, argv, &i, &pendulumdatapath)) ;
     else if (argcmpass("--datafilepath|-d", argc, argv, &i, &datafilepath)) ;
+    else if (argcmpass("--dump|-D", argc, argv, &i, &dumppath)) ;
     else if (ARGCMP("--whitebg", i)) {
       whitebg = 1;
     }
@@ -156,18 +158,32 @@ int main(int argc, char *argv[]) {
   // x11 things
   sf = createSHMSurface(100, 100, 500, 500);
   
-  int in_fd = inotify_init();
-  if (in_fd == -1) {
-    fprintf(stderr, "can't create inotify fd: %s\n", strerror(errno));
-    exit(1);
-  }
-  int in_watch = inotify_add_watch(in_fd, datafilepath, IN_CLOSE_WRITE);
-  if (in_watch == -1) {
-    fprintf(stderr, "can't create inotify watch: %s\n", strerror(errno));
-    exit(1);
+  int in_fd;
+  if (dumppath == NULL) {
+    in_fd = inotify_init();
+    if (in_fd == -1) {
+      fprintf(stderr, "can't create inotify fd: %s\n", strerror(errno));
+      exit(1);
+    }
+    int in_watch = inotify_add_watch(in_fd, datafilepath, IN_CLOSE_WRITE);
+    if (in_watch == -1) {
+      fprintf(stderr, "can't create inotify watch: %s\n", strerror(errno));
+      exit(1);
+    }
   }
   
   run();
+  
+  if (dumppath != NULL) {
+    int fd = open(dumppath, O_WRONLY|O_CREAT|O_TRUNC, 0777);
+    if (fd == -1) {
+      fprintf(stderr, "can't open \"%s\" for writing: %s\n", dumppath, strerror(errno));
+      exit(1);
+    }
+    dump_ppm(fd, sf);
+    close(fd);
+    return 0;
+  }
   
   while (1) {
     size_t evt_size = sizeof(struct inotify_event)+NAME_MAX+1;
