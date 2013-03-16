@@ -143,7 +143,7 @@ int main(int argc, char *argv[]) {
     }
     else if (ARGCMP("--no-show-normal-lines", i)) show_normal_lines = false;
     else if (argcmpassdouble("--l1", argc, argv, &i, &l1)) ;
-    else if (argcmpassdouble("--l2b", argc, argv, &i, &l1)) ;
+    else if (argcmpassdouble("--l2b", argc, argv, &i, &l2b)) ;
     else fprintf(stderr, "warning: Unknown argument ignored: \"%s\"\n", argv[i]);
   }
   
