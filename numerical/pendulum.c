@@ -27,16 +27,16 @@ static bool binout = false;
 #define m1 2.0
 #define m2 1.0
 
-static const double phi1_0 = M_PI*1.5;
-static const double phi2_0 = M_PI;
-static const double p1_0 = 0;
-static const double p2_0 = 0;
+static double phi1_0 = M_PI*1.5;
+static double phi2_0 = M_PI;
+static double p1_0 = 0;
+static double p2_0 = 0;
 
-static const double k1 = (1.0/3) * (l1*l1) * m1;
-static const double k2 = (1.0/2) * l1      * m1;
-static const double k3 = m2;
-static const double k4 = (1.0/3) * l2*(l2) * m2;
-static const double k5 = (1.0/2) * l2      * m2;
+static double k1 = (1.0/3) * (l1*l1) * m1;
+static double k2 = (1.0/2) * l1      * m1;
+static double k3 = m2;
+static double k4 = (1.0/3) * l2*(l2) * m2;
+static double k5 = (1.0/2) * l2      * m2;
 
 //////// Variables about minimum and maximum vals ///////
 // These are updated during `run`
@@ -196,10 +196,20 @@ static void run(pstate s, double timestep, double time, int output_each_nth) {
 int main(int argc, char *argv[]) {
   for (int i = 1; i < argc; i++) {
     if (!strcmp("--binout", argv[i])) binout = true;
-    if (!strcmp("--time", argv[i])) {
-      i++;
-      time = strtod(argv[i], NULL);
-    }
+    if (!strcmp("--time", argv[i])) { i++; time = strtod(argv[i], NULL); }
+    
+    // start conditions
+    if (!strcmp("--phi1", argv[i])) { i++; phi1_0 = strtod(argv[i], NULL); }
+    if (!strcmp("--phi2", argv[i])) { i++; phi2_0 = strtod(argv[i], NULL); }
+    if (!strcmp("--p1", argv[i])) { i++; p1_0 = strtod(argv[i], NULL); }
+    if (!strcmp("--p2", argv[i])) { i++; p2_0 = strtod(argv[i], NULL); }
+    
+    // constant pendulum properties (unless someone moves the magnet...)
+    if (!strcmp("--k1", argv[i])) { i++; k1 = strtod(argv[i], NULL); }
+    if (!strcmp("--k2", argv[i])) { i++; k2 = strtod(argv[i], NULL); }
+    if (!strcmp("--k3", argv[i])) { i++; k3 = strtod(argv[i], NULL); }
+    if (!strcmp("--k4", argv[i])) { i++; k4 = strtod(argv[i], NULL); }
+    if (!strcmp("--k5", argv[i])) { i++; k5 = strtod(argv[i], NULL); }
   }
   
   fprintf(stderr, "time          = %f\n", time);
