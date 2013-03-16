@@ -1,4 +1,5 @@
-//////// Data structure for current values during sim ////////
+
+// Data structure for current values during sim
 typedef struct {
   double phi1;
   double phi2;
@@ -12,3 +13,4 @@ typedef struct {
   double pot;
   double e;
 } pstate;
+

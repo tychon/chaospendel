@@ -9,7 +9,7 @@ CFLAGS += -I../common/ # include files can be in ../common/
 # Defines
 CFLAGS += -D_BSD_SOURCE
 
-# Options appenden on linking
+# Options appended on linking
 LIBS := ../common/libcommon.a -lfftw3 -lm -lowfat -lX11 -lXext
 
 # Options for compiling and linking

@@ -5,11 +5,6 @@
 #include <math.h>
 #include <fftw3.h>
 
-// You know what this is:
-#define PI  3.141592653589793238462643383279502884197169
-// TAU is 2*PI
-#define TAU 6.283185307179586476925286766559005768394338
-
 // returns whether the correct amount of data was parsed
 int parseCSVLine(FILE *f, double *res, int columns) {
   char buf[1000];
