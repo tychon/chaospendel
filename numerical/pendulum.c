@@ -18,7 +18,7 @@ static double time = 60.0;
 static double simtimestep = 0.0001;
 // Time per sample in output
 static double outtimestep = 1. / 80.;
-
+// Output as binary, otherwise ASCII CSV
 static bool binout = false;
 
 // Startbedingungen
@@ -83,7 +83,7 @@ static double v2(double phi1, double phi2) {
 }
 
 
-static void print_state_as_csv(pstate s) {
+static void print_state(pstate s) {
   if (binout) {
     write(1, &s, sizeof(pstate));
   } else {
@@ -188,7 +188,7 @@ static void run(pstate s, double timestep, double time, int output_each_nth) {
       UPDATEIF(vmax, >, s.pot)
       UPDATEIF(emax, >, s.e)
 
-      print_state_as_csv(s);
+      print_state(s);
     }
   }
 }
