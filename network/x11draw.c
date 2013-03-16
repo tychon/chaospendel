@@ -2,14 +2,16 @@
 #define _GNU_SOURCE
 
 #include <stdlib.h>
+#include <unistd.h>
 #include <stdio.h>
-#include <string.h> // for 'memmove'
+#include <string.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <sys/shm.h>
 #include <X11/extensions/XShm.h>
 #include <math.h>
 #include <assert.h>
+#include <errno.h>
 
 #include "x11draw.h"
 
@@ -45,7 +47,7 @@ shmsurface *createSHMSurface(int xpos, int ypos, int width, int height) {
   
   int blackColor = BlackPixel(dpy, DefaultScreen(dpy));
   Window window = XCreateWindow(dpy, DefaultRootWindow(dpy), xpos, ypos, width, height, 0,
-                           depth, InputOutput, visual, CWBackPixel | CWColormap | CWBorderPixel, &attrs);
+                           depth, InputOutput, visual, CWOverrideRedirect | CWBackPixel | CWColormap | CWBorderPixel, &attrs);
   XSelectInput(dpy, window, StructureNotifyMask);
   XMapWindow(dpy, window);
   GC gc = XCreateGC(dpy, window, 0, NULL);
@@ -392,6 +394,36 @@ int drawHyperbola(shmsurface *surface
   }
   
   return 0;
+}
+
+void dump_ppm(int fd, shmsurface *s) {
+  char *header;
+  if (asprintf(&header, "P6\n%d %d\n255\n", s->width, s->height) < 0) {
+    fprintf(stderr, "can't asprintf ppm header: %s\n", strerror(errno));
+    exit(1);
+  }
+  if (write(fd, header, strlen(header)) != strlen(header)) {
+    fprintf(stderr, "can't write ppm header: %s\n", strerror(errno));
+    exit(1);
+  }
+  
+  char *imgdata = s->image->data;
+  size_t bodysize = 3*s->height*s->width;
+  char *body = malloc(bodysize);
+  int body_i = 0;
+  for (int x=0; x<s->width; x++) {
+    for (int y=0; y<s->height; y++) {
+      // TODO make this endianness-independent
+      body[body_i++] = *(imgdata+4*(x+y*s->width)+2);
+      body[body_i++] = *(imgdata+4*(x+y*s->width)+1);
+      body[body_i++] = *(imgdata+4*(x+y*s->width)+0);
+    }
+  }
+  assert(body_i == bodysize);
+  if (write(fd, body, bodysize) != bodysize) {
+    fprintf(stderr, "can't write ppm body: %s\n", strerror(errno));
+    exit(1);
+  }
 }
 
 #undef SWAPDOUBLES

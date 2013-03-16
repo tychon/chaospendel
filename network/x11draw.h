@@ -41,5 +41,7 @@ int drawHyperbola(shmsurface *surface
                  , double ratio
                  , int color);
 
+void dump_ppm(int fd, shmsurface *s);
+
 #endif // _X11DRAW_H
 
