@@ -36,7 +36,7 @@ def main():
   pygame.mouse.set_visible(0)
   
   # open file
-  filename = "out.txt"
+  filename = "out.csv"
   f = open(filename, "r")
   
   #Prepare Game Objects

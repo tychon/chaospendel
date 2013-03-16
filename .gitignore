@@ -29,7 +29,5 @@
 data_*
 socket_*
 
-fftw/fourier
-numerical/doc/
 wikihaskell/main
 
