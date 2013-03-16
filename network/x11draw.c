@@ -47,7 +47,7 @@ shmsurface *createSHMSurface(int xpos, int ypos, int width, int height) {
   
   int blackColor = BlackPixel(dpy, DefaultScreen(dpy));
   Window window = XCreateWindow(dpy, DefaultRootWindow(dpy), xpos, ypos, width, height, 0,
-                           depth, InputOutput, visual, CWBackPixel | CWColormap | CWBorderPixel, &attrs);
+                           depth, InputOutput, visual, CWOverrideRedirect | CWBackPixel | CWColormap | CWBorderPixel, &attrs);
   XSelectInput(dpy, window, StructureNotifyMask);
   XMapWindow(dpy, window);
   GC gc = XCreateGC(dpy, window, 0, NULL);
