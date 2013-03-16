@@ -29,6 +29,7 @@
 static projectdata *pd;
 static shmsurface *sf;
 static char *datafilepath = "../numerical/out.bin";
+static bool show_normal_lines = true;
 
 void toPendulumCartesian(double radius, double angle, double *x, double *y) {
   *x = sin(angle) * radius;
@@ -67,6 +68,10 @@ void drawPendulum(pstate *states, int states_len) {
   // draw center (main axis of pendulum)
   drawDot(sf, sf->width/2, sf->height/2, red_color);
   
+  // draw maximum reach of common axis and outer pendulum
+  drawCircle(sf, sf->width/2, sf->height/2, scale*pd->l1, red_color);
+  drawCircle(sf, sf->width/2, sf->height/2, scale*(pd->l1+pd->l2b), red_color);
+  
   // draw data
   int last_xpos, last_ypos, xpos, ypos;
   int last_section, cur_section;
@@ -81,7 +86,8 @@ void drawPendulum(pstate *states, int states_len) {
     ypos += sf->height/2;
     
     cur_section = s->phi2/(M_PI/2);
-    cur_section = ((cur_section%4)+4)%4;
+    if (cur_section < 0) cur_section *= -1;
+    cur_section = cur_section%4;
     assert(cur_section >= 0 && cur_section < 4);
     
     if (i != 0) {
@@ -91,7 +97,9 @@ void drawPendulum(pstate *states, int states_len) {
       int color = green_color;
       if (last_section == 1/*upper left*/ && cur_section == 2/*upper right*/) { color = red_color; right_loopings++; }
       if (last_section == 2/*upper right*/ && cur_section == 1/*upper left*/) { color = blue_color; left_loopings++; }
-      drawBresenhamLine(sf, last_xpos, last_ypos, xpos, ypos, color);
+      if (show_normal_lines || color != green_color) {
+        drawBresenhamLine(sf, last_xpos, last_ypos, xpos, ypos, color);
+      }
     }
     
     last_xpos = xpos;
@@ -136,6 +144,7 @@ int main(int argc, char *argv[]) {
     else if (ARGCMP("--whitebg", i)) {
       whitebg = 1;
     }
+    else if (ARGCMP("--no-show-normal-lines", i)) show_normal_lines = false;
     else fprintf(stderr, "warning: Unknown argument ignored: \"%s\"\n", argv[i]);
   }
   
