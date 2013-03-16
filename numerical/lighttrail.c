@@ -155,7 +155,7 @@ int main(int argc, char *argv[]) {
   // x11 things
   sf = createSHMSurface(100, 100, 500, 500);
   
-  int in_fd;
+  int in_fd = -1;
   if (dumppath == NULL) {
     in_fd = inotify_init();
     if (in_fd == -1) {
