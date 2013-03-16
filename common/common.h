@@ -20,6 +20,8 @@ int argcmpass(char *options
 int argcmpassint(char *options
                , const int argc, char *argv[], int *argindex
                , int *dest);
+double argcmpassdouble(char *options, const int argc
+            , char *argv[], int *argindex, double *dest);
 
 #endif // _COMMON_H
 

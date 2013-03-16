@@ -18,18 +18,13 @@
 #include <assert.h>
 
 #include "common.h"
-#include "projectreader.h"
-#include "uds_server.h"
-#include "uds_client.h"
-#include "protocol.h"
 #include "x11draw.h"
-#include "integral.h"
-#include "../numerical/pendulum.h"
+#include "pendulum.h"
 
-static projectdata *pd;
 static shmsurface *sf;
 static char *datafilepath = "../numerical/out.bin";
 static bool show_normal_lines = true;
+static double l1=-1, l2b=-1;
 
 void toPendulumCartesian(double radius, double angle, double *x, double *y) {
   *x = sin(angle) * radius;
@@ -37,9 +32,9 @@ void toPendulumCartesian(double radius, double angle, double *x, double *y) {
 }
 void pstateToCartesianEnd(pstate *s, double *second_x, double *second_y) {
   double first_x, first_y;
-  toPendulumCartesian(pd->l1, s->phi1, &first_x, &first_y);
+  toPendulumCartesian(l1, s->phi1, &first_x, &first_y);
   double second_x_rel, second_y_rel;
-  toPendulumCartesian(pd->l2b, s->phi2, &second_x_rel, &second_y_rel);
+  toPendulumCartesian(l2b, s->phi2, &second_x_rel, &second_y_rel);
   *second_x = first_x+second_x_rel;
   *second_y = first_y+second_y_rel;
 }
@@ -61,7 +56,7 @@ void drawPendulum(pstate *states, int states_len) {
   } else shmsurface_fill(sf, COLOR_BLACK);
   
   // precompute scaling
-  double maxpendlength = (double)(pd->l1 + (pd->l2a > pd->l2b ? pd->l2a : pd->l2b));
+  double maxpendlength = l1 + l2b;
   // this scale is in pixels per meter
   double scale = (double)(sf->width < sf->height ? sf->width : sf->height) / 2.0 * (4.0/5.0) / maxpendlength;
   
@@ -69,8 +64,8 @@ void drawPendulum(pstate *states, int states_len) {
   drawDot(sf, sf->width/2, sf->height/2, red_color);
   
   // draw maximum reach of common axis and outer pendulum
-  drawCircle(sf, sf->width/2, sf->height/2, scale*pd->l1, red_color);
-  drawCircle(sf, sf->width/2, sf->height/2, scale*(pd->l1+pd->l2b), red_color);
+  drawCircle(sf, sf->width/2, sf->height/2, scale*l1, red_color);
+  drawCircle(sf, sf->width/2, sf->height/2, scale*(l1+l2b), red_color);
   
   // draw data
   int last_xpos, last_ypos, xpos, ypos;
@@ -147,13 +142,15 @@ int main(int argc, char *argv[]) {
       whitebg = 1;
     }
     else if (ARGCMP("--no-show-normal-lines", i)) show_normal_lines = false;
+    else if (argcmpassdouble("--l1", argc, argv, &i, &l1)) ;
+    else if (argcmpassdouble("--l2b", argc, argv, &i, &l1)) ;
     else fprintf(stderr, "warning: Unknown argument ignored: \"%s\"\n", argv[i]);
   }
   
-  pd = assert_malloc(sizeof(projectdata));
-  
-  fprintf(stderr, "reading pendulum data from \"%s\" ...\n", pendulumdatapath);
-  readPendulumData(pd, pendulumdatapath);
+  if (l1 <= 0 || l2b <= 0) {
+    fprintf(stderr, "l1 and l2b must be >0\n");
+    exit(1);
+  }
   
   // x11 things
   sf = createSHMSurface(100, 100, 500, 500);

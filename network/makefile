@@ -1,9 +1,9 @@
 
-CFLAGS := -g -std=gnu99 -Wall -Werror
+CFLAGS := -g -std=gnu99 -Wall -Werror -I../common/
 LIBS := -g -lc -lpthread -lm -lfftw3 -lX11 -lXext -lev -lrt
 
-NONMAINOBJS := memory_wrappers.o integral.o x11draw.o markov_chain.o
-NONMAINOBJS += common.o uds_server.o uds_client.o protocol.o projectreader.o
+NONMAINOBJS := integral.o markov_chain.o
+NONMAINOBJS += uds_server.o uds_client.o protocol.o projectreader.o
 HEADERFILES := $(NONMAINOBJS:.o=.h) ../numerical/pendulum.h
 
 EXECUTABLES := testreader.x x11drawtest.x
@@ -12,14 +12,16 @@ EXECUTABLES += rangetester.x normalisation.x tracker.x
 EXECUTABLES += markov_prediction.x
 EXECUTABLES += markovchaintest.x
 EXECUTABLES += measure_rtt.x
-EXECUTABLES += lighttrail.x
 
-.PHONY: all clean
+.PHONY: all clean ../common/libcommon.a
 
 all: $(EXECUTABLES)
 
+../common/libcommon.a:
+	make -C../common/
+
 # make executables
-%.x: %.o $(NONMAINOBJS)
+%.x: %.o $(NONMAINOBJS) ../common/libcommon.a
 	gcc $^ $(LIBS) -o $*.x
 
 # make object files

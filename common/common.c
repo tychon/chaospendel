@@ -82,6 +82,31 @@ int argcmpassint(char *options, const int argc, char *argv[], int *argindex, int
   else
     return 0;
 }
+double argcmpassdouble(char *options, const int argc, char *argv[], int *argindex, double *dest) {
+  char *opt = argv[*argindex];
+  char *opts = assert_malloc(strlen(options));
+  strcpy(opts, options);
+  if (argcmpTestOptions(opt, opts)) {
+    if (*argindex >= argc-1) {
+      fprintf(stderr, "error: Invalid argument, expected value after option \"%s\"\n", options);
+      exit(1);
+    }
+    
+    (*argindex) ++;
+    
+    char *endptr, *value = argv[*argindex];
+    double parsed = strtod(value, &endptr);
+    if (value == endptr || *endptr != '\0') {
+      fprintf(stderr, "error: Invalid number in option \"%s\".\n", opt);
+      exit(1);
+    } else
+      *dest = parsed;
+    
+    return 1;
+  }
+  else
+    return 0;
+}
 
 #endif // _COMMON_C
 
