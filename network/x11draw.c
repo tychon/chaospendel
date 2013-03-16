@@ -411,8 +411,8 @@ void dump_ppm(int fd, shmsurface *s) {
   size_t bodysize = 3*s->height*s->width;
   char *body = malloc(bodysize);
   int body_i = 0;
-  for (int x=0; x<s->width; x++) {
-    for (int y=0; y<s->height; y++) {
+  for (int y=0; y<s->height; y++) {
+    for (int x=0; x<s->width; x++) {
       // TODO make this endianness-independent
       body[body_i++] = *(imgdata+4*(x+y*s->width)+2);
       body[body_i++] = *(imgdata+4*(x+y*s->width)+1);
