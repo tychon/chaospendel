@@ -14,7 +14,7 @@ LIBS := -lfftw3 -lm -lowfat
 # Options for compiling and linking
 BOTH := -mfpmath=387 -malign-double -march=native -mtune=native -O3 -fwhole-program -flto -ffast-math
 
-all: fourier.x pendulum.x
+all: fourier.x pendulum.x genpmovie.x
 
 %.o: %.c
 	gcc $(CFLAGS) $(BOTH) $(OPTS) -c -o $*.o $*.c
