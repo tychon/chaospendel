@@ -97,20 +97,15 @@ int main(int argc, char** argv) {
     exit(1);
   }
   
-  if (! inputfilepath || ! outputfilepath) {
-    fprintf(stderr, "Give me an input and an output file!\n");
-    exit(1);
-  }
-  
   // open input file
-  inpf = fopen(inputfilepath, "r");
-  outf = fopen(outputfilepath, "w+");
+  inpf = inputfilepath ? fopen(inputfilepath, "r") : stdin;
+  outf = outputfilepath ? fopen(outputfilepath, "w+") : stdout;
   
   //// RUN ////
   run(window, single, cleardc);
   
-  fclose(inpf);
-  fclose(outf);
+  if (inputfilepath) fclose(inpf);
+  if (outputfilepath) fclose(outf);
   
   return 0;
 }

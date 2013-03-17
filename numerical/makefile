@@ -27,4 +27,4 @@ libcommon:
 	gcc $(BOTH) -o $*.x $*.o $(LIBS)
 
 clean:
-	rm -f *.x *.o *.csv *.ppm
+	rm -f *.x *.o *.csv *.ppm *.pgm
