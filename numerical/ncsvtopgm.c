@@ -77,9 +77,11 @@ int main(int argc, char *argv[]) {
         if (data[row][col] > maxval) maxval = data[row][col];
       }
     }
+    double scale = pgmmaxval / maxval;
+    fprintf(stderr, "scale=%f\n", scale);
     for (int row = 0; row < rows; row ++) {
       for (int col = 0; col < columns; col ++) {
-        data[row][col] = data[row][col] / maxval * pgmmaxval;
+        data[row][col] = data[row][col] * scale;
       }
     }
   }
