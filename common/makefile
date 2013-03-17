@@ -10,5 +10,5 @@ libcommon.a: $(OBJS)
 	gcc $(CFLAGS) -c -o $*.o $*.c
 
 clean:
-	rm -f *.o
+	rm -f *.o *.a
 
