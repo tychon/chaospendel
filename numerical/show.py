@@ -130,15 +130,12 @@ def main():
       GREEN = (0, 150, 0)
       global BARCOLOR
       BARCOLOR = GREEN
-      print "WHITE background!"
     elif not project_name:
       project_name = arg
     else: print "Argument ignored: ", arg
   if not project_name:
     print "Give me some project name!"
     exit(1)
-  
-  print backgroundcolor
   
   ################
   # open info file
