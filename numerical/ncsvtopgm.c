@@ -47,20 +47,18 @@ int main(int argc, char *argv[]) {
   }
   double numbers[columns];
   for (;;) {
-    if (feof(inpf)) break;
+    int retv;
+    if ( (retv = parseNCSVLine(inpf, columns, numbers))) {
+      if (retv == -1) break; // end of file
+      fprintf(stderr, "ERROR: Bad CSV file! err %d line %d\n", retv, rows+1);
+      exit(1);
+    }
     
     if (rows == allocated_rows) {
       allocated_rows += 1000;
       data = assert_realloc(data, allocated_rows * sizeof(double*));
     }
     
-    int parseres;
-    if ((parseres=parseNCSVLine(inpf, columns, numbers))) {
-      if (parseres != -1 && parseres != -3) {
-        fprintf(stderr, "ERROR: Bad CSV file! err %d at line %d\n", parseres, rows+1);
-        exit(1);
-      }
-    }
     data[rows] = assert_malloc(columns * sizeof(double));
     memcpy(data[rows], numbers, columns * sizeof(double));
     rows++;
@@ -81,7 +79,7 @@ int main(int argc, char *argv[]) {
         if (data[row][col] > maxval) maxval = data[row][col];
       }
     }
-    double scale = pgmmaxval / maxval;
+    double scale = maxval == 0.0 ? 1.0 : pgmmaxval / maxval;
     fprintf(stderr, "scale=%f\n", scale);
     for (int row = 0; row < rows; row ++) {
       for (int col = 0; col < columns; col ++) {
@@ -109,7 +107,7 @@ int main(int argc, char *argv[]) {
   for (int row = 0; row < rows; row ++) {
     for (int col = 0; col < columns-1; col ++) {
       if (binary) fwrite(&data[row][col], 1, sizeof(unsigned char), outf);
-      else fprintf(outf, "%d,", (int)data[row][col]);
+      else fprintf(outf, "%d ", (int)data[row][col]);
     }
     if (binary) fwrite(&data[row][columns-1], 1, sizeof(unsigned char), outf);
     else fprintf(outf, "%d\n", (int)data[row][columns-1]);
