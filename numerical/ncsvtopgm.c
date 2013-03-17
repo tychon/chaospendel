@@ -68,7 +68,27 @@ int main(int argc, char *argv[]) {
   
   //// mirror and scale ////
   
-  if (ascale == ALL) {
+  if (ascale == ROWS) {
+    for (int row = 0; row < rows; row ++) {
+      double maxval = 0;
+      for (int col = 0; col < columns; col ++) {
+        if (data[row][col] < 0) {
+          fprintf(stderr, "Invalid number smaller zero in row %d col %d: %f\n", row+1, col+1, data[row][col]);
+          exit(1);
+        }
+        if (data[row][col] > maxval) maxval = data[row][col];
+      }
+      double scale = maxval == 0.0 ? 1.0 : pgmmaxval / maxval;
+      fprintf(stderr, "scale%d=%f\n", row, scale);
+      for (int col = 0; col < columns; col ++) {
+        data[row][col] = data[row][col] * scale;
+      }
+    }
+  }
+  else if (ascale == COLUMNS) {
+    // scale columns
+  }
+  else {
     double maxval = 0;
     for (int row = 0; row < rows; row ++) {
       for (int col = 0; col < columns; col ++) {
@@ -87,7 +107,6 @@ int main(int argc, char *argv[]) {
       }
     }
   }
-  else ; //TODO scale rows / cols
   
   
   if (mirror) {
