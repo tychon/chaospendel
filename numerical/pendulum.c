@@ -27,8 +27,8 @@ static bool binout = false;
 #define m1 2.0
 #define m2 1.0
 
-static double phi1_0 = M_PI*1.5;
-static double phi2_0 = M_PI;
+static double phi1_0 = M_PI / 4.0;
+static double phi2_0 = M_PI / 2.0;
 static double p1_0 = 0;
 static double p2_0 = 0;
 
