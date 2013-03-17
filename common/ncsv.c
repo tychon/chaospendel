@@ -21,8 +21,10 @@ bool parseNCSVLine(FILE *f, int columns, double *res) {
     res[resindex++] = strtod(p, &endptr);
     if (endptr == p) {
       fprintf(stderr, "WARNING: unparseable number!\n");
-    } else if (*endptr != 0) {
-      fprintf(stderr, "WARNING: can't parse the whole number!\n");
+      exit(1);
+    } else if (*endptr != 0 && *endptr != 10 && *endptr != 13) {
+      fprintf(stderr, "WARNING: can't parse the whole number! hex code %x\n", (int)*endptr);
+      exit(1);
     }
   }
   if (resindex == columns) {
