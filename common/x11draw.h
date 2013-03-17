@@ -13,35 +13,37 @@
 #define COLOR_MAGENTA ((int)0xff00ff)
 #define COLOR_YELlOW ((int)0xffffff00)
 
-struct shmsurface {
+struct generic_surface {
   int width, height;
+  int bytes_per_line;
   Display *display;
   Window window;
   GC graphics_context;
   XImage *image;
+  char *data;
 };
-typedef struct shmsurface shmsurface;
+typedef struct generic_surface generic_surface;
 
-shmsurface *createSHMSurface(int xpos, int ypos, int width, int height);
-void flushSHMSurface(shmsurface *surface);
+generic_surface *createSHMSurface(int xpos, int ypos, int width, int height);
+void flushSHMSurface(generic_surface *surface);
 
-void shmsurface_memshift(shmsurface *surface, int xshift);
-void shmsurface_fill(shmsurface *surface, int color);
+void generic_surface_memshift(generic_surface *surface, int xshift);
+void generic_surface_fill(generic_surface *surface, int color);
 
-void drawDot(shmsurface *surface, int x, int y, int color);
-void drawBresenhamLine(shmsurface *surface, int x0, int y0, int x1, int y1, int color);
-void drawRect(shmsurface *surface, int xpos, int ypos, int width, int height, int color);
-void fillRect(shmsurface *surface, int xpos, int ypos, int width, int height, int color);
-void drawCircle(shmsurface *surface, int xpos, int ypos, int radius, int color);
-void fillCircle(shmsurface *surface, int xpos, int ypos, int radius, int color);
+void drawDot(generic_surface *surface, int x, int y, int color);
+void drawBresenhamLine(generic_surface *surface, int x0, int y0, int x1, int y1, int color);
+void drawRect(generic_surface *surface, int xpos, int ypos, int width, int height, int color);
+void fillRect(generic_surface *surface, int xpos, int ypos, int width, int height, int color);
+void drawCircle(generic_surface *surface, int xpos, int ypos, int radius, int color);
+void fillCircle(generic_surface *surface, int xpos, int ypos, int radius, int color);
 
-int drawHyperbola(shmsurface *surface
+int drawHyperbola(generic_surface *surface
                  , double ax, double ay
                  , double fx, double fy
                  , double ratio
                  , int color);
 
-void dump_ppm(int fd, shmsurface *s);
+void dump_ppm(int fd, generic_surface *s);
 
 #endif // _X11DRAW_H
 

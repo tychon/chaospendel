@@ -21,7 +21,7 @@
 #include "x11draw.h"
 #include "pendulum.h"
 
-static shmsurface *sf;
+static generic_surface *sf;
 static char *datafilepath = "../numerical/out.bin";
 static bool show_normal_lines = true;
 static double l1=-1, l2b=-1;
@@ -49,11 +49,11 @@ void drawPendulum(pstate *states, int states_len) {
   int blue_color = COLOR_BLUE;
   // clear surface
   if (whitebg) {
-    shmsurface_fill(sf, COLOR_WHITE);
+    generic_surface_fill(sf, COLOR_WHITE);
     green_color = 0xff009600;
     red_color = 0xff960000;
     blue_color = 0xff000096;
-  } else shmsurface_fill(sf, COLOR_BLACK);
+  } else generic_surface_fill(sf, COLOR_BLACK);
   
   // precompute scaling
   double maxpendlength = l1 + l2b;
