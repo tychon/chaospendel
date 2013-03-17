@@ -15,18 +15,16 @@ LIBS := ../common/libcommon.a -lfftw3 -lm -lowfat -lX11 -lXext
 # Options for compiling and linking
 BOTH := -mfpmath=387 -malign-double -march=native -mtune=native -O3 -fwhole-program -flto -ffast-math
 
-.PHONY: all clean ../common/libcommon.a
+all: libcommon ncsvtopgm.x fourier.x pendulum.x genpmovie.x lighttrail.x
 
-all: fourier.x pendulum.x genpmovie.x lighttrail.x
-
-../common/libcommon.a:
+libcommon:
 	make -C ../common/
 
 %.o: %.c
 	gcc $(CFLAGS) $(BOTH) $(OPTS) -c -o $*.o $*.c
 
-%.x: %.o ../common/libcommon.a
+%.x: %.o
 	gcc $(BOTH) -o $*.x $*.o $(LIBS)
 
 clean:
-	rm -f *.x *.o
+	rm -f *.x *.o *.csv *.ppm
