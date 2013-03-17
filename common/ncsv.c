@@ -16,7 +16,7 @@ int parseNCSVLine(FILE *f, int columns, double *res) {
   int resindex = 0;
   while ((p = strtok(strtok_buf, ",")) != NULL) {
     strtok_buf = NULL;
-    if (resindex == columns) return -3; // no more space in res
+    if (resindex == columns) return 0;
     char *endptr;
     res[resindex++] = strtod(p, &endptr);
     if (endptr == p) {
