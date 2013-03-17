@@ -54,6 +54,11 @@ int main(int argc, char *argv[]) {
       exit(1);
     }
     
+    if (parseNCSVLine(inpf, columns, numbers)) {
+      fprintf(stderr, "ERROR: Bad CSV file! line %d\n", rows+1);
+      exit(1);
+    }
+    
     if (rows == allocated_rows) {
       allocated_rows += 1000;
       data = assert_realloc(data, allocated_rows * sizeof(double*));
