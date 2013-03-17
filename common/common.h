@@ -3,6 +3,7 @@
 #define _COMMON_H
 
 #include "memory_wrappers.h"
+#include "ncsv.h"
 
 #define GLOBALSEQPACKETSIZE 1024
 

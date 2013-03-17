@@ -20,42 +20,6 @@ static int column = 0;
 static FILE *inpf
           , *outf;
 
-// returns 0 if the correct amount of data was parsed
-static bool parseCSVLine(FILE *f, int columns, double *res) {
-  char buf[1000];
-  if (fgets(buf, 1000, f) == NULL) {
-    return -2; // real error
-  }
-  
-  char *strtok_buf = buf;
-  char *p = buf;
-  int resindex = 0;
-  while ((p = strtok(strtok_buf, ",")) != NULL) {
-    strtok_buf = NULL;
-    if (resindex == columns) return 1; // no more space in res
-    char *endptr;
-    res[resindex++] = strtod(p, &endptr);
-    if (endptr == p) {
-      fprintf(stderr, "WARNING: unparseable number!\n");
-    } else if (*endptr != 0) {
-      fprintf(stderr, "WARNING: can't parse the whole number!\n");
-    }
-  }
-  if (resindex == columns) {
-    return true; // everything is fine
-  } else {
-    return false; // didn't parse at least `columns` columns
-  }
-}
-
-static void printCSVLine(FILE *f, int columns, double *data) {
-  for (int i = 0; i < columns-1; i++) {
-    fprintf(f, "%f,", data[i]);
-  }
-  fprintf(f, "%f", data[columns-1]);
-  fputc('\n', f);
-}
-
 double *run(int window, bool single, bool nodc) {
   int freqn = window/2 + 1; // array length of result
   
@@ -69,7 +33,7 @@ double *run(int window, bool single, bool nodc) {
   
   // initial filling of input array
   for (int i = 0; i < window; i++) {
-    if (csvline ++, ! parseCSVLine(inpf, column+1, numbers) < 0) {
+    if (csvline ++, ! parseNCSVLine(inpf, column+1, numbers) < 0) {
       fprintf(stderr, "ERROR: Bad CSV file! line %d\n", csvline);
       exit(1);
     }
@@ -88,7 +52,7 @@ double *run(int window, bool single, bool nodc) {
       tmp2 = fftwout[i][1]/window;
       result[i] = sqrt(tmp1*tmp1+tmp2*tmp2);
     }
-    printCSVLine(outf, freqn, result);
+    printNCSVLine(outf, freqn, result);
     
     if (feof(inpf) || single) {
       return result;
@@ -99,7 +63,7 @@ double *run(int window, bool single, bool nodc) {
     //memmove(fftwin, fftwin+sizeof(double), (window-1) * sizeof(double));
     for (int i = 0; i < window-1; i++) fftwin[i] = fftwin[i+1];
     // read next csv line
-    if (csvline ++, ! parseCSVLine(inpf, column+1, numbers) < 0) {
+    if (csvline ++, ! parseNCSVLine(inpf, column+1, numbers) < 0) {
       fprintf(stderr, "ERROR: Bad CSV file! line %d\n", csvline);
       exit(1);
     }

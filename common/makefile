@@ -1,7 +1,7 @@
 
 CFLAGS := -g -std=gnu99 -Wall -Werror
 
-OBJS := common.o memory_wrappers.o x11draw.o
+OBJS := common.o memory_wrappers.o x11draw.o ncsv.o
 
 libcommon.a: $(OBJS)
 	ar rcs libcommon.a $(OBJS)
