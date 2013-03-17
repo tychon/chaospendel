@@ -1,0 +1,15 @@
+
+# This is the configuration file for the feigenbaum script.
+
+directory=feigenbaum-data
+
+steps=1000
+angle_offset=0
+angle_start=0
+angle_end=pi/2
+
+time=20
+sim_step=0.0001
+
+fourier_window_max=128
+

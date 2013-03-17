@@ -2,7 +2,7 @@
 # Compiler options
 CFLAGS :=
 CFLAGS += --std=c99 # Specify standard: iso9899:199x
-CFLAGS += -g # produce debugging information
+#CFLAGS += -g # produce debugging information
 CFLAGS += -Wall # Turn on all optional warnings which are desirable for normal code
 CFLAGS += -Werror # Make all warnings into hard errors
 CFLAGS += -I../common/ # include files can be in ../common/
