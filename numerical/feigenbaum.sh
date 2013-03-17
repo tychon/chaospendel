@@ -1,5 +1,9 @@
 
-# Uhh, useful?
+make
+if [[ $? != 0 ]]; then
+  echo "makefile error"
+  exit
+fi
 
 source easy_bash.sh
 
@@ -8,7 +12,7 @@ configfile=feigenbaum
 STEPS=`doawk steps`
 DIRECTORY=`doawk directory`
 
-STEP=`doawk sim_step`
+OUTSTEP=`doawk simout_step`
 TIME=`doawk time`
 
 if [ "$1" == "simulations" ]; then
@@ -26,7 +30,7 @@ if [ "$1" == "simulations" ]; then
     INFOFILE=$DIRECTORY"/out$X.info"
     
     # simulation
-    MAINARGS="--time $TIME --timestep $STEP --outstep $STEP --phi1 "$(math "$ANGLE+$ANGLE_OFFSET")" --phi2 "$(math "2*$ANGLE+$ANGLE_OFFSET")
+    MAINARGS="--time $TIME --outstep $OUTSTEP --phi1 "$(math "$ANGLE+$ANGLE_OFFSET")" --phi2 "$(math "2*$ANGLE+$ANGLE_OFFSET")
     ./pendulum.x $MAINARGS > $DATAFILE 2> $INFOFILE
     
     # Add up angle for next step
@@ -34,22 +38,41 @@ if [ "$1" == "simulations" ]; then
   done
 fi
 
+FWINDOW=`math "$TIME / $OUTSTEP"`
+FREQN=`math "$FWINDOW / 2 + 1"`
+
 if [ "$1" == "fourier" ]; then
-  FWINDOW=`doawk fourier_window_max`
   echo -n "fourier: "
   for X in $(seq 0 $STEPS); do
     echo -n "."
     DATAFILE=$DIRECTORY"/out$X.csv"
     INFOFILE=$DIRECTORY"/out$X.info"
     
-    ./fourier.x --single -w $FWINDOW -c 0 -i $DATAFILE -o $DIRECTORY"/out$X.pend1.pgm"
-    ./fourier.x --single -w $FWINDOW -c 1 -i $DATAFILE -o $DIRECTORY"/out$X.pend2.pgm"
+    ./fourier.x --single -w $FWINDOW -c 0 -i $DATAFILE -o $DIRECTORY"/out$X.fourier1.csv"
+    ./fourier.x --single -w $FWINDOW -c 1 -i $DATAFILE -o $DIRECTORY"/out$X.fourier2.csv"
+  done
+  echo # newline
+fi
+
+if [ "$1" == "pgms" ]; then
+  echo -n "pgms: "
+  for X in $(seq 0 $STEPS); do
+    echo -n "."
+    ./ncsvtopgm.x -c $FREQN -i $DIRECTORY"/out$X.fourier1.csv" -o $DIRECTORY"/out$X.fourier1.pgm" 2> /dev/null
+    ./ncsvtopgm.x -c $FREQN -i $DIRECTORY"/out$X.fourier2.csv" -o $DIRECTORY"/out$X.fourier2.pgm" 2> /dev/null
   done
   echo # newline
 fi
 
 if [ "$1" == "diagram" ]; then
-  python bifurcations.py -i 1 -n $STEPS $DIRECTORY/out
-  python bifurcations.py -i 2 -n $STEPS $DIRECTORY/out
+  cat $DIRECTORY/*.fourier1.csv > $DIRECTORY/fourier1.csv
+  cat $DIRECTORY/*.fourier2.csv > $DIRECTORY/fourier2.csv
+  ./ncsvtopgm.x -c $FREQN -i $DIRECTORY/fourier1.csv -o $DIRECTORY/fourier1.pgm
+  ./ncsvtopgm.x -c $FREQN -i $DIRECTORY/fourier2.csv -o $DIRECTORY/fourier2.pgm
 fi
 
+if [ "$1" == "all" ]; then
+  ./feigenbaum.sh simulations
+  ./feigenbaum.sh fourier
+  ./feigenbaum.sh diagram
+fi

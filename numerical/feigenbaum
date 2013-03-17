@@ -9,7 +9,5 @@ angle_start=0
 angle_end=pi/2
 
 time=20
-sim_step=0.0001
-
-fourier_window_max=128
+simout_step=0.01
 
