@@ -27,7 +27,7 @@ static bool binout = false;
 #define m1 2.0
 #define m2 1.0
 
-static double phi1_0 = M_PI / 4.0;
+static double phi1_0 = M_PI / 4.0 + M_PI;
 static double phi2_0 = M_PI / 2.0;
 static double p1_0 = 0;
 static double p2_0 = 0;
@@ -54,6 +54,8 @@ static double v2max = -HUGE_VAL;
 static double tmax = -HUGE_VAL;
 static double vmax = -HUGE_VAL;
 static double emax = -HUGE_VAL;
+static int loopings_left = 0;
+static int loopings_right = 0;
 
 //////// Equations of motion and energy ////////
 // Differential equations
@@ -154,8 +156,16 @@ static pstate step(pstate s0, double h) {
 //    line" and so on
 static void run(pstate s, double timestep, double time, int output_each_nth) {
   int output_i = output_each_nth;
+  double phi2, phi2new;
   while (time > 0) {
+    phi2 = floor((fabs(s.phi2)+M_PI) / (2 * M_PI));
+    
     s = step(s, timestep);
+    
+    phi2new = floor((fabs(s.phi2)+M_PI) / (2 * M_PI));
+    if (phi2new > phi2) loopings_left ++;
+    else if (phi2new < phi2) loopings_right ++;
+    
     time -= timestep;
 
     output_i--;
@@ -235,5 +245,7 @@ int main(int argc, char *argv[]) {
   fprintf(stderr, "tmax=%f\n", tmax);
   fprintf(stderr, "vmax=%f\n", vmax);
   fprintf(stderr, "emax=%f\n", emax);
+  fprintf(stderr, "loopings_left=%d\n", loopings_left);
+  fprintf(stderr, "loopings_right=%d\n", loopings_right);
   return 0;
 }
