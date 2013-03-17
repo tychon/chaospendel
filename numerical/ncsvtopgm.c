@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 
 #include "common.h"
 
@@ -16,6 +17,8 @@ int main(int argc, char *argv[]) {
   int columns = 1
     , pgmmaxval = 255;
   bool mirror = false
+     , maximum = false
+     , logarithmic = false
      , invert = false
      , binary = false;
   autoscale ascale = ALL;
@@ -25,6 +28,8 @@ int main(int argc, char *argv[]) {
     else if (argcmpass("--outputpath|-o", argc, argv, &i, &outputpath));
     else if (argcmpassint("--columns|-c", argc, argv, &i, &columns));
     else if (! strcmp("--mirror", argv[i])) mirror = true;
+    else if (! strcmp("--maximum", argv[i])) maximum = true;
+    else if (! strcmp("--logarithmic", argv[i])) logarithmic = true;
     else if (! strcmp("--scalerows", argv[i])) ascale = ROWS;
     else if (! strcmp("--scalecols", argv[i])) ascale = COLUMNS;
     else if (! strcmp("--invert", argv[i])) invert = true;
@@ -106,6 +111,35 @@ int main(int argc, char *argv[]) {
     for (int row = 0; row < rows; row ++) {
       for (int col = 0; col < columns; col ++) {
         data[row][col] = data[row][col] * scale;
+      }
+    }
+  }
+  
+  if (maximum) {
+    for (int row = 0; row < rows; row ++) {
+      double val1 = data[row][0]
+           , val2 = data[row][1];
+      for (int col = 2; col < columns; col ++) {
+        if (val1 < val2 && val2 > data[row][col]) {
+          val1 = val2;
+          val2 = data[row][col];
+          data[row][col-2] = 0.0;
+        } else {
+          val1 = val2;
+          val2 = data[row][col];
+          data[row][col-1] = 0.0;
+        }
+      }
+      if (val2 > data[row][columns-1])
+        data[row][columns-1] = 0.0;
+    }
+  }
+  
+  if (logarithmic) {
+    int scale = pgmmaxval / log1p(pgmmaxval);
+    for (int row = 0; row < rows; row ++) {
+      for (int col = 2; col < columns; col ++) {
+        data[row][col] = log1p(data[row][col]) * scale;
       }
     }
   }

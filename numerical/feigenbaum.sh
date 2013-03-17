@@ -67,8 +67,8 @@ fi
 if [ "$1" == "diagram" ]; then
   cat $DIRECTORY/*.fourier1.csv > $DIRECTORY/fourier1.csv
   cat $DIRECTORY/*.fourier2.csv > $DIRECTORY/fourier2.csv
-  ./ncsvtopgm.x -c $FREQN -i $DIRECTORY/fourier1.csv -o $DIRECTORY/fourier1.pgm
-  ./ncsvtopgm.x -c $FREQN -i $DIRECTORY/fourier2.csv -o $DIRECTORY/fourier2.pgm
+  ./ncsvtopgm.x --scalerows --logarithmic --invert --maximum -c $FREQN -i $DIRECTORY/fourier1.csv -o $DIRECTORY/fourier1.pgm 2> /dev/null
+  ./ncsvtopgm.x --scalerows --logarithmic --invert --maximum -c $FREQN -i $DIRECTORY/fourier2.csv -o $DIRECTORY/fourier2.pgm 2> /dev/null
 fi
 
 if [ "$1" == "all" ]; then
