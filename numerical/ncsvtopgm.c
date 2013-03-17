@@ -54,12 +54,16 @@ int main(int argc, char *argv[]) {
       data = assert_realloc(data, allocated_rows * sizeof(double*));
     }
     
-    if (rows ++, ! parseNCSVLine(inpf, columns, numbers) < 0) {
-      fprintf(stderr, "ERROR: Bad CSV file! line %d\n", rows);
-      exit(1);
+    int parseres;
+    if ((parseres=parseNCSVLine(inpf, columns, numbers))) {
+      if (parseres != -1 && parseres != -3) {
+        fprintf(stderr, "ERROR: Bad CSV file! err %d at line %d\n", parseres, rows+1);
+        exit(1);
+      }
     }
-    data[rows-1] = assert_malloc(columns * sizeof(double));
-    memcpy(data[rows-1], numbers, columns * sizeof(double));
+    data[rows] = assert_malloc(columns * sizeof(double));
+    memcpy(data[rows], numbers, columns * sizeof(double));
+    rows++;
   }
   
   if (inputpath) fclose(inpf);
