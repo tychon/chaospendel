@@ -5,10 +5,10 @@
 #include <string.h>
 
 // returns 0 if the correct amount of data was parsed
-bool parseNCSVLine(FILE *f, int columns, double *res) {
-  char buf[1000];
-  if (fgets(buf, 1000, f) == NULL) {
-    return -2; // real error
+int parseNCSVLine(FILE *f, int columns, double *res) {
+  char buf[10000];
+  if (fgets(buf, sizeof(buf), f) == NULL) {
+    return -1; // probably EOF
   }
   
   char *strtok_buf = buf;
@@ -16,7 +16,7 @@ bool parseNCSVLine(FILE *f, int columns, double *res) {
   int resindex = 0;
   while ((p = strtok(strtok_buf, ",")) != NULL) {
     strtok_buf = NULL;
-    if (resindex == columns) return 1; // no more space in res
+    if (resindex == columns) return -3; // no more space in res
     char *endptr;
     res[resindex++] = strtod(p, &endptr);
     if (endptr == p) {
@@ -28,9 +28,9 @@ bool parseNCSVLine(FILE *f, int columns, double *res) {
     }
   }
   if (resindex == columns) {
-    return true; // everything is fine
+    return 0; // everything is fine
   } else {
-    return false; // didn't parse at least `columns` columns
+    return -2; // didn't parse at least `columns` columns
   }
 }
 
