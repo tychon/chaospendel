@@ -16,6 +16,7 @@ int main(int argc, char *argv[]) {
   int columns = 1
     , pgmmaxval = 255;
   bool mirror = false
+     , invert = false
      , binary = false;
   autoscale ascale = ALL;
   
@@ -26,6 +27,7 @@ int main(int argc, char *argv[]) {
     else if (! strcmp("--mirror", argv[i])) mirror = true;
     else if (! strcmp("--scalerows", argv[i])) ascale = ROWS;
     else if (! strcmp("--scalecols", argv[i])) ascale = COLUMNS;
+    else if (! strcmp("--invert", argv[i])) invert = true;
     else if (! strcmp("--binary", argv[i])) binary = true;
     else {
       fprintf(stderr, "Unknown argument: %s\n", argv[i]);
@@ -86,7 +88,7 @@ int main(int argc, char *argv[]) {
     }
   }
   else if (ascale == COLUMNS) {
-    // scale columns
+    //TODO scale columns
   }
   else {
     double maxval = 0;
@@ -108,9 +110,16 @@ int main(int argc, char *argv[]) {
     }
   }
   
-  
   if (mirror) {
     //TODO mirror
+  }
+  
+  if (invert) {
+    for (int row = 0; row < rows; row ++) {
+      for (int col = 0; col < columns; col ++) {
+        data[row][col] = pgmmaxval - data[row][col];
+      }
+    }
   }
   
   //// output ////
