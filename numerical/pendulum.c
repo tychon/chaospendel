@@ -207,6 +207,8 @@ int main(int argc, char *argv[]) {
   for (int i = 1; i < argc; i++) {
     if (!strcmp("--binout", argv[i])) binout = true;
     if (!strcmp("--time", argv[i])) { i++; time = strtod(argv[i], NULL); }
+    if (!strcmp("--simstep", argv[i])) { i++; simtimestep = strtod(argv[i], NULL); }
+    if (!strcmp("--outstep", argv[i])) { i++; outtimestep = strtod(argv[i], NULL); }
     
     // start conditions
     if (!strcmp("--phi1", argv[i])) { i++; phi1_0 = strtod(argv[i], NULL); }
@@ -229,6 +231,8 @@ int main(int argc, char *argv[]) {
   fprintf(stderr, "frames_loss   = %f\n", 1-1/outtimestep*simtimestep);
   fprintf(stderr, "l1=%f\n", l1);
   fprintf(stderr, "l2=%f\n", l2);
+  fprintf(stderr, "phi1=%f\n", phi1_0);
+  fprintf(stderr, "phi2=%f\n", phi2_0);
   pstate state0 = {.phi1=phi1_0, .phi2 = phi2_0, .p1 = p1_0, .p2 = p2_0 };
   run(state0, simtimestep, time, (int)ceil((1/simtimestep)*outtimestep));
   fprintf(stderr, "t1min=%f\n", t1min);
