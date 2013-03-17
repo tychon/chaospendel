@@ -27,17 +27,17 @@ void toPendulumCartesian(double radius, double angle, double *x, double *y) {
   *y = cos(angle) * radius;
 }
 
-void drawPendulum(shmsurface *sf, projectdata *pd
+void drawPendulum(generic_surface *sf, projectdata *pd
                 , integral **integ, double integrange
                 , int whitebg) {
   int green_color = COLOR_GREEN;
   int red_color = COLOR_RED;
   // clear surface
   if (whitebg) {
-    shmsurface_fill(sf, COLOR_WHITE);
+    generic_surface_fill(sf, COLOR_WHITE);
     green_color = 0xff009600;
     red_color = 0xff960000;
-  } else shmsurface_fill(sf, COLOR_BLACK);
+  } else generic_surface_fill(sf, COLOR_BLACK);
   
   // precompute scaling
   double maxpendlength = (double)(pd->l1 + (pd->l2a > pd->l2b ? pd->l2a : pd->l2b));
@@ -164,7 +164,7 @@ int main(int argc, char *argv[]) {
   uds_start_server(udsss);
   
   // x11 things
-  shmsurface *surface = NULL;
+  generic_surface *surface = NULL;
   if (showx11gui) {
     surface = createSHMSurface(100, 100, 500, 500);
   }

@@ -51,7 +51,7 @@ int main(int argc, char *argv[]) {
   udsclientsocket *udscs = uds_create_client(socketpath);
   
   // the x11 thing
-  shmsurface *surface = createSHMSurface(100, 10, BARWIDTH*pd->solnum, BARHEIGHT);
+  generic_surface *surface = createSHMSurface(100, 10, BARWIDTH*pd->solnum, BARHEIGHT);
   
   // precompute some values
   const double scale = ((double)BARHEIGHT-1.0) / (pd->inputrangemax - pd->inputrangemin);
@@ -100,8 +100,8 @@ int main(int argc, char *argv[]) {
     
     micros = getMicroseconds();
     if (micros-lastframemicros > minframewait) {
-      if (whitebg) shmsurface_fill(surface, COLOR_WHITE);
-      else shmsurface_fill(surface, COLOR_BLACK);
+      if (whitebg) generic_surface_fill(surface, COLOR_WHITE);
+      else generic_surface_fill(surface, COLOR_BLACK);
       
       // draw bars
       for (int i = 0; i < pd->solnum; i++) {

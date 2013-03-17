@@ -19,7 +19,7 @@
  * Initialize all the X11 stuff.
  * The function puts some infos about the window on stderr.
  */
-shmsurface *createSHMSurface(int xpos, int ypos, int width, int height) {
+generic_surface *createSHMSurface(int xpos, int ypos, int width, int height) {
   Display *dpy = XOpenDisplay(NULL);
   if (dpy == NULL) {
     fputs("Can't open display.\n", stderr);
@@ -76,13 +76,15 @@ shmsurface *createSHMSurface(int xpos, int ypos, int width, int height) {
   XShmAttach(dpy, shminfo);
   XFlush(dpy);
   
-  shmsurface *surf = malloc(sizeof(shmsurface));
+  generic_surface *surf = malloc(sizeof(generic_surface));
   surf->width = width;
   surf->height = height;
+  surf->bytes_per_line = img->bytes_per_line;
   surf->display = dpy;
   memcpy(&surf->window, &window, sizeof(Window));
   memcpy(&surf->graphics_context, &gc, sizeof(GC));
   surf->image = img;
+  surf->data = img->data;
   
   return surf;
 }
@@ -91,7 +93,7 @@ shmsurface *createSHMSurface(int xpos, int ypos, int width, int height) {
  * Flush, flush, flush! the image.
  * -> make it visible on the screen.
  */
-void flushSHMSurface(shmsurface *surface) {
+void flushSHMSurface(generic_surface *surface) {
   XShmPutImage(surface->display
              , surface->window
              , surface->graphics_context
@@ -110,7 +112,7 @@ void flushSHMSurface(shmsurface *surface) {
  * one row higher on the right. And if the xshift is positive, pixels
  * disappearing on the right appear one row lower on the left!
  */
-void shmsurface_memshift(shmsurface *surface, int xshift) {
+void generic_surface_memshift(generic_surface *surface, int xshift) {
   if (xshift < 0) { // move to the left
     memmove(surface->image->data
           , surface->image->data - xshift*sizeof(int)
@@ -124,7 +126,7 @@ void shmsurface_memshift(shmsurface *surface, int xshift) {
 /**
  * Set all the pixels in the surface to one and only one 'color'.
  */
-void shmsurface_fill(shmsurface *surface, int color) {
+void generic_surface_fill(generic_surface *surface, int color) {
   memset(surface->image->data
        , color
        , surface->image->bytes_per_line * surface->image->height);
@@ -151,7 +153,7 @@ void shmsurface_fill(shmsurface *surface, int color) {
 /**
  * Draw a simple dot, to put it in other words: color one pixel.
  */
-void drawDot(shmsurface *surface, int x, int y, int color) {
+void drawDot(generic_surface *surface, int x, int y, int color) {
   STDPLOT(surface, x, y, color)
 }
 
@@ -161,7 +163,7 @@ void drawDot(shmsurface *surface, int x, int y, int color) {
  * This is an implementation of Bresenham's line algorithm.
  * code found on the english Wikipedia
  */
-void drawBresenhamLine(shmsurface *surface, int x0, int y0, int x1, int y1, int color) {
+void drawBresenhamLine(generic_surface *surface, int x0, int y0, int x1, int y1, int color) {
   CHECKRANGE(surface, x0, y0)
   CHECKRANGE(surface, x1, y1)
 
@@ -198,7 +200,7 @@ void drawBresenhamLine(shmsurface *surface, int x0, int y0, int x1, int y1, int 
 /**
  * Draw the borders of the given rect.
  */
-void drawRect(shmsurface *surface, int xpos, int ypos, int width, int height, int color) {
+void drawRect(generic_surface *surface, int xpos, int ypos, int width, int height, int color) {
   CHECKRANGE(surface, xpos, ypos)
   CHECKRANGE(surface, xpos+width, ypos+height)
 
@@ -226,9 +228,9 @@ void drawRect(shmsurface *surface, int xpos, int ypos, int width, int height, in
 /**
  * Fills a given area with the given color.
  * For filling the whole surface use the more efficient
- * function 'shmsurface_fill'.
+ * function 'generic_surface_fill'.
  */
-void fillRect(shmsurface *surface, int xpos, int ypos, int width, int height, int color) {
+void fillRect(generic_surface *surface, int xpos, int ypos, int width, int height, int color) {
   CHECKRANGE(surface, xpos, ypos)
   CHECKRANGE(surface, xpos+width, ypos+height)
 
@@ -253,7 +255,7 @@ void fillRect(shmsurface *surface, int xpos, int ypos, int width, int height, in
  * This is an implementation of the midpoint circle algorithm.
  * code fount on the english Wikipedia
  */
-void drawCircle(shmsurface *surface, int xpos, int ypos, int radius, int color) {
+void drawCircle(generic_surface *surface, int xpos, int ypos, int radius, int color) {
   CHECKRANGE(surface, xpos-radius, ypos-radius)
   CHECKRANGE(surface, xpos+radius, ypos+radius)
 
@@ -296,7 +298,7 @@ void drawCircle(shmsurface *surface, int xpos, int ypos, int radius, int color) 
  * given color.
  * This is a slightly modified version of the midpoint circle algorithm.
  */
-void fillCircle(shmsurface *surface, int xpos, int ypos, int radius, int color) {
+void fillCircle(generic_surface *surface, int xpos, int ypos, int radius, int color) {
   CHECKRANGE(surface, xpos-radius, ypos-radius)
   CHECKRANGE(surface, xpos+radius, ypos+radius)
 
@@ -328,7 +330,7 @@ void fillCircle(shmsurface *surface, int xpos, int ypos, int radius, int color) 
   }
 }
 
-int drawHyperbola(shmsurface *surface
+int drawHyperbola(generic_surface *surface
                  , double ax, double ay
                  , double fx, double fy
                  , double f/*ratio*/
@@ -400,7 +402,7 @@ int drawHyperbola(shmsurface *surface
   return 0;
 }
 
-void dump_ppm(int fd, shmsurface *s) {
+void dump_ppm(int fd, generic_surface *s) {
   char *header;
   if (asprintf(&header, "P6\n%d %d\n255\n", s->width, s->height) < 0) {
     fprintf(stderr, "can't asprintf ppm header: %s\n", strerror(errno));

@@ -18,7 +18,7 @@ double getPolarDistance(projectdata *pd, int solindex1, int solindex2) {
   return sqrt(r1*r1 + r2*r2 - 2*r1*r2*cos(phi1-phi2));
 }
 
-void toPendulumCartesian(projectdata *pd, shmsurface *sf
+void toPendulumCartesian(projectdata *pd, generic_surface *sf
                        , double scale
                        , int solindex
                        , double *x, double *y) {
@@ -28,7 +28,7 @@ void toPendulumCartesian(projectdata *pd, shmsurface *sf
   *y += sf->height/2;
 }
 
-void drawPendulum(shmsurface *sf, projectdata *pd
+void drawPendulum(generic_surface *sf, projectdata *pd
                 , int tracklength, int *track
                 , int nextindex, double nextprob
                 , int whitebg) {
@@ -36,11 +36,11 @@ void drawPendulum(shmsurface *sf, projectdata *pd
   //int green = COLOR_GREEN;
   int red = COLOR_RED;
   if (whitebg) {
-    shmsurface_fill(sf, COLOR_WHITE);
+    generic_surface_fill(sf, COLOR_WHITE);
     //green = 0xff009600;
     red = 0xff960000;
   }
-  else shmsurface_fill(sf, COLOR_BLACK);
+  else generic_surface_fill(sf, COLOR_BLACK);
   
   // precompute scaling
   double maxpendlength = (double)(pd->l1 + (pd->l2a > pd->l2b ? pd->l2a : pd->l2b));
@@ -162,7 +162,7 @@ int main(int argc, char *argv[]) {
   fprintf(stderr, "reading pendulum data from \"%s\" ...\n", pendulumdatapath);
   readPendulumData(pd, pendulumdatapath);
   
-  shmsurface *surface = createSHMSurface(100, 100, 500, 500);
+  generic_surface *surface = createSHMSurface(100, 100, 500, 500);
   
   int *track = assert_malloc(pd->markovtracklength * sizeof(int));
   for (int i = 0; i < pd->markovtracklength; i++) track[i] = -1;
