@@ -25,21 +25,18 @@ static bool binout = false;
 #endif
 
 // Startbedingungen
-#define l1 4.0
-#define l2 3.0
-#define m1 2.0
-#define m2 1.0
+#define l1 0.285
 
 static double phi1_0 = M_PI / 4.0 + M_PI;
 static double phi2_0 = M_PI / 2.0;
 static double p1_0 = 0;
 static double p2_0 = 0;
 
-static double k1 = (1.0/3) * (l1*l1) * m1;
-static double k2 = (1.0/2) * l1      * m1;
-static double k3 = m2;
-static double k4 = (1.0/3) * l2*(l2) * m2;
-static double k5 = (1.0/2) * l2      * m2;
+static double k1 = 0.0284;
+static double k2 = 0.118;
+static double k3 = 0.448;
+static double k4 = 0.00441;
+static double k5 = 0.0254;
 
 #ifndef LOOPINGS
 //////// Variables about minimum and maximum vals ///////
@@ -252,7 +249,6 @@ int main(int argc, char *argv[]) {
   fprintf(stderr, "time_step     = %f\n", outtimestep);
   fprintf(stderr, "frames_loss   = %f\n", 1-1/outtimestep*simtimestep);
   fprintf(stderr, "l1=%f\n", l1);
-  fprintf(stderr, "l2=%f\n", l2);
   fprintf(stderr, "phi1=%f\n", phi1_0);
   fprintf(stderr, "phi2=%f\n", phi2_0);
 #endif
