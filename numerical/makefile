@@ -15,7 +15,7 @@ LIBS := ../common/libcommon.a -lfftw3 -lm -lowfat -lX11 -lXext
 # Options for compiling and linking
 BOTH := -mfpmath=387 -malign-double -march=native -mtune=native -O3 -fwhole-program -flto -ffast-math
 
-all: libcommon ncsvtopgm.x fourier.x pendulum.x genpmovie.x lighttrail.x fast_pendulum.x loopgraph.x
+all: libcommon ncsvtopgm.x fourier.x pendulum.x genpmovie.x lighttrail.x fast_pendulum.x loopgraph.x binmerge.x
 
 libcommon:
 	make -C ../common/
