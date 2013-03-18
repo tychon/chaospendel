@@ -27,4 +27,5 @@ libcommon:
 	gcc $(BOTH) -o $*.x $*.o $(LIBS)
 
 clean:
+	rm -rf feigenbaum-data
 	rm -f *.x *.o *.csv *.ppm *.pgm

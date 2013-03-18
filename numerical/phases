@@ -1,0 +1,11 @@
+
+directory=phases-data
+steps=100
+
+time=120
+simout_step=0.01
+
+angle_offset=0
+angle_start=0
+angle_end=pi/2
+
