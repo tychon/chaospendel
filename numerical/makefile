@@ -15,13 +15,16 @@ LIBS := ../common/libcommon.a -lfftw3 -lm -lowfat -lX11 -lXext
 # Options for compiling and linking
 BOTH := -mfpmath=387 -malign-double -march=native -mtune=native -O3 -fwhole-program -flto -ffast-math
 
-all: libcommon ncsvtopgm.x fourier.x pendulum.x genpmovie.x lighttrail.x
+all: libcommon ncsvtopgm.x fourier.x pendulum.x genpmovie.x lighttrail.x fast_pendulum.x loopgraph.x
 
 libcommon:
 	make -C ../common/
 
 %.o: %.c
 	gcc $(CFLAGS) $(BOTH) $(OPTS) -c -o $*.o $*.c
+
+fast_pendulum.x: pendulum.c
+	gcc -DLOOPINGS $(CFLAGS) $(BOTH) $(OPTS) -o fast_pendulum.x pendulum.c $(LIBS)
 
 %.x: %.o
 	gcc $(BOTH) -o $*.x $*.o $(LIBS)

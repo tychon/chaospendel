@@ -6,6 +6,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include "pendulum.h"
 
 // Average gravity in Germany
@@ -16,10 +17,12 @@ static const double g = 9.81;
 static double time = 60.0;
 // Time per step in Runge-Kutta
 static double simtimestep = 0.0001;
+#ifndef LOOPINGS
 // Time per sample in output
 static double outtimestep = 1. / 80.;
 // Output as binary, otherwise ASCII CSV
 static bool binout = false;
+#endif
 
 // Startbedingungen
 #define l1 4.0
@@ -38,6 +41,7 @@ static double k3 = m2;
 static double k4 = (1.0/3) * l2*(l2) * m2;
 static double k5 = (1.0/2) * l2      * m2;
 
+#ifndef LOOPINGS
 //////// Variables about minimum and maximum vals ///////
 // These are updated during `run`
 static double t1min = HUGE_VAL;
@@ -54,8 +58,9 @@ static double v2max = -HUGE_VAL;
 static double tmax = -HUGE_VAL;
 static double vmax = -HUGE_VAL;
 static double emax = -HUGE_VAL;
-static int loopings_left = 0;
-static int loopings_right = 0;
+#endif
+static uint8_t loopings_left = 0;
+static uint8_t loopings_right = 0;
 
 //////// Equations of motion and energy ////////
 // Differential equations
@@ -75,6 +80,7 @@ static double fp2(const pstate s) {
 }
 
 // Energies
+#ifndef LOOPINGS
 static double t1(double phi1d) { return (1.0/2) * (phi1d*phi1d) * k1; }
 static double v1(double phi1) { return (-g) * k2 * cos(phi1); }
 static double t2(double phi1, double phi2, double phi1d, double phi2d) {
@@ -83,8 +89,10 @@ static double t2(double phi1, double phi2, double phi1d, double phi2d) {
 static double v2(double phi1, double phi2) {
   return (-g) * l1 * k3 * cos(phi1) - g * k5 * cos(phi2);
 }
+#endif
 
 
+#ifndef LOOPINGS
 static void print_state(pstate s) {
   if (binout) {
     write(1, &s, sizeof(pstate));
@@ -103,6 +111,7 @@ static void print_state(pstate s) {
         , s.e);
   }
 }
+#endif
 
 static pstate calc_s_(pstate s) {
   pstate s_;
@@ -154,8 +163,14 @@ static pstate step(pstate s0, double h) {
 //  - `output_each_nth` specifies how many of the values we generate should
 //    appear in our output - 1 means "print each line", 2 means "print every second
 //    line" and so on
-static void run(pstate s, double timestep, double time, int output_each_nth) {
+static void run(pstate s, double timestep, double time
+#ifndef LOOPINGS
+                , int output_each_nth
+#endif
+                ) {
+#ifndef LOOPINGS
   int output_i = output_each_nth;
+#endif
   double phi2, phi2new;
   while (time > 0) {
     phi2 = floor((fabs(s.phi2)+M_PI) / (2 * M_PI));
@@ -168,6 +183,7 @@ static void run(pstate s, double timestep, double time, int output_each_nth) {
     
     time -= timestep;
 
+#ifndef LOOPINGS
     output_i--;
     if (output_i == 0) {
       output_i = output_each_nth;
@@ -200,15 +216,20 @@ static void run(pstate s, double timestep, double time, int output_each_nth) {
 
       print_state(s);
     }
+#endif
   }
 }
 
 int main(int argc, char *argv[]) {
   for (int i = 1; i < argc; i++) {
+#ifndef LOOPINGS
     if (!strcmp("--binout", argv[i])) binout = true;
+#endif
     if (!strcmp("--time", argv[i])) { i++; time = strtod(argv[i], NULL); }
     if (!strcmp("--simstep", argv[i])) { i++; simtimestep = strtod(argv[i], NULL); }
+#ifndef LOOPINGS
     if (!strcmp("--outstep", argv[i])) { i++; outtimestep = strtod(argv[i], NULL); }
+#endif
     
     // start conditions
     if (!strcmp("--phi1", argv[i])) { i++; phi1_0 = strtod(argv[i], NULL); }
@@ -224,6 +245,7 @@ int main(int argc, char *argv[]) {
     if (!strcmp("--k5", argv[i])) { i++; k5 = strtod(argv[i], NULL); }
   }
   
+#ifndef LOOPINGS
   fprintf(stderr, "time          = %f\n", time);
   fprintf(stderr, "integral_step = %f\n", simtimestep);
   fprintf(stderr, "opt_fps       = %f\n", 1/outtimestep);
@@ -233,8 +255,14 @@ int main(int argc, char *argv[]) {
   fprintf(stderr, "l2=%f\n", l2);
   fprintf(stderr, "phi1=%f\n", phi1_0);
   fprintf(stderr, "phi2=%f\n", phi2_0);
+#endif
   pstate state0 = {.phi1=phi1_0, .phi2 = phi2_0, .p1 = p1_0, .p2 = p2_0 };
-  run(state0, simtimestep, time, (int)ceil((1/simtimestep)*outtimestep));
+  run(state0, simtimestep, time
+#ifndef LOOPINGS
+      , (int)ceil((1/simtimestep)*outtimestep)
+#endif
+  );
+#ifndef LOOPINGS
   fprintf(stderr, "t1min=%f\n", t1min);
   fprintf(stderr, "v1min=%f\n", v1min);
   fprintf(stderr, "t2min=%f\n", t2min);
@@ -251,5 +279,9 @@ int main(int argc, char *argv[]) {
   fprintf(stderr, "emax=%f\n", emax);
   fprintf(stderr, "loopings_left=%d\n", loopings_left);
   fprintf(stderr, "loopings_right=%d\n", loopings_right);
+#else
+  write(1, &loopings_left, 1);
+  write(1, &loopings_right, 1);
+#endif
   return 0;
 }
