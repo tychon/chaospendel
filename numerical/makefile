@@ -10,12 +10,12 @@ CFLAGS += -I../common/ # include files can be in ../common/
 CFLAGS += -D_BSD_SOURCE
 
 # Options appended on linking
-LIBS := ../common/libcommon.a -lfftw3 -lm -lowfat -lX11 -lXext
+LIBS := ../common/libcommon.a -lfftw3 -lm -lowfat -lX11 -lXext -lOpenCL
 
 # Options for compiling and linking
 BOTH := -mfpmath=387 -malign-double -march=native -mtune=native -O3 -fwhole-program -flto -ffast-math
 
-all: libcommon ncsvtopgm.x fourier.x pendulum.x genpmovie.x lighttrail.x fast_pendulum.x loopgraph.x binmerge.x
+all: libcommon ncsvtopgm.x fourier.x pendulum.x genpmovie.x lighttrail.x fast_pendulum.x loopgraph.x binmerge.x incredible_pendulum.x
 
 libcommon:
 	make -C ../common/
