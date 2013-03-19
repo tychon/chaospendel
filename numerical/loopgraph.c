@@ -16,7 +16,7 @@
 
 int main(int argc, char **argv) {
   if (argc != 6) {
-    fprintf(stderr, "wrong invocation: want width, height, outpath starti nofi!\n");
+    fprintf(stderr, "wrong invocation: want width, height, outpath, starti, nofi!\n");
     exit(1);
   }
   int width = atoi(argv[1]);
@@ -25,7 +25,7 @@ int main(int argc, char **argv) {
   int starti = atoi(argv[4]);
   int nofi = atoi(argv[5]);
   
-  int outfd = open(outpath, O_RDWR|O_CREAT|O_TRUNC, 0777);
+  int outfd = open(outpath, O_RDWR|O_CREAT|O_TRUNC, 0666);
   if (outfd == -1) {
     perror("can't open file");
     return 1;
