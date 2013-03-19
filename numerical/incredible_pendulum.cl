@@ -31,19 +31,19 @@ inline float fphi2(const pstate s) {
   float phidiff = cos(s.phi1-s.phi2);
   return (k1*s.p2+l1*(k3*l1*s.p2-k5*s.p1*phidiff)) / (k1*k4+l1*l1*(k3*k4-k5*k5*phidiff*phidiff));
 }
-float fp1(const pstate s) {
-  return -l1*fphi1(s)*fphi2(s)*k5*sin(s.phi1-s.phi2) - g*k2*sin(s.phi1) - g*l1*k3*sin(s.phi1);
+inline float fp1(const pstate s, float newphi1, float newphi2) {
+  return -l1*newphi1*newphi2*k5*sin(s.phi1-s.phi2) - g*k2*sin(s.phi1) - g*l1*k3*sin(s.phi1);
 }
-float fp2(const pstate s) {
-  return l1*fphi1(s)*fphi2(s)*k5*sin(s.phi1-s.phi2) - g*k5*sin(s.phi2);
+inline float fp2(const pstate s, float newphi1, float newphi2) {
+  return l1*newphi1*newphi2*k5*sin(s.phi1-s.phi2) - g*k5*sin(s.phi2);
 }
 
 pstate calc_s_(pstate s) {
   pstate s_;
   s_.phi1 = fphi1(s);
   s_.phi2 = fphi2(s);
-  s_.p1   = fp1(s);
-  s_.p2   = fp2(s);
+  s_.p1   = fp1(s, s_.phi1, s_.phi2);
+  s_.p2   = fp2(s, s_.phi1, s_.phi2);
   return s_;
 }
 
@@ -91,16 +91,16 @@ __kernel void simulate_pendulum(__global float *in, __global unsigned char *out_
   unsigned char loopings_left=0, loopings_right=0;
   
   pstate s = {.phi1=phi1_0, .phi2 = phi2_0, .p1 = 0, .p2 = 0 };
-  float phi2, phi2new;
+  float phi2 = floor((fabs(s.phi2)+FLOAT_PI) / (2 * FLOAT_PI));
+  float phi2new;
   int i;
   for (i=0; i<ITERATIONS; i++) {
-    phi2 = floor((fabs(s.phi2)+FLOAT_PI) / (2 * FLOAT_PI));
-    
     s = mystep(s, timestep);
     
     phi2new = floor((fabs(s.phi2)+FLOAT_PI) / (2 * FLOAT_PI));
     if (phi2new > phi2) loopings_left ++;
     else if (phi2new < phi2) loopings_right ++;
+    phi2 = phi2new;
   }
   
   out[0] = 0;
