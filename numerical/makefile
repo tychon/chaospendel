@@ -23,12 +23,12 @@ libcommon:
 %.o: %.c
 	gcc $(CFLAGS) $(BOTH) $(OPTS) -c -o $*.o $*.c
 
-fast_pendulum.x: pendulum.c
-	gcc -DLOOPINGS $(CFLAGS) $(BOTH) $(OPTS) -o fast_pendulum.x pendulum.c $(LIBS)
-
 %.x: %.o
 	gcc $(BOTH) -o $*.x $*.o $(LIBS)
 
+fast_pendulum.x: pendulum.c
+	gcc -DLOOPINGS $(CFLAGS) $(BOTH) $(OPTS) -o fast_pendulum.x pendulum.c $(LIBS)
+
 clean:
-	rm -rf feigenbaum-data
+	rm -rf feigenbaum-data phases-data
 	rm -f *.x *.o *.csv *.ppm *.pgm
