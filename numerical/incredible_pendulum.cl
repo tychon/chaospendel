@@ -1,6 +1,7 @@
 #pragma OPENCL EXTENSION cl_khr_byte_addressable_store : enable
 
 #define ITERATIONS 600000
+#define timestep 0.0001
 #define g 9.81
 #define l1 0.285
 #define k1 0.0284
@@ -46,7 +47,7 @@ pstate calc_s_(pstate s) {
   return s_;
 }
 
-pstate step(pstate s0, float h) {
+pstate mystep(pstate s0, float h) {
   // see http://de.wikipedia.org/wiki/Klassisches_Runge-Kutta-Verfahren
   // sxd is the first derivation of sx
 
@@ -89,19 +90,17 @@ __kernel void simulate_pendulum(__global float *in, __global unsigned char *out_
   __global unsigned char *out = out_+3*tid;
   unsigned char loopings_left=0, loopings_right=0;
   
-  pstate state0 = {.phi1=phi1_0, .phi2 = phi2_0, .p1 = 0, .p2 = 0 };
+  pstate s = {.phi1=phi1_0, .phi2 = phi2_0, .p1 = 0, .p2 = 0 };
   float phi2, phi2new;
   int i;
   for (i=0; i<ITERATIONS; i++) {
     phi2 = floor((fabs(s.phi2)+FLOAT_PI) / (2 * FLOAT_PI));
     
-    s = step(s, timestep);
+    s = mystep(s, timestep);
     
     phi2new = floor((fabs(s.phi2)+FLOAT_PI) / (2 * FLOAT_PI));
     if (phi2new > phi2) loopings_left ++;
     else if (phi2new < phi2) loopings_right ++;
-    
-    time -= timestep;
   }
   
   out[0] = 0;

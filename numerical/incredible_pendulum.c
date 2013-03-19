@@ -15,8 +15,6 @@
 
 #define SEPARATOR "----------------------------------------------------------------------\n"
 
-#define use_gpu 1
-
 // CL_SUCCESS is 0
 
 // WARNING: The incredible pendulum can't handle double-precision
@@ -58,23 +56,42 @@ int main(int argc, char **argv) {
   int err;
   
   // ######  Parse args.  ######
-  if (argc != 4) {
-    fprintf(stderr, "wrong invocation: want width, height, outpath!\n");
+  if (argc != 5) {
+    fprintf(stderr, "wrong invocation: want cpu/gpu, width, height, outpath!\n");
     exit(1);
   }
-  int width = atoi(argv[1]);
-  int height = atoi(argv[2]);
-  char *outpath = argv[3];
+  int use_gpu;
+  if (!strcmp(argv[1], "cpu")) {
+    use_gpu = 0;
+  } else if (!strcmp(argv[1], "gpu")) {
+    use_gpu = 1;
+  } else {
+    printf("I only know cpu and gpu!\n");
+    exit(1);
+  }
+  int width = atoi(argv[2]);
+  int height = atoi(argv[3]);
+  char *outpath = argv[4];
   
   
   // ######  Prepare the OpenCL environment and our kernel.  ######
   printf("preparing the OpenCL environment and the kernel...\n");
+  cl_platform_id platforms[16];
+  cl_uint num_platforms;
+  err = clGetPlatformIDs(15, platforms, &num_platforms);
+  if (err || num_platforms == 0) {
+    printf("Can't locate platform!");
+    return 1;
+  }
+  cl_platform_id platform = platforms[0];
+  printf("%i platforms found.\n", (int)num_platforms);
   cl_device_id device_id;
-  err = clGetDeviceIDs(NULL, use_gpu?CL_DEVICE_TYPE_GPU:CL_DEVICE_TYPE_CPU, 1, &device_id, NULL);
+  err = clGetDeviceIDs(platform, use_gpu?CL_DEVICE_TYPE_GPU:CL_DEVICE_TYPE_CPU, 1, &device_id, NULL);
   if (err) {
     printf("Error: Failed to locate a compute device!\n");
     return 1;
   }
+  printf("Yay! Seems as if you've got a working compute device!\n");
   
   size_t max_workgroup_size;
   cl_char vendor_name[1024] = {0};
@@ -127,8 +144,12 @@ int main(int argc, char **argv) {
   // ######  Our kernel is ready, now prepare the input/output buffers and data.  ######
   printf("kernel is ready, preparing outfile, data and buffers...\n");
   size_t number_of_runs = width * height;
-  cl_float *inputdata = malloc(2*sizeof(cl_float)*number_of_runs+4);
-  inputdata = (cl_float*)(((long long)(inputdata+sizeof(cl_float)))&~0x3);
+  cl_float *inputdata;
+  err = posix_memalign((void**)&inputdata, 2*sizeof(cl_float), 2*sizeof(cl_float)*number_of_runs);
+  if (err) {
+    printf("Error allocating aligned memory.\n");
+    exit(1);
+  }
   cl_float *inputdata_ = inputdata;
   if (inputdata == NULL) {
     printf("Error: Failed to malloc input buffer!\n");
@@ -189,7 +210,7 @@ int main(int argc, char **argv) {
   
   
   // ######  Everything is ready, run it!  ######
-  printf("data is also ready, starting execution...\n");
+  printf("data is also ready, starting execution of %d jobs...\n", (int)number_of_runs);
   err = clEnqueueNDRangeKernel(commands, kern, 1, NULL, &number_of_runs, NULL, 0, NULL, NULL);
   if (err) {
     printf("Error: Failed to execute kernel!\n");
