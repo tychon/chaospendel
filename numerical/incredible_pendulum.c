@@ -125,7 +125,7 @@ int main(int argc, char **argv) {
     return 1;
   }
   
-  err = clBuildProgram(prog, 0, NULL, NULL, NULL, NULL);
+  err = clBuildProgram(prog, 0, NULL, "-cl-unsafe-math-optimizations", NULL, NULL);
   if (err) {
     printf("Error: Failed to build program executable!\n");
     char build_log[2048];

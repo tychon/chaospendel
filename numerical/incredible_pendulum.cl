@@ -14,27 +14,27 @@
 
 // Data structure for current values during sim
 typedef struct {
-  double phi1;
-  double phi2;
-  double p1;
-  double p2;
+  float phi1;
+  float phi2;
+  float p1;
+  float p2;
 } pstate;
 
 
 //////// Equations of motion and energy ////////
 // Differential equations
-float fphi1(const pstate s) {
+inline float fphi1(const pstate s) {
   float phidiff = cos(s.phi1-s.phi2);
   return (k4*s.p1-k5*l1*phidiff*s.p2) / (k1*k4+l1*l1*(k3*k4-k5*k5*phidiff*phidiff));
 }
-float fphi2(const pstate s) {
+inline float fphi2(const pstate s) {
   float phidiff = cos(s.phi1-s.phi2);
   return (k1*s.p2+l1*(k3*l1*s.p2-k5*s.p1*phidiff)) / (k1*k4+l1*l1*(k3*k4-k5*k5*phidiff*phidiff));
 }
 float fp1(const pstate s) {
   return -l1*fphi1(s)*fphi2(s)*k5*sin(s.phi1-s.phi2) - g*k2*sin(s.phi1) - g*l1*k3*sin(s.phi1);
 }
-double fp2(const pstate s) {
+float fp2(const pstate s) {
   return l1*fphi1(s)*fphi2(s)*k5*sin(s.phi1-s.phi2) - g*k5*sin(s.phi2);
 }
 
@@ -47,7 +47,7 @@ pstate calc_s_(pstate s) {
   return s_;
 }
 
-pstate mystep(pstate s0, float h) {
+inline pstate mystep(pstate s0, float h) {
   // see http://de.wikipedia.org/wiki/Klassisches_Runge-Kutta-Verfahren
   // sxd is the first derivation of sx
 
