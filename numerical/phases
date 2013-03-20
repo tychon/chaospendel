@@ -2,10 +2,11 @@
 directory=phases-data
 steps=100
 
-time=480
+time=240
 simout_step=0.01
 
-angle_offset=0
-angle_start=pi/4
-angle_end=pi/2
+phi1_start=0.7697
+phi1_end=0.1990
+phi2_start=2.1677
+phi2_end=2.7855
 
