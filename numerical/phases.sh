@@ -38,7 +38,7 @@ for X in $(seq 0 $STEPS); do
   ./pendulum.x $MAINARGS > $DATAFILE 2> /dev/null
   
   octave --eval "A=csvread(\"$DATAFILE\");
-    plot3(A(30000:48000,1),A(30000:48000,2),A(30000:48000,4));
+    plot3(A(:,1),A(:,2),A(:,4));
     title(\"phi1_0=$PHI1, phi2_0=$PHI2\");
     xlabel(\"phi1\");
     ylabel(\"phi2\");
