@@ -15,19 +15,30 @@
 // x is phi2, y is phi1
 
 int main(int argc, char **argv) {
-  if (argc != 6) {
-    fprintf(stderr, "wrong invocation: want width, height, outpath, starti, nofi!\n");
+  if (argc != 11) {
+    fprintf(stderr, "wrong invocation: want width, height, minphi1, maxphi1, minphi2, maxphi2, binoutpath, csvoutpath, starti, nofi!\n");
     exit(1);
   }
   int width = atoi(argv[1]);
   int height = atoi(argv[2]);
-  char *outpath = argv[3];
-  int starti = atoi(argv[4]);
-  int nofi = atoi(argv[5]);
+  double minphi1 = strtod(argv[3], NULL);
+  double maxphi1 = strtod(argv[4], NULL);
+  double minphi2 = strtod(argv[5], NULL);
+  double maxphi2 = strtod(argv[6], NULL);
+  char *outpath = argv[7];
+  char *csvoutpath = argv[8];
+  int starti = atoi(argv[9]);
+  int nofi = atoi(argv[10]);
   
   int outfd = open(outpath, O_RDWR|O_CREAT|O_TRUNC, 0666);
   if (outfd == -1) {
-    perror("can't open file");
+    perror("can't open binout file");
+    return 1;
+  }
+  
+  FILE *csvout = fopen(csvoutpath, "w");
+  if (csvout == NULL) {
+    perror("can't open csvout file");
     return 1;
   }
   
@@ -45,10 +56,11 @@ int main(int argc, char **argv) {
   unsigned char *data = data_ + strlen(header);
   
   setvbuf(stdout, NULL, _IONBF, 0);
+  setvbuf(csvout, NULL, _IONBF, 0); /* TODO FIXME WHAT THE FUCK IS UP HERE? This line fixes an output bug... is stdio broken? */
   
   for (int y=starti/width; y<height; y++) {
     /* y=0 means phi1=pi/2, y=max means phi1=0 */
-    double phi1 = (M_PI/2)*(1-y/(double)height);
+    double phi1 = maxphi1 - (maxphi1-minphi1)*(y/(double)height);
     for (int x=(y==starti/width)?(starti%width):0; x<width; x++) {
       int i = y*width+x;
       if (i == starti+nofi) goto end;
@@ -58,7 +70,7 @@ int main(int argc, char **argv) {
         printf(", ~%d minutes total          ", (int)(t*nofi/(i-starti)/60));
       }
       
-      double phi2 = M_PI*(x/(double)width);
+      double phi2 = minphi2 + (maxphi2-minphi2)*(x/(double)width);
       
       unsigned char *pixel = data + 3*i;
       pixel[0] = 0;
@@ -78,6 +90,7 @@ int main(int argc, char **argv) {
       close(pipefds[1]);
       if (read(pipefds[0], pixel+1, 1) != 1) exit(1);
       if (read(pipefds[0], pixel+2, 1) != 1) exit(1);
+      fprintf(csvout, "%f,%f,%hhu,%hhu\n", phi1, phi2, *(unsigned char*)(pixel+1), *(unsigned char*)(pixel+2));
       close(pipefds[0]);
       waitpid(forkres, NULL, 0);
     }
