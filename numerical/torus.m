@@ -1,6 +1,6 @@
 
 function cutted = periodic(X, xoff, xstart, xend)
-  cutted = (X+xoff) / (xend-xstart);
+  cutted = (X) / (xend-xstart);
 endfunction
 
 # X, Y, Z periodic in [0; 1]
