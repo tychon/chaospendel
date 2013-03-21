@@ -37,13 +37,14 @@ for X in $(seq 0 $STEPS); do
   MAINARGS="--time $TIME --outstep $OUTSTEP --phi1 $PHI1 --phi2 $PHI2"
   ./pendulum.x $MAINARGS > $DATAFILE 2> /dev/null
   
-  octave --eval "A=csvread(\"$DATAFILE\");
-    plot3(A(:,1),A(:,2),A(:,4));
+  octave --eval "source torus.m;
+    A = csvread(\"$DATAFILE\");
+    plotTorus(periodic(A(:,1).*2.7,-pi,-pi,pi), periodic(A(:,2),-pi,-pi,pi), periodic(A(:,4),-0.1,-0.1,0.1), 10, 6);
+    view(-37.5,50);
     title(\"phi1_0=$PHI1, phi2_0=$PHI2\");
     xlabel(\"phi1\");
     ylabel(\"phi2\");
     zlabel(\"p2\");
-    axis(\"square\");
     print -dpng \"$IMAGEFILE\";" > /dev/null
   
   # Add up angles for next step
