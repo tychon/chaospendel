@@ -49,7 +49,7 @@ for X in $(seq 0 $STEPS); do
       ylabel(\"phi2\");
       zlabel(\"p2\");
       axis(\"square\");
-      print -dpng \"$IMAGEFILE\";" > /dev/null
+      print -dpng \"$IMAGEFILE\";" > /dev/null &
   fi
   
   if [ "$1" = "tori" ] || [ "$1" = "all" ]; then
@@ -58,7 +58,7 @@ for X in $(seq 0 $STEPS); do
       plotTorus(periodic(A(:,1).*2.7,-pi,-pi,pi), periodic(A(:,2),-pi,-pi,pi), periodic(A(:,4),-0.1,-0.1,0.1), 10, 6);
       view(-37.5,50);
       title(\"phi1_0=$PHI1, phi2_0=$PHI2\");
-      print -dpng \"$TIMAGEFILE\";" > /dev/null
+      print -dpng \"$TIMAGEFILE\";" > /dev/null &
   fi
   
   # Add up angles for next step
