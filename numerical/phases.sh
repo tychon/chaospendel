@@ -55,7 +55,7 @@ for X in $(seq 0 $STEPS); do
   if [ "$1" = "tori" ] || [ "$1" = "all" ]; then
     octave --eval "source torus.m;
       A = csvread(\"$DATAFILE\");
-      plotTorus(periodic(A(:,1).*2.7,-pi,-pi,pi), periodic(A(:,2),-pi,-pi,pi), periodic(A(:,4),-0.1,-0.1,0.1), 10, 6);
+      plotTorus(periodic(A(:,2),-pi,-pi,pi), periodic(A(:,1),-pi,-pi,pi), periodic(A(:,4),-0.1,-0.1,0.1), 10, 6);
       view(-37.5,50);
       title(\"phi1_0=$PHI1, phi2_0=$PHI2\");
       print -dpng \"$TIMAGEFILE\";" > /dev/null &
