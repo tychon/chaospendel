@@ -1,11 +1,7 @@
 
 # TODOs
 
-# numerical
-
-* get C working
-* try to generate Lorentz attractor
-* try to generate fractal
+* inline documentation
 
 # network
 
