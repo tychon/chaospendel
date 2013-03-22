@@ -56,8 +56,8 @@ int main(int argc, char **argv) {
   int err;
   
   // ######  Parse args.  ######
-  if (argc != 5) {
-    fprintf(stderr, "wrong invocation: want cpu/gpu, width, height, outpath!\n");
+  if (argc != 8) {
+    fprintf(stderr, "wrong invocation: want cpu/gpu, width, height, off, len, outpath!\n");
     exit(1);
   }
   int use_gpu;
@@ -71,7 +71,9 @@ int main(int argc, char **argv) {
   }
   int width = atoi(argv[2]);
   int height = atoi(argv[3]);
-  char *outpath = argv[4];
+  int off = atoi(argv[4]);
+  size_t len = atoi(argv[5]);
+  char *outpath = argv[6];
   
   
   // ######  Prepare the OpenCL environment and our kernel.  ######
@@ -143,9 +145,9 @@ int main(int argc, char **argv) {
   
   // ######  Our kernel is ready, now prepare the input/output buffers and data.  ######
   printf("kernel is ready, preparing outfile, data and buffers...\n");
-  size_t number_of_runs = width * height;
+  //size_t number_of_all_runs = width * height;
   cl_float *inputdata;
-  err = posix_memalign((void**)&inputdata, 2*sizeof(cl_float), 2*sizeof(cl_float)*number_of_runs);
+  err = posix_memalign((void**)&inputdata, 2*sizeof(cl_float), 2*sizeof(cl_float)*len);
   if (err) {
     printf("Error allocating aligned memory.\n");
     exit(1);
@@ -155,15 +157,22 @@ int main(int argc, char **argv) {
     printf("Error: Failed to malloc input buffer!\n");
     return 1;
   }
-  for (int y=0; y<height; y++) {
-    for (int x=0; x<width; x++) {
+  int y = off/width;
+  int x = off%width;
+  int n=0;
+  for (; y<height; y++) {
+    for (; x<width; x++) {
       cl_float phi1 = (M_PI/2)*(1-y/(cl_float)height);
       *(inputdata_++) = phi1;
       cl_float phi2 = M_PI*(x/(cl_float)width);
       *(inputdata_++) = phi2;
+      n++;
+      if (n == len) goto loopend;
     }
+    x=0;
   }
-  cl_mem cl_inbuf = clCreateBuffer(context, CL_MEM_READ_ONLY|CL_MEM_USE_HOST_PTR, 2*sizeof(cl_float)*number_of_runs, inputdata, NULL);
+loopend: ;
+  cl_mem cl_inbuf = clCreateBuffer(context, CL_MEM_READ_ONLY|CL_MEM_USE_HOST_PTR, 2*sizeof(cl_float)*len, inputdata, NULL);
   if (cl_inbuf == NULL) {
     printf("Error: Failed to allocate OpenCL input buffer!\n");
     return 1;
@@ -186,18 +195,20 @@ int main(int argc, char **argv) {
     printf("Error: Can't write outfile header!\n");
     exit(1);
   }
-  int datasize = 3*width*height;
-  if (ftruncate(outfd, strlen(header)+datasize)) {
+  int full_datasize = 3*width*height;
+  int part_datasize = 3*len;
+  off_t data_offset = 3*off;
+  if (ftruncate(outfd, strlen(header)+full_datasize)) {
     printf("Error: Can't allocate disk space for outfile!\n");
     exit(1);
   }
-  unsigned char *outdata_ = mmap(NULL, strlen(header)+datasize, PROT_READ|PROT_WRITE, MAP_SHARED, outfd, 0);
+  unsigned char *outdata_ = mmap(NULL, strlen(header)+full_datasize, PROT_READ|PROT_WRITE, MAP_SHARED, outfd, 0);
   if (outdata_ == MAP_FAILED) {
     printf("Error: Can't mmap outfile!\n");
     exit(1);
   }
-  unsigned char *outdata = outdata_ + strlen(header);
-  cl_mem cl_outbuf = clCreateBuffer(context, CL_MEM_WRITE_ONLY|CL_MEM_ALLOC_HOST_PTR, datasize, NULL, NULL);
+  unsigned char *outdata = outdata_ + strlen(header) + data_offset;
+  cl_mem cl_outbuf = clCreateBuffer(context, CL_MEM_WRITE_ONLY|CL_MEM_ALLOC_HOST_PTR, part_datasize, NULL, NULL);
   if (cl_outbuf == NULL) {
     printf("Error: Failed to allocate OpenCL output buffer!\n");
     return 1;
@@ -210,8 +221,8 @@ int main(int argc, char **argv) {
   
   
   // ######  Everything is ready, run it!  ######
-  printf("data is also ready, starting execution of %d jobs...\n", (int)number_of_runs);
-  err = clEnqueueNDRangeKernel(commands, kern, 1, NULL, &number_of_runs, NULL, 0, NULL, NULL);
+  printf("data is also ready, starting execution of %d jobs...\n", (int)len);
+  err = clEnqueueNDRangeKernel(commands, kern, 1, NULL, &len, NULL, 0, NULL, NULL);
   if (err) {
     printf("Error: Failed to execute kernel!\n");
     return 1;
@@ -226,12 +237,12 @@ int main(int argc, char **argv) {
   
   // ######  Fetch computed data.  ######
   printf("execution has finished, fetching results...\n");
-  void *outdata2 = clEnqueueMapBuffer(commands, cl_outbuf, CL_TRUE, CL_MAP_READ, 0, datasize, 0, NULL, NULL, NULL);
+  void *outdata2 = clEnqueueMapBuffer(commands, cl_outbuf, CL_TRUE, CL_MAP_READ, 0, part_datasize, 0, NULL, NULL, NULL);
   if (outdata2 == NULL) {
     printf("Error: Failed to map output buffer!\n");
     return 1;
   }
-  memcpy(outdata, outdata2, datasize);
+  memcpy(outdata, outdata2, part_datasize);
   
   
   printf("done. Thanks for flying with your trusty GPU!\n");
