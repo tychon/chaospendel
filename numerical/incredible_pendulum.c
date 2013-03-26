@@ -56,8 +56,8 @@ int main(int argc, char **argv) {
   int err;
   
   // ######  Parse args.  ######
-  if (argc != 8) {
-    fprintf(stderr, "wrong invocation: want cpu/gpu, width, height, off, len, outpath!\n");
+  if (argc != 12) {
+    fprintf(stderr, "wrong invocation: want cpu/gpu, width, height, off, len, outpath, csvoutpath!\n");
     exit(1);
   }
   int use_gpu;
@@ -74,6 +74,17 @@ int main(int argc, char **argv) {
   int off = atoi(argv[4]);
   size_t len = atoi(argv[5]);
   char *outpath = argv[6];
+  char *csvoutpath = argv[7];
+  double minphi1 = strtod(argv[8], NULL);
+  double maxphi1 = strtod(argv[9], NULL);
+  double minphi2 = strtod(argv[10], NULL);
+  double maxphi2 = strtod(argv[11], NULL);
+  
+  FILE *csvout = fopen(csvoutpath, "w");
+  if (csvout == NULL) {
+    perror("can't open csvout file");
+    return 1;
+  }
   
   
   // ######  Prepare the OpenCL environment and our kernel.  ######
@@ -162,9 +173,9 @@ int main(int argc, char **argv) {
   int n=0;
   for (; y<height; y++) {
     for (; x<width; x++) {
-      cl_float phi1 = (M_PI/2)*(1-y/(cl_float)height);
+      cl_float phi1 = minphi1+(maxphi1-minphi1)*(1-y/(cl_float)height);
       *(inputdata_++) = phi1;
-      cl_float phi2 = M_PI*(x/(cl_float)width);
+      cl_float phi2 = minphi2+(maxphi2-minphi2)*(x/(cl_float)width);
       *(inputdata_++) = phi2;
       n++;
       if (n == len) goto loopend;
@@ -243,6 +254,13 @@ loopend: ;
     return 1;
   }
   memcpy(outdata, outdata2, part_datasize);
+  
+  for (int i=0; i<len; i++) {
+    unsigned char *pixel = outdata2+3*i;
+    double phi1 = inputdata[2*i+0];
+    double phi2 = inputdata[2*i+1];
+    fprintf(csvout, "%f,%f,%hhu,%hhu\n", phi1, phi2, *(unsigned char*)(pixel+1), *(unsigned char*)(pixel+2));
+  }
   
   
   printf("done. Thanks for flying with your trusty GPU!\n");
