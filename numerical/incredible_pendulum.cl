@@ -91,13 +91,13 @@ __kernel void simulate_pendulum(__global float *in, __global unsigned char *out_
   unsigned char loopings_left=0, loopings_right=0;
   
   pstate s = {.phi1=phi1_0, .phi2 = phi2_0, .p1 = 0, .p2 = 0 };
-  float phi2 = floor((fabs(s.phi2)+FLOAT_PI) / (2 * FLOAT_PI));
+  float phi2 = floor((s.phi2+FLOAT_PI) / (2 * FLOAT_PI));
   float phi2new;
   int i;
   for (i=0; i<ITERATIONS; i++) {
     s = mystep(s, timestep);
     
-    phi2new = floor((fabs(s.phi2)+FLOAT_PI) / (2 * FLOAT_PI));
+    phi2new = floor((s.phi2+FLOAT_PI) / (2 * FLOAT_PI));
     if (phi2new > phi2) loopings_left ++;
     else if (phi2new < phi2) loopings_right ++;
     phi2 = phi2new;

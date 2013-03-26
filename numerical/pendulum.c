@@ -170,11 +170,11 @@ static void run(pstate s, double timestep, double time
 #endif
   double phi2, phi2new;
   while (time > 0) {
-    phi2 = floor((fabs(s.phi2)+M_PI) / (2 * M_PI));
+    phi2 = floor((s.phi2+M_PI) / (2 * M_PI));
     
     s = step(s, timestep);
     
-    phi2new = floor((fabs(s.phi2)+M_PI) / (2 * M_PI));
+    phi2new = floor((s.phi2+M_PI) / (2 * M_PI));
     if (phi2new > phi2) loopings_left ++;
     else if (phi2new < phi2) loopings_right ++;
     
