@@ -1,3 +1,5 @@
+#define _POSIX_SOURCE
+
 // Transform a loopgraph from [phi1;phi2] coordinates to
 // [x;y] coordinates.
 
@@ -6,6 +8,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/mman.h>
+#include <string.h>
+#include "memory_wrappers.h"
 
 #define l1 0.285
 #define l2b TODO
@@ -51,7 +55,6 @@ void grabline(char *buf, int buflen, FILE *f, char *errstr) {
     perror(errstr?errstr:"can't read expected line"), exit(1);
   size_t datalen = strlen(buf);
   if (buf[datalen-1] == '\n') buf[datalen-1] = '\0';
-  return buf;
 }
 
 /* Like grabline, but skips comment lines */
@@ -95,7 +98,7 @@ struct cartesian angles_to_cartesian(struct angle_pair in) {
     }),
     pol_to_car((struct polar) {
       .phi = in.phi2,
-      .r = l2
+      .r = l2b
     })
   );
 }
@@ -138,7 +141,7 @@ struct outpixel *pixels_out;
 
 int main(int argc, char **argv) {
   /* -- parse args -- */
-  if (argc != 13) fputs(stderr, "bad invocation\n"), exit(1);
+  if (argc != 13) fputs("bad invocation\n", stderr), exit(1);
   
   char *in_name = argv[1];
   phi1_range.min = xatof(argv[2]);
@@ -170,7 +173,7 @@ int main(int argc, char **argv) {
   int infile_size = width_in * height_in * 3;
   long in_pos = ftell(f_in);
   /* map the whole file... */
-  data_in = mmap(NULL, in_pos+infile_size, PROT_READ, MAP_PRIVATE, getfd(f_in), 0);
+  data_in = mmap(NULL, in_pos+infile_size, PROT_READ, MAP_PRIVATE, fileno(f_in), 0);
   if (data_in == MAP_FAILED) perror("can't mmap infile"), exit(1);
   /* then bump the pointer up to the image data */
   data_in += in_pos;
@@ -183,7 +186,7 @@ int main(int argc, char **argv) {
       double phi2 = unscale(src_x, width_in, phi2_range);
       for (int src_y=0; src_y<height_in; src_y++) {
         double phi1 = unscale(src_y, height_in, phi1_range);
-        double value = data[(src_y*width_in+src_x)*3+color] / (double)255;
+        double value = data_in[(src_y*width_in+src_x)*3+color] / (double)255;
         
         // we add pi/2 to compensate that our polar coordinate system has
         // 0 pointing to the bottom while the normal one has 0 pointing to
@@ -210,7 +213,7 @@ int main(int argc, char **argv) {
           for (int y=nmax(0,yout_r-10); y<nmin(yout_r+10,height_out); y++) {
             // add 0.0001 to prevent DIV/0 errors
             double weight = 1/(0.0001+dist(out_coords.x, out_coords.y, x, y));
-            struct outpixel *px = pixels_out+(y*width+x)*3;
+            struct outpixel *px = pixels_out+(y*width_out+x)*3;
             px->numerator += value * weight;
             px->denominator += weight;
           }
