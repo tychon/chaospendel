@@ -12,7 +12,7 @@
 #include "memory_wrappers.h"
 
 #define l1 0.285
-#define l2b TODO
+#define l2b 0.19
 
 /* -----  HELPERS ----- */
 double xatof(const char *nptr) {
@@ -213,7 +213,7 @@ int main(int argc, char **argv) {
           for (int y=nmax(0,yout_r-10); y<nmin(yout_r+10,height_out); y++) {
             // add 0.0001 to prevent DIV/0 errors
             double weight = 1/(0.0001+dist(out_coords.x, out_coords.y, x, y));
-            struct outpixel *px = pixels_out+(y*width_out+x)*3;
+            struct outpixel *px = pixels_out+((y*width_out+x)*3+color);
             px->numerator += value * weight;
             px->denominator += weight;
           }
