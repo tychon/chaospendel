@@ -209,15 +209,11 @@ int main(int argc, char **argv) {
         
         int xout_r = (int)round(out_coords.x);
         int yout_r = (int)round(out_coords.y);
-        for (int x=nmax(0,xout_r-10); x<nmin(xout_r+10,width_out); x++) {
-          for (int y=nmax(0,yout_r-10); y<nmin(yout_r+10,height_out); y++) {
-            // add 0.0001 to prevent DIV/0 errors
-            double weight = 1/(0.0001+dist(out_coords.x, out_coords.y, x, y));
-            struct outpixel *px = pixels_out+((y*width_out+x)*3+color);
-            px->numerator += value * weight;
-            px->denominator += weight;
-          }
-        }
+          
+        if (xout_r < 0 || xout_r >= width_out) continue;
+        if (yout_r < 0 || yout_r >= height_out) continue;
+        struct outpixel *px = pixels_out+((yout_r*width_out+xout_r)*3+color);
+        px->numerator += value;
       }
     }
   }
@@ -229,6 +225,7 @@ int main(int argc, char **argv) {
   if (fprintf(f_out, "P6\n%d %d\n255\n", width_out, height_out) < 0)
     perror("can't write outheaders"), exit(1);
   for (struct outpixel *px = pixels_out; px < pixels_out+infile_size; px++) {
+    px->denominator = 1;
     unsigned char px_val = (unsigned char)round(255*px->numerator/px->denominator);
     if (fwrite(&px_val, 1, 1, f_out) != 1)
       perror("fwrite failed"), exit(1);
