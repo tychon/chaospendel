@@ -143,6 +143,14 @@ int main(int argc, char *argv[]) {
       }
     }
   }
+  if (logarithmic) {
+    int scale = pgmmaxval / log1p(pgmmaxval);
+    for (int row = 0; row < rows; row ++) {
+      for (int col = 2; col < columns; col ++) {
+        data[row][col] = log1p(data[row][col]) * scale;
+      }
+    }
+  }
   
   if (mirror) {
     //TODO mirror
