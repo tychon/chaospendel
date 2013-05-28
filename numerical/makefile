@@ -31,4 +31,4 @@ fast_pendulum.x: pendulum.c
 
 clean:
 	rm -rf feigenbaum-data phases-data
-	rm -f *.x *.o *.csv *.ppm *.pgm
+	rm -f *.x *.o *.csv *.ppm *.pgm *.info
