@@ -41,6 +41,7 @@ fi
 FWINDOW=`math "$TIME / $OUTSTEP"`
 FREQN=`math "$FWINDOW / 2 + 1"`
 
+# Requires run with "simulations"
 if [ "$1" == "fourier" ]; then
   echo -n "fourier: "
   for X in $(seq 0 $STEPS); do
@@ -54,6 +55,7 @@ if [ "$1" == "fourier" ]; then
   echo # newline
 fi
 
+# Requires run with "fourier"
 if [ "$1" == "pgms" ]; then
   echo -n "pgms: "
   for X in $(seq 0 $STEPS); do
@@ -64,6 +66,7 @@ if [ "$1" == "pgms" ]; then
   echo # newline
 fi
 
+# Requires run with "fourier"
 if [ "$1" == "diagram" ]; then
   cat $DIRECTORY/*.fourier1.csv > $DIRECTORY/fourier1.csv
   cat $DIRECTORY/*.fourier2.csv > $DIRECTORY/fourier2.csv
