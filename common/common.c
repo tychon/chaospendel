@@ -33,7 +33,7 @@ long long getMicroseconds() {
 
 
 int argcmpass(char *options, const int argc, char *argv[], int *argindex, char **dest) {
-  char *opts = assert_malloc(strlen(options));
+  char *opts = assert_malloc(strlen(options)+1);
   strcpy(opts, options);
   if (argcmpTestOptions(argv[*argindex], opts)) {
     if (*argindex >= argc-1) {
@@ -53,7 +53,7 @@ int argcmpass(char *options, const int argc, char *argv[], int *argindex, char *
 }
 int argcmpassint(char *options, const int argc, char *argv[], int *argindex, int *dest) {
   char *opt = argv[*argindex];
-  char *opts = assert_malloc(strlen(options));
+  char *opts = assert_malloc(strlen(options)+1);
   strcpy(opts, options);
   if (argcmpTestOptions(opt, opts)) {
     if (*argindex >= argc-1) {
@@ -84,7 +84,7 @@ int argcmpassint(char *options, const int argc, char *argv[], int *argindex, int
 }
 double argcmpassdouble(char *options, const int argc, char *argv[], int *argindex, double *dest) {
   char *opt = argv[*argindex];
-  char *opts = assert_malloc(strlen(options));
+  char *opts = assert_malloc(strlen(options)+1);
   strcpy(opts, options);
   if (argcmpTestOptions(opt, opts)) {
     if (*argindex >= argc-1) {
